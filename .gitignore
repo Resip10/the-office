@@ -14,3 +14,4 @@ build/
 
 # Local tooling
 .superpowers/
+.claude/
