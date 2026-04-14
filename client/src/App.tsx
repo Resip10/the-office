@@ -1,26 +1,8 @@
 import { useReducer } from 'react'
 import { dashboardReducer, initialState } from './reducer'
 import { useRelay } from './hooks/useRelay'
+import { AgentTree } from './components/AgentTree'
 import type { DashboardState } from './types'
-
-// Placeholder panels — replaced in later tasks
-function AgentTreePanel({ state }: { state: DashboardState }) {
-  const count = state.agents.size
-  return (
-    <div className="flex flex-col h-full border-r border-border p-3 overflow-y-auto">
-      <div className="text-text-muted text-xs uppercase tracking-wider mb-2">Agents ({count})</div>
-      {count === 0 ? (
-        <div className="text-text-muted text-xs mt-4">No agents yet. Start a Claude Code session or use ?mock=true</div>
-      ) : (
-        Array.from(state.agents.values()).map(a => (
-          <div key={a.sessionId} className="text-xs py-1 text-text-primary">
-            {a.agentName} — {a.status}
-          </div>
-        ))
-      )}
-    </div>
-  )
-}
 
 function DetailPanel({ state }: { state: DashboardState }) {
   const agent = state.selectedAgentId ? state.agents.get(state.selectedAgentId) : null
@@ -76,7 +58,11 @@ export default function App() {
       {/* Main panels */}
       <div className="flex flex-1 overflow-hidden">
         <div className="w-64 shrink-0 overflow-y-auto">
-          <AgentTreePanel state={state} />
+          <AgentTree
+            agents={state.agents}
+            selectedId={state.selectedAgentId}
+            onSelect={(id) => dispatch({ type: 'SELECT_AGENT', sessionId: id })}
+          />
         </div>
         <div className="flex-1 overflow-y-auto">
           <DetailPanel state={state} />
