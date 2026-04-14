@@ -3,20 +3,7 @@ import { dashboardReducer, initialState } from './reducer'
 import { useRelay } from './hooks/useRelay'
 import { AgentTree } from './components/AgentTree'
 import { AgentDetail } from './components/AgentDetail'
-import type { DashboardState } from './types'
-
-
-function EventStreamPanel({ state }: { state: DashboardState }) {
-  return (
-    <div className="h-32 border-t border-border p-2 overflow-y-auto">
-      {state.events.slice(-20).reverse().map(ev => (
-        <div key={ev._id} className="text-xs text-text-muted font-mono py-0.5">
-          {new Date(ev._timestamp).toLocaleTimeString()} {ev.session_id.slice(0, 8)} {ev.hook_event_name} {ev.tool_name ?? ''}
-        </div>
-      ))}
-    </div>
-  )
-}
+import { EventStream } from './components/EventStream'
 
 export default function App() {
   const [state, dispatch] = useReducer(dashboardReducer, initialState)
@@ -59,7 +46,7 @@ export default function App() {
       </div>
 
       {/* Event stream */}
-      <EventStreamPanel state={state} />
+      <EventStream events={state.events} />
     </div>
   )
 }
