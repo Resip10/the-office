@@ -1,5 +1,6 @@
 import { useReducer } from 'react'
 import { dashboardReducer, initialState } from './reducer'
+import { useRelay } from './hooks/useRelay'
 import type { DashboardState } from './types'
 
 // Placeholder panels — replaced in later tasks
@@ -48,9 +49,7 @@ function EventStreamPanel({ state }: { state: DashboardState }) {
 
 export default function App() {
   const [state, dispatch] = useReducer(dashboardReducer, initialState)
-
-  // useRelay will be wired in Task 11
-  // For now, dispatch is unused — mock mode will come next
+  useRelay(dispatch)
 
   return (
     <div className="flex flex-col h-full bg-canvas text-text-primary font-mono text-sm">
