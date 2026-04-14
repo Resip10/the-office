@@ -766,7 +766,7 @@ git commit -m "feat: implement Express server with WebSocket relay"
 **Files:**
 - Create: `client/src/reducer.ts`, `client/src/__tests__/reducer.test.ts`
 
-- [ ] **Step 1: Create `client/src/__tests__/reducer.test.ts`**
+- [x] **Step 1: Create `client/src/__tests__/reducer.test.ts`**
 
 ```typescript
 import { dashboardReducer, initialState } from '../reducer'
@@ -911,7 +911,7 @@ describe('dashboardReducer', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests — verify they fail**
+- [x] **Step 2: Run tests — verify they fail**
 
 ```bash
 cd client && npm test
@@ -919,7 +919,7 @@ cd client && npm test
 
 Expected: FAIL — `Cannot find module '../reducer'`
 
-- [ ] **Step 3: Create `client/src/reducer.ts`**
+- [x] **Step 3: Create `client/src/reducer.ts`**
 
 ```typescript
 import type { DashboardState, Action, AgentState, AgentSnapshot, HookEvent, ToolCall } from './types'
@@ -1104,7 +1104,7 @@ export function dashboardReducer(state: DashboardState, action: Action): Dashboa
 }
 ```
 
-- [ ] **Step 4: Run tests — verify they pass**
+- [x] **Step 4: Run tests — verify they pass**
 
 ```bash
 cd client && npm test
@@ -1112,7 +1112,7 @@ cd client && npm test
 
 Expected: PASS — all reducer tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add client/src/reducer.ts client/src/__tests__/reducer.test.ts
@@ -1127,7 +1127,7 @@ git commit -m "feat: implement dashboardReducer with full test coverage"
 - Modify: `server/src/bootstrap.ts`
 - Create: `server/src/__tests__/bootstrap.test.ts`
 
-- [ ] **Step 1: Create `server/src/__tests__/bootstrap.test.ts`**
+- [x] **Step 1: Create `server/src/__tests__/bootstrap.test.ts`**
 
 ```typescript
 import { parseJSONLSession } from '../bootstrap'
@@ -1187,7 +1187,7 @@ describe('parseJSONLSession', () => {
 })
 ```
 
-- [ ] **Step 2: Run test — verify it fails**
+- [x] **Step 2: Run test — verify it fails**
 
 ```bash
 cd server && npm test
@@ -1195,7 +1195,7 @@ cd server && npm test
 
 Expected: FAIL — `parseJSONLSession` is not exported.
 
-- [ ] **Step 3: Replace `server/src/bootstrap.ts` stub with full implementation**
+- [x] **Step 3: Replace `server/src/bootstrap.ts` stub with full implementation**
 
 ```typescript
 import { readFile, stat } from 'fs/promises'
@@ -1282,7 +1282,7 @@ export function parseJSONLSession(filePath: string, lines: string[]): AgentSnaps
 }
 ```
 
-- [ ] **Step 4: Run tests — verify they pass**
+- [x] **Step 4: Run tests — verify they pass**
 
 ```bash
 cd server && npm test
@@ -1290,7 +1290,7 @@ cd server && npm test
 
 Expected: PASS — all relay + bootstrap tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/bootstrap.ts server/src/__tests__/bootstrap.test.ts
@@ -1304,7 +1304,7 @@ git commit -m "feat: implement JSONL bootstrap with parseJSONLSession tests"
 **Files:**
 - Create: `client/src/mock/generator.ts`
 
-- [ ] **Step 1: Create `client/src/mock/generator.ts`**
+- [x] **Step 1: Create `client/src/mock/generator.ts`**
 
 ```typescript
 import type { Dispatch } from 'react'
@@ -1389,7 +1389,7 @@ export function startMockGenerator(dispatch: Dispatch<Action>): () => void {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add client/src/mock/generator.ts
@@ -1404,7 +1404,7 @@ git commit -m "feat: implement mock event generator for two-project scenario"
 - Create: `client/src/App.tsx`
 - Modify: `client/src/main.tsx`
 
-- [ ] **Step 1: Create `client/src/App.tsx`**
+- [x] **Step 1: Create `client/src/App.tsx`**
 
 ```tsx
 import { useReducer } from 'react'
@@ -1500,7 +1500,7 @@ export default function App() {
 }
 ```
 
-- [ ] **Step 2: Update `client/src/main.tsx` to render App**
+- [x] **Step 2: Update `client/src/main.tsx` to render App**
 
 ```typescript
 import React from 'react'
@@ -1515,7 +1515,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 )
 ```
 
-- [ ] **Step 3: Start client and verify the layout renders**
+- [x] **Step 3: Start client and verify the layout renders**
 
 ```bash
 npm run dev -w client
@@ -1523,7 +1523,7 @@ npm run dev -w client
 
 Open `http://localhost:5173` — verify dark 3-panel layout, "No agents yet" message, header with "the-office" and "● disconnected".
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add client/src/App.tsx client/src/main.tsx
@@ -1538,7 +1538,7 @@ git commit -m "feat: add App layout shell with 3-panel dark terminal UI"
 - Create: `client/src/hooks/useRelay.ts`
 - Modify: `client/src/App.tsx`
 
-- [ ] **Step 1: Create `client/src/hooks/useRelay.ts`**
+- [x] **Step 1: Create `client/src/hooks/useRelay.ts`**
 
 ```typescript
 import { useEffect } from 'react'
@@ -1605,7 +1605,7 @@ export function useRelay(dispatch: Dispatch<Action>): void {
 }
 ```
 
-- [ ] **Step 2: Wire useRelay into `client/src/App.tsx`**
+- [x] **Step 2: Wire useRelay into `client/src/App.tsx`**
 
 Add the import at the top:
 ```typescript
@@ -1620,7 +1620,7 @@ useRelay(dispatch)
 
 Remove the comment `// useRelay will be wired in Task 11`.
 
-- [ ] **Step 3: Verify mock mode works**
+- [x] **Step 3: Verify mock mode works**
 
 Start the client dev server:
 ```bash
@@ -1633,7 +1633,7 @@ Open `http://localhost:5173?mock=true` — verify:
 - Events appear in the event stream at the bottom
 - Status values change (idle, working, done, etc.)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add client/src/hooks/useRelay.ts client/src/App.tsx
@@ -1648,7 +1648,7 @@ git commit -m "feat: wire useRelay hook with mock mode and live WebSocket"
 - Create: `client/src/components/AgentTree.tsx`, `client/src/components/ProjectGroup.tsx`, `client/src/components/AgentNode.tsx`
 - Modify: `client/src/App.tsx`
 
-- [ ] **Step 1: Create `client/src/components/AgentNode.tsx`**
+- [x] **Step 1: Create `client/src/components/AgentNode.tsx`**
 
 ```tsx
 import type { AgentState, AgentStatus } from '../types'
@@ -1703,7 +1703,7 @@ export function AgentNode({ agent, depth, selected, onClick }: Props) {
 }
 ```
 
-- [ ] **Step 2: Create `client/src/components/ProjectGroup.tsx`**
+- [x] **Step 2: Create `client/src/components/ProjectGroup.tsx`**
 
 ```tsx
 import { useState } from 'react'
@@ -1756,7 +1756,7 @@ export function ProjectGroup({ projectPath, agents, selectedId, onSelect }: Prop
 }
 ```
 
-- [ ] **Step 3: Create `client/src/components/AgentTree.tsx`**
+- [x] **Step 3: Create `client/src/components/AgentTree.tsx`**
 
 ```tsx
 import type { AgentState } from '../types'
@@ -1803,7 +1803,7 @@ export function AgentTree({ agents, selectedId, onSelect }: Props) {
 }
 ```
 
-- [ ] **Step 4: Replace placeholder AgentTreePanel in `client/src/App.tsx`**
+- [x] **Step 4: Replace placeholder AgentTreePanel in `client/src/App.tsx`**
 
 Remove the inline `AgentTreePanel` function and replace with an import:
 ```typescript
@@ -1819,7 +1819,7 @@ Replace the `<AgentTreePanel state={state} />` call:
 />
 ```
 
-- [ ] **Step 5: Verify in mock mode**
+- [x] **Step 5: Verify in mock mode**
 
 Open `http://localhost:5173?mock=true` — verify:
 - Agents appear grouped under "my-project/" and "other-project/" headers
@@ -1827,7 +1827,7 @@ Open `http://localhost:5173?mock=true` — verify:
 - Status dots animate as events come in
 - Clicking an agent highlights it
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add client/src/components/AgentTree.tsx client/src/components/ProjectGroup.tsx client/src/components/AgentNode.tsx client/src/App.tsx
@@ -1842,7 +1842,7 @@ git commit -m "feat: implement AgentTree with project grouping and status dots"
 - Create: `client/src/components/ToolHistory.tsx`, `client/src/components/AgentDetail.tsx`
 - Modify: `client/src/App.tsx`
 
-- [ ] **Step 1: Create `client/src/components/ToolHistory.tsx`**
+- [x] **Step 1: Create `client/src/components/ToolHistory.tsx`**
 
 ```tsx
 import type { ToolCall } from '../types'
@@ -1893,7 +1893,7 @@ export function ToolHistory({ toolHistory }: Props) {
 }
 ```
 
-- [ ] **Step 2: Create `client/src/components/AgentDetail.tsx`**
+- [x] **Step 2: Create `client/src/components/AgentDetail.tsx`**
 
 ```tsx
 import type { AgentState } from '../types'
@@ -1974,7 +1974,7 @@ export function AgentDetail({ agent }: Props) {
 }
 ```
 
-- [ ] **Step 3: Replace placeholder DetailPanel in `client/src/App.tsx`**
+- [x] **Step 3: Replace placeholder DetailPanel in `client/src/App.tsx`**
 
 Add import:
 ```typescript
@@ -1988,7 +1988,7 @@ Replace `<DetailPanel state={state} />` and the `DetailPanel` function:
 
 Remove the `DetailPanel` inline function entirely.
 
-- [ ] **Step 4: Verify in mock mode**
+- [x] **Step 4: Verify in mock mode**
 
 Open `http://localhost:5173?mock=true` — click an agent. Verify:
 - Detail panel shows agent name, project, status, duration
@@ -1996,7 +1996,7 @@ Open `http://localhost:5173?mock=true` — click an agent. Verify:
 - Tool input JSON shows for working agents
 - Duration counts up
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add client/src/components/AgentDetail.tsx client/src/components/ToolHistory.tsx client/src/App.tsx
@@ -2011,7 +2011,7 @@ git commit -m "feat: implement AgentDetail panel with ToolHistory"
 - Create: `client/src/components/EventRow.tsx`, `client/src/components/EventStream.tsx`
 - Modify: `client/src/App.tsx`
 
-- [ ] **Step 1: Create `client/src/components/EventRow.tsx`**
+- [x] **Step 1: Create `client/src/components/EventRow.tsx`**
 
 ```tsx
 import type { HookEvent } from '../types'
@@ -2054,7 +2054,7 @@ export function EventRow({ event }: Props) {
 }
 ```
 
-- [ ] **Step 2: Create `client/src/components/EventStream.tsx`**
+- [x] **Step 2: Create `client/src/components/EventStream.tsx`**
 
 ```tsx
 import { useEffect, useRef, useState } from 'react'
@@ -2116,7 +2116,7 @@ export function EventStream({ events }: Props) {
 }
 ```
 
-- [ ] **Step 3: Replace placeholder EventStreamPanel in `client/src/App.tsx`**
+- [x] **Step 3: Replace placeholder EventStreamPanel in `client/src/App.tsx`**
 
 Add import:
 ```typescript
@@ -2130,7 +2130,7 @@ Replace `<EventStreamPanel state={state} />` and the `EventStreamPanel` function
 
 Remove the `EventStreamPanel` inline function entirely.
 
-- [ ] **Step 4: Verify in mock mode**
+- [x] **Step 4: Verify in mock mode**
 
 Open `http://localhost:5173?mock=true` — verify:
 - Event stream fills with rows as events arrive
@@ -2139,7 +2139,7 @@ Open `http://localhost:5173?mock=true` — verify:
 - Scrolling up pauses auto-scroll with a "↓ resume" button
 - Clicking "↓ resume" jumps back to bottom
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add client/src/components/EventStream.tsx client/src/components/EventRow.tsx client/src/App.tsx
@@ -2154,7 +2154,7 @@ git commit -m "feat: implement EventStream with auto-scroll and pause on scroll-
 - Create: `client/src/components/ConnectionBadge.tsx`
 - Modify: `client/src/App.tsx`
 
-- [ ] **Step 1: Create `client/src/components/ConnectionBadge.tsx`**
+- [x] **Step 1: Create `client/src/components/ConnectionBadge.tsx`**
 
 ```tsx
 interface Props {
@@ -2171,7 +2171,7 @@ export function ConnectionBadge({ connected }: Props) {
 }
 ```
 
-- [ ] **Step 2: Update header in `client/src/App.tsx` to use ConnectionBadge**
+- [x] **Step 2: Update header in `client/src/App.tsx` to use ConnectionBadge**
 
 Add import:
 ```typescript
@@ -2183,7 +2183,7 @@ Replace the inline connection status span:
 <ConnectionBadge connected={state.connected} />
 ```
 
-- [ ] **Step 3: Add auto-refresh duration display to AgentNode**
+- [x] **Step 3: Add auto-refresh duration display to AgentNode**
 
 Edit `client/src/components/AgentNode.tsx`. Add a live duration counter for active agents. Import `useEffect` and `useState`:
 
@@ -2212,7 +2212,7 @@ Add the elapsed time next to status in the button JSX:
 </span>
 ```
 
-- [ ] **Step 4: Verify full mock mode experience**
+- [x] **Step 4: Verify full mock mode experience**
 
 Open `http://localhost:5173?mock=true` — final checklist:
 - [ ] Header shows "the-office", ConnectionBadge in green, "Clear All" button
@@ -2225,7 +2225,7 @@ Open `http://localhost:5173?mock=true` — final checklist:
 - [ ] "Clear All" clears agents and events, "● disconnected" remains
 - [ ] Refresh page re-runs mock scenario from scratch
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add client/src/components/ConnectionBadge.tsx client/src/components/AgentNode.tsx client/src/App.tsx
@@ -2239,7 +2239,7 @@ git commit -m "feat: add ConnectionBadge, elapsed timer, polish empty states"
 **Files:**
 - Create: `README.md`
 
-- [ ] **Step 1: Run both server and client together**
+- [x] **Step 1: Run both server and client together**
 
 ```bash
 npm run dev
@@ -2247,7 +2247,7 @@ npm run dev
 
 Expected: concurrently starts both. Server on `http://localhost:7777`, client on `http://localhost:5173`.
 
-- [ ] **Step 2: Send a test hook event and verify it appears**
+- [x] **Step 2: Send a test hook event and verify it appears**
 
 In a second terminal:
 ```bash
@@ -2266,7 +2266,7 @@ curl -X POST http://localhost:7777/api/events \
 
 Verify: agent status changes to working, event stream shows the event.
 
-- [ ] **Step 3: Create `README.md`**
+- [x] **Step 3: Create `README.md`**
 
 ```markdown
 # the-office
@@ -2365,14 +2365,14 @@ npm test -w client   # client tests (Vitest)
 - **Phase 3:** Deployed client (Vercel) + local server, then desktop app (Tauri/Electron)
 ```
 
-- [ ] **Step 4: Commit README**
+- [x] **Step 4: Commit README**
 
 ```bash
 git add README.md
 git commit -m "docs: add README with setup, architecture, mock mode, roadmap"
 ```
 
-- [ ] **Step 5: Final verification checklist**
+- [x] **Step 5: Final verification checklist**
 
 Run through the Phase 1 success criteria:
 - [ ] `npm run dev` starts both server and client with one command
