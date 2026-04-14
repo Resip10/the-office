@@ -11,7 +11,7 @@ export async function bootstrap(): Promise<AgentSnapshot[]> {
 
   let files: string[]
   try {
-    files = await fg('**/sessions/*.jsonl', { cwd: claudeDir, absolute: true })
+    files = await fg('**/*.jsonl', { cwd: claudeDir, absolute: true })
   } catch {
     return []
   }
@@ -46,19 +46,33 @@ export function parseJSONLSession(filePath: string, lines: string[]): AgentSnaps
     try {
       const obj = JSON.parse(line) as Record<string, unknown>
 
+      // Real Claude Code JSONL format: sessionId and cwd are top-level fields
+      if (typeof obj.sessionId === 'string' && !sessionId) {
+        sessionId = obj.sessionId
+      }
+      if (typeof obj.cwd === 'string' && !projectPath) {
+        projectPath = obj.cwd.replace(/\\/g, '/')
+      }
+      if (typeof obj.timestamp === 'string' && startedAt === Date.now()) {
+        const t = new Date(obj.timestamp).getTime()
+        if (!isNaN(t)) startedAt = t
+      }
+
+      // Subagent parent link
+      if (typeof obj.parentSessionId === 'string' && !parentSessionId) {
+        parentSessionId = obj.parentSessionId
+      }
+
+      // Session is done when a summary/result entry appears
+      if (obj.type === 'summary' || obj.type === 'result') {
+        isDone = true
+      }
+
+      // Legacy format fallback (type: system, subtype: init)
       if (obj.type === 'system' && obj.subtype === 'init') {
         const data = (typeof obj.data === 'object' && obj.data !== null ? obj.data : obj) as Record<string, unknown>
-        sessionId = (data.session_id as string | undefined) ?? null
-        projectPath = (data.cwd as string | undefined) ?? ''
-        if (typeof obj.timestamp === 'number') startedAt = obj.timestamp
-      }
-
-      if (typeof obj.parent_session_id === 'string') {
-        parentSessionId = obj.parent_session_id
-      }
-
-      if (obj.type === 'result') {
-        isDone = true
+        if (!sessionId) sessionId = (data.session_id as string | undefined) ?? null
+        if (!projectPath) projectPath = ((data.cwd as string | undefined) ?? '').replace(/\\/g, '/')
       }
     } catch {
       // malformed line — skip
@@ -67,11 +81,24 @@ export function parseJSONLSession(filePath: string, lines: string[]): AgentSnaps
 
   if (!sessionId) return null
 
-  // Derive agent name from filename: "code-reviewer-abc123.jsonl" → "code-reviewer"
-  const filename = (filePath.split(/[\\/]/).pop() ?? '').replace(/\.jsonl$/, '')
-  const agentName = (filename.endsWith('-' + sessionId)
-    ? filename.slice(0, -(sessionId.length + 1))
-    : filename.replace(/-[a-f0-9]{8,}.*$/, '').replace(/-[0-9a-f-]{36}$/, '')) || sessionId.slice(0, 8)
+  // Derive agent name:
+  // - subagent files: "agent-<hex>.jsonl" → use parent folder (session UUID) as context, name = "agent"
+  // - main session files: filename IS the session UUID → use encoded project folder name
+  const parts = filePath.replace(/\\/g, '/').split('/')
+  const filename = (parts.pop() ?? '').replace(/\.jsonl$/, '')
+  const parentFolder = parts.pop() ?? ''           // session UUID or "subagents"
+  const projectFolder = parentFolder === 'subagents' ? (parts.pop() ?? '') : parentFolder
+
+  let agentName: string
+  if (filename.startsWith('agent-')) {
+    // subagent: derive name from the agent- prefix, strip hex suffix
+    agentName = filename.replace(/-[0-9a-f]{16,}$/, '') || 'agent'
+  } else if (filename === sessionId) {
+    // main session: name from encoded project folder (C--projects-the-office → the-office)
+    agentName = projectFolder.replace(/^[A-Z]--/, '').replace(/^projects-/, '') || sessionId.slice(0, 8)
+  } else {
+    agentName = filename.replace(/-[a-f0-9]{8,}.*$/, '') || sessionId.slice(0, 8)
+  }
 
   return {
     sessionId,
