@@ -2,20 +2,9 @@ import { useReducer } from 'react'
 import { dashboardReducer, initialState } from './reducer'
 import { useRelay } from './hooks/useRelay'
 import { AgentTree } from './components/AgentTree'
+import { AgentDetail } from './components/AgentDetail'
 import type { DashboardState } from './types'
 
-function DetailPanel({ state }: { state: DashboardState }) {
-  const agent = state.selectedAgentId ? state.agents.get(state.selectedAgentId) : null
-  return (
-    <div className="flex flex-col h-full p-3 overflow-y-auto">
-      {agent ? (
-        <div className="text-xs text-text-primary">{agent.agentName} — {agent.status}</div>
-      ) : (
-        <div className="text-text-muted text-xs mt-4">Select an agent</div>
-      )}
-    </div>
-  )
-}
 
 function EventStreamPanel({ state }: { state: DashboardState }) {
   return (
@@ -65,7 +54,7 @@ export default function App() {
           />
         </div>
         <div className="flex-1 overflow-y-auto">
-          <DetailPanel state={state} />
+          <AgentDetail agent={state.selectedAgentId ? (state.agents.get(state.selectedAgentId) ?? null) : null} />
         </div>
       </div>
 
