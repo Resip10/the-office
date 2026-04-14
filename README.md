@@ -91,4 +91,5 @@ npm test -w client   # client tests (Vitest)
 ## Roadmap
 
 - **Phase 2:** Kill agents, view full conversations, spawn agents from dashboard
-- **Phase 3:** Deployed client (Vercel) + local server, then desktop app (Tauri/Electron)
+- **Phase 3:** Claude Code plugin (auto-installs hooks + server), deployed client (Vercel), desktop app (Tauri/Electron)
+- **Phase 3+:** Generic adapter schema — support LangChain, OpenAI Agents SDK, AutoGen and any agent framework via thin HTTP adapters
