@@ -66,7 +66,7 @@ the-office/
 **Files:**
 - Create: `package.json`
 
-- [ ] **Step 1: Create root package.json**
+- [x] **Step 1: Create root package.json**
 
 ```json
 {
@@ -83,7 +83,7 @@ the-office/
 }
 ```
 
-- [ ] **Step 2: Install root dependencies**
+- [x] **Step 2: Install root dependencies**
 
 ```bash
 cd /path/to/the-office
@@ -92,7 +92,7 @@ npm install
 
 Expected: `node_modules/concurrently` exists at root.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add package.json
@@ -106,7 +106,7 @@ git commit -m "chore: add monorepo root with npm workspaces"
 **Files:**
 - Create: `server/package.json`, `server/tsconfig.json`, `server/jest.config.cjs`, `server/src/index.ts` (stub)
 
-- [ ] **Step 1: Create `server/package.json`**
+- [x] **Step 1: Create `server/package.json`**
 
 ```json
 {
@@ -139,7 +139,7 @@ git commit -m "chore: add monorepo root with npm workspaces"
 }
 ```
 
-- [ ] **Step 2: Create `server/tsconfig.json`**
+- [x] **Step 2: Create `server/tsconfig.json`**
 
 ```json
 {
@@ -159,7 +159,7 @@ git commit -m "chore: add monorepo root with npm workspaces"
 }
 ```
 
-- [ ] **Step 3: Create `server/jest.config.cjs`**
+- [x] **Step 3: Create `server/jest.config.cjs`**
 
 ```javascript
 /** @type {import('jest').Config} */
@@ -170,13 +170,13 @@ module.exports = {
 }
 ```
 
-- [ ] **Step 4: Create `server/src/index.ts` stub**
+- [x] **Step 4: Create `server/src/index.ts` stub**
 
 ```typescript
 console.log('the-office server starting...')
 ```
 
-- [ ] **Step 5: Install server dependencies**
+- [x] **Step 5: Install server dependencies**
 
 ```bash
 npm install -w server
@@ -184,7 +184,7 @@ npm install -w server
 
 Expected: `server/node_modules` exists.
 
-- [ ] **Step 6: Verify server compiles**
+- [x] **Step 6: Verify server compiles**
 
 ```bash
 cd server && npx tsx src/index.ts
@@ -192,7 +192,7 @@ cd server && npx tsx src/index.ts
 
 Expected output: `the-office server starting...`
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add server/
@@ -206,7 +206,7 @@ git commit -m "chore: scaffold server package"
 **Files:**
 - Create: `client/package.json`, `client/vite.config.ts`, `client/tailwind.config.js`, `client/postcss.config.js`, `client/index.html`, `client/src/main.tsx`, `client/src/index.css`
 
-- [ ] **Step 1: Create `client/package.json`**
+- [x] **Step 1: Create `client/package.json`**
 
 ```json
 {
@@ -240,7 +240,7 @@ git commit -m "chore: scaffold server package"
 }
 ```
 
-- [ ] **Step 2: Create `client/vite.config.ts`**
+- [x] **Step 2: Create `client/vite.config.ts`**
 
 ```typescript
 import { defineConfig } from 'vite'
@@ -256,7 +256,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 3: Create `client/tailwind.config.js`**
+- [x] **Step 3: Create `client/tailwind.config.js`**
 
 ```javascript
 /** @type {import('tailwindcss').Config} */
@@ -286,7 +286,7 @@ module.exports = {
 }
 ```
 
-- [ ] **Step 4: Create `client/postcss.config.js`**
+- [x] **Step 4: Create `client/postcss.config.js`**
 
 ```javascript
 module.exports = {
@@ -297,7 +297,7 @@ module.exports = {
 }
 ```
 
-- [ ] **Step 5: Create `client/index.html`**
+- [x] **Step 5: Create `client/index.html`**
 
 ```html
 <!doctype html>
@@ -314,7 +314,7 @@ module.exports = {
 </html>
 ```
 
-- [ ] **Step 6: Create `client/src/index.css`**
+- [x] **Step 6: Create `client/src/index.css`**
 
 ```css
 @tailwind base;
@@ -332,13 +332,13 @@ html, body, #root {
 }
 ```
 
-- [ ] **Step 7: Create `client/src/test-setup.ts`**
+- [x] **Step 7: Create `client/src/test-setup.ts`**
 
 ```typescript
 import '@testing-library/jest-dom'
 ```
 
-- [ ] **Step 8: Create `client/src/main.tsx` stub**
+- [x] **Step 8: Create `client/src/main.tsx` stub**
 
 ```typescript
 import React from 'react'
@@ -354,13 +354,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 )
 ```
 
-- [ ] **Step 9: Install client dependencies**
+- [x] **Step 9: Install client dependencies**
 
 ```bash
 npm install -w client
 ```
 
-- [ ] **Step 10: Verify client dev server starts**
+- [x] **Step 10: Verify client dev server starts**
 
 ```bash
 npm run dev -w client
@@ -368,7 +368,7 @@ npm run dev -w client
 
 Expected: Vite starts on `http://localhost:5173`. Open browser — shows "the-office loading..." on dark background.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add client/
@@ -382,7 +382,7 @@ git commit -m "chore: scaffold client package with Vite + React + Tailwind"
 **Files:**
 - Create: `server/src/types.ts`, `client/src/types.ts`, `client/src/tsconfig.json`
 
-- [ ] **Step 1: Create `client/tsconfig.json`**
+- [x] **Step 1: Create `client/tsconfig.json`**
 
 ```json
 {
@@ -406,7 +406,7 @@ git commit -m "chore: scaffold client package with Vite + React + Tailwind"
 }
 ```
 
-- [ ] **Step 2: Create `server/src/types.ts`**
+- [x] **Step 2: Create `server/src/types.ts`**
 
 ```typescript
 export interface HookEvent {
@@ -445,7 +445,7 @@ export interface EventPayload {
 export type WSMessage = InitPayload | EventPayload
 ```
 
-- [ ] **Step 3: Create `client/src/types.ts`**
+- [x] **Step 3: Create `client/src/types.ts`**
 
 ```typescript
 export type AgentStatus = 'starting' | 'idle' | 'working' | 'waiting' | 'done' | 'error'
@@ -509,7 +509,7 @@ export type Action =
   | { type: 'CLEAR' }
 ```
 
-- [ ] **Step 4: Verify both packages compile**
+- [x] **Step 4: Verify both packages compile**
 
 ```bash
 cd server && npx tsc --noEmit
@@ -518,7 +518,7 @@ cd ../client && npx tsc --noEmit
 
 Expected: no errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/types.ts client/src/types.ts client/tsconfig.json
@@ -532,7 +532,7 @@ git commit -m "feat: define TypeScript types for server and client"
 **Files:**
 - Create: `server/src/relay.ts`, `server/src/__tests__/relay.test.ts`
 
-- [ ] **Step 1: Create `server/src/__tests__/relay.test.ts`**
+- [x] **Step 1: Create `server/src/__tests__/relay.test.ts`**
 
 ```typescript
 import { Relay } from '../relay'
@@ -595,7 +595,7 @@ describe('Relay', () => {
 })
 ```
 
-- [ ] **Step 2: Run test — verify it fails**
+- [x] **Step 2: Run test — verify it fails**
 
 ```bash
 cd server && npm test
@@ -603,7 +603,7 @@ cd server && npm test
 
 Expected: FAIL — `Cannot find module '../relay'`
 
-- [ ] **Step 3: Create `server/src/relay.ts`**
+- [x] **Step 3: Create `server/src/relay.ts`**
 
 ```typescript
 import type { WebSocket } from 'ws'
@@ -643,7 +643,7 @@ export class Relay {
 }
 ```
 
-- [ ] **Step 4: Run tests — verify they pass**
+- [x] **Step 4: Run tests — verify they pass**
 
 ```bash
 cd server && npm test
@@ -651,7 +651,7 @@ cd server && npm test
 
 Expected: PASS — 4 tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/relay.ts server/src/__tests__/relay.test.ts
@@ -665,7 +665,7 @@ git commit -m "feat: implement relay ring buffer with tests"
 **Files:**
 - Modify: `server/src/index.ts`
 
-- [ ] **Step 1: Replace `server/src/index.ts` stub with full implementation**
+- [x] **Step 1: Replace `server/src/index.ts` stub with full implementation**
 
 ```typescript
 import { createServer } from 'http'
@@ -719,7 +719,7 @@ server.listen(PORT, () => {
 
 Note: `bootstrap` is imported here. Create a stub now so the server starts. Task 8 replaces this stub with the real implementation.
 
-- [ ] **Step 2: Create `server/src/bootstrap.ts` stub** (will be replaced in Task 8)
+- [x] **Step 2: Create `server/src/bootstrap.ts` stub** (will be replaced in Task 8)
 
 ```typescript
 import type { AgentSnapshot } from './types'
@@ -729,7 +729,7 @@ export async function bootstrap(): Promise<AgentSnapshot[]> {
 }
 ```
 
-- [ ] **Step 3: Start the server and verify it responds**
+- [x] **Step 3: Start the server and verify it responds**
 
 ```bash
 cd server && npm run dev
@@ -742,7 +742,7 @@ curl http://localhost:7777/health
 
 Expected: `{"ok":true}`
 
-- [ ] **Step 4: Verify event endpoint accepts hook events**
+- [x] **Step 4: Verify event endpoint accepts hook events**
 
 ```bash
 curl -X POST http://localhost:7777/api/events \
@@ -752,7 +752,7 @@ curl -X POST http://localhost:7777/api/events \
 
 Expected: HTTP 200, no body.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/index.ts server/src/bootstrap.ts
