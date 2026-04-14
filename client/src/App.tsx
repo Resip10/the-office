@@ -4,6 +4,7 @@ import { useRelay } from './hooks/useRelay'
 import { AgentTree } from './components/AgentTree'
 import { AgentDetail } from './components/AgentDetail'
 import { EventStream } from './components/EventStream'
+import { ConnectionBadge } from './components/ConnectionBadge'
 
 export default function App() {
   const [state, dispatch] = useReducer(dashboardReducer, initialState)
@@ -15,13 +16,7 @@ export default function App() {
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-surface shrink-0">
         <span className="font-semibold tracking-wide">the-office</span>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-text-muted">
-            {state.connected ? (
-              <span className="text-status-idle">● connected</span>
-            ) : (
-              <span className="text-status-error">● disconnected</span>
-            )}
-          </span>
+          <ConnectionBadge connected={state.connected} />
           <button
             onClick={() => dispatch({ type: 'CLEAR' })}
             className="text-xs text-text-muted hover:text-text-primary border border-border px-2 py-0.5 rounded"

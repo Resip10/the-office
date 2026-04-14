@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { AgentState, AgentStatus } from '../types'
 
 const STATUS_DOT: Record<AgentStatus, string> = {
@@ -27,6 +28,19 @@ interface Props {
 
 export function AgentNode({ agent, depth, selected, onClick }: Props) {
   const indent = depth * 12
+  const [, setTick] = useState(0)
+
+  useEffect(() => {
+    if (agent.status === 'done' || agent.status === 'error') return
+    const id = setInterval(() => setTick(t => t + 1), 1000)
+    return () => clearInterval(id)
+  }, [agent.status])
+
+  function elapsed(): string {
+    const s = Math.floor((Date.now() - agent.startedAt) / 1000)
+    if (s < 60) return `${s}s`
+    return `${Math.floor(s / 60)}m`
+  }
 
   return (
     <button
@@ -39,11 +53,14 @@ export function AgentNode({ agent, depth, selected, onClick }: Props) {
       <span className={`shrink-0 mt-0.5 ${STATUS_COLOR[agent.status]}`}>
         {STATUS_DOT[agent.status]}
       </span>
-      <span className="flex flex-col min-w-0">
+      <span className="flex flex-col min-w-0 flex-1">
         <span className="text-text-primary truncate">{agent.agentName}</span>
         {agent.currentTool && (
           <span className="text-text-muted truncate">→{agent.currentTool}</span>
         )}
+      </span>
+      <span className="text-text-muted ml-auto shrink-0">
+        {agent.status !== 'done' && agent.status !== 'error' ? elapsed() : ''}
       </span>
     </button>
   )
