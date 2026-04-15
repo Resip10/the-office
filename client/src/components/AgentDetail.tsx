@@ -42,10 +42,16 @@ export function AgentDetail({ agent }: Props) {
             <div className="text-status-working">{agent.currentTool}</div>
           </div>
         )}
+        {agent.agentType && (
+          <div>
+            <div className="text-text-muted uppercase tracking-wider text-[10px] mb-0.5">Type</div>
+            <div className="text-text-primary">{agent.agentType}</div>
+          </div>
+        )}
         {agent.parentSessionId && (
           <div>
             <div className="text-text-muted uppercase tracking-wider text-[10px] mb-0.5">Parent</div>
-            <div className="text-text-primary">{agent.parentSessionId.slice(0, 12)}</div>
+            <div className="text-text-primary font-mono">{agent.parentSessionId.slice(0, 12)}</div>
           </div>
         )}
         <div>

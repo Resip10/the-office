@@ -6,7 +6,7 @@ import type { AgentSnapshot } from './types'
 
 const FOUR_HOURS = 4 * 60 * 60 * 1000
 
-export async function bootstrap(): Promise<AgentSnapshot[]> {
+export async function bootstrap(terminatedSessions = new Set<string>()): Promise<AgentSnapshot[]> {
   const claudeDir = join(homedir(), '.claude', 'projects')
 
   let files: string[]
@@ -26,13 +26,24 @@ export async function bootstrap(): Promise<AgentSnapshot[]> {
       const content = await readFile(file, 'utf-8')
       const lines = content.trim().split('\n').filter(Boolean)
       const snapshot = parseJSONLSession(file, lines)
-      if (snapshot) snapshots.push(snapshot)
+      if (snapshot && snapshot.status !== 'done') snapshots.push(snapshot)
     } catch {
       // unreadable or locked file — skip silently
     }
   }
 
-  return snapshots
+  // Deduplicate by sessionId — multiple JSONL files can share the same sessionId
+  // (subagent transcripts, conversation history). Keep the one with the shortest
+  // projectPath as a proxy for "most root-level" (e.g. prefer /the-office over /the-office/server)
+  const bySession = new Map<string, AgentSnapshot>()
+  for (const snap of snapshots) {
+    const existing = bySession.get(snap.sessionId)
+    if (!existing || snap.projectPath.length < existing.projectPath.length) {
+      bySession.set(snap.sessionId, snap)
+    }
+  }
+
+  return Array.from(bySession.values()).filter(s => !terminatedSessions.has(s.sessionId))
 }
 
 export function parseJSONLSession(filePath: string, lines: string[]): AgentSnapshot | null {
@@ -51,7 +62,7 @@ export function parseJSONLSession(filePath: string, lines: string[]): AgentSnaps
         sessionId = obj.sessionId
       }
       if (typeof obj.cwd === 'string' && !projectPath) {
-        projectPath = obj.cwd.replace(/\\/g, '/')
+        projectPath = obj.cwd.replace(/\\/g, '/').replace(/\/$/, '')
       }
       if (typeof obj.timestamp === 'string' && startedAt === Date.now()) {
         const t = new Date(obj.timestamp).getTime()
@@ -66,6 +77,16 @@ export function parseJSONLSession(filePath: string, lines: string[]): AgentSnaps
       // Session is done when a summary/result entry appears
       if (obj.type === 'summary' || obj.type === 'result') {
         isDone = true
+      }
+
+      // /exit command writes a Bye! stdout entry — also a terminal marker
+      if (obj.type === 'user') {
+        const msg = (typeof obj.message === 'object' && obj.message !== null ? obj.message : {}) as Record<string, unknown>
+        const content = typeof msg.content === 'string' ? msg.content : ''
+        if (content.includes('<local-command-stdout>Bye!</local-command-stdout>') ||
+            content.includes('<command-name>/exit</command-name>')) {
+          isDone = true
+        }
       }
 
       // Legacy format fallback (type: system, subtype: init)

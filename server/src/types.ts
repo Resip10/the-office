@@ -6,6 +6,9 @@ export interface HookEvent {
   tool_output?: Record<string, unknown>
   transcript_path?: string
   parent_session_id?: string
+  agent_id?: string
+  agent_type?: string
+  agent_transcript_path?: string
   cwd?: string
   _timestamp: number
   _id: string

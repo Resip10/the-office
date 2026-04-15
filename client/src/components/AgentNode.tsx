@@ -24,10 +24,11 @@ interface Props {
   depth: number
   selected: boolean
   onClick: () => void
+  showId?: boolean
 }
 
-export function AgentNode({ agent, depth, selected, onClick }: Props) {
-  const indent = depth * 12
+export function AgentNode({ agent, depth, selected, onClick, showId = false }: Props) {
+  const indent = depth * 20
   const [, setTick] = useState(0)
 
   useEffect(() => {
@@ -54,7 +55,12 @@ export function AgentNode({ agent, depth, selected, onClick }: Props) {
         {STATUS_DOT[agent.status]}
       </span>
       <span className="flex flex-col min-w-0 flex-1">
-        <span className="text-text-primary truncate">{agent.agentName}</span>
+        <span className="truncate">
+          <span className="text-text-primary">{agent.agentName}</span>
+          {(agent.parentSessionId || showId) && (
+            <span className="text-text-muted ml-1">· {agent.sessionId.slice(0, 6)}</span>
+          )}
+        </span>
         {agent.currentTool && (
           <span className="text-text-muted truncate">→{agent.currentTool}</span>
         )}

@@ -10,10 +10,11 @@ export interface ToolCall {
 }
 
 export interface AgentState {
-  sessionId: string
+  sessionId: string       // unique map key: session_id for root agents, agent_id for subagents
   agentName: string
+  agentType?: string      // e.g. 'general-purpose', 'Explore' — present on subagents
   status: AgentStatus
-  parentSessionId: string | null
+  parentSessionId: string | null  // null for root agents; root's session_id for subagents
   currentTool: string | null
   currentToolInput: unknown | null
   toolHistory: ToolCall[]
@@ -39,6 +40,9 @@ export interface HookEvent {
   tool_output?: Record<string, unknown>
   transcript_path?: string
   parent_session_id?: string
+  agent_id?: string
+  agent_type?: string
+  agent_transcript_path?: string
   cwd?: string
   _timestamp: number
   _id: string

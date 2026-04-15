@@ -14,6 +14,7 @@ function snapshotToAgent(snap: AgentSnapshot): AgentState {
   return {
     sessionId: snap.sessionId,
     agentName: snap.agentName,
+    agentType: undefined,
     status: snap.status === 'done' ? 'done' : 'idle',
     parentSessionId: snap.parentSessionId,
     currentTool: null,
@@ -25,38 +26,49 @@ function snapshotToAgent(snap: AgentSnapshot): AgentState {
   }
 }
 
+function normalizePath(p: string): string {
+  return p.replace(/\\/g, '/').replace(/\/$/, '')
+}
+
 function deriveProjectPath(event: HookEvent): string {
-  if (event.cwd) return event.cwd
+  if (event.cwd) return normalizePath(event.cwd)
   if (!event.transcript_path) return ''
   // transcript_path: ~/.claude/projects/<encoded>/sessions/<file>.jsonl
   // Extract the part between the last 'projects/' and '/sessions/'
   const normalized = event.transcript_path.replace(/\\/g, '/')
   const projectsIdx = normalized.lastIndexOf('/projects/')
   const sessionsIdx = normalized.indexOf('/sessions/', projectsIdx)
-  if (projectsIdx === -1 || sessionsIdx === -1) return event.transcript_path
+  if (projectsIdx === -1 || sessionsIdx === -1) return normalized
   return normalized.slice(projectsIdx + '/projects/'.length, sessionsIdx)
 }
 
-function defaultAgent(event: HookEvent): AgentState {
+function defaultAgent(event: HookEvent, agents: Map<string, AgentState>): AgentState {
+  const key = event.agent_id ?? event.session_id
+  const isSubagent = !!event.agent_id
+  // Subagents always use parent's projectPath so they appear in the same group
+  const projectPath = isSubagent
+    ? (agents.get(event.session_id)?.projectPath ?? deriveProjectPath(event))
+    : deriveProjectPath(event)
   return {
-    sessionId: event.session_id,
-    agentName: event.session_id.slice(0, 8),
+    sessionId: key,
+    agentName: event.agent_type ?? key.slice(0, 8),
+    agentType: event.agent_type,
     status: 'idle',
-    parentSessionId: event.parent_session_id ?? null,
+    parentSessionId: isSubagent ? event.session_id : (event.parent_session_id ?? null),
     currentTool: null,
     currentToolInput: null,
     toolHistory: [],
     startedAt: event._timestamp,
     lastActivityAt: event._timestamp,
-    projectPath: deriveProjectPath(event),
+    projectPath,
   }
 }
 
 function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<string, AgentState> {
   const next = new Map(agents)
-  const id = event.session_id
+  const id = event.agent_id ?? event.session_id
   const ts = event._timestamp
-  const existing = next.get(id) ?? defaultAgent(event)
+  const existing = next.get(id) ?? defaultAgent(event, agents)
 
   switch (event.hook_event_name) {
     case 'SessionStart':
@@ -72,8 +84,11 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
       next.set(id, {
         ...existing,
         status: 'starting',
-        parentSessionId: event.parent_session_id ?? existing.parentSessionId,
-        projectPath: deriveProjectPath(event) || existing.projectPath,
+        agentName: event.agent_type ?? existing.agentName,
+        agentType: event.agent_type ?? existing.agentType,
+        parentSessionId: event.agent_id ? event.session_id : (event.parent_session_id ?? existing.parentSessionId),
+        // Always inherit parent's projectPath so subagent stays in the same group
+        projectPath: existing.projectPath || next.get(event.session_id)?.projectPath || deriveProjectPath(event),
         lastActivityAt: ts,
       })
       break
@@ -134,7 +149,7 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
 
     case 'SubagentStop':
     case 'SessionEnd':
-      next.set(id, { ...existing, status: 'done', lastActivityAt: ts })
+      next.delete(id)
       break
 
     case 'Stop':
@@ -162,7 +177,11 @@ export function dashboardReducer(state: DashboardState, action: Action): Dashboa
     case 'EVENT': {
       const agents = applyEvent(state.agents, action.event)
       const events = [...state.events, action.event].slice(-MAX_EVENTS)
-      return { ...state, agents, events }
+      // If the selected agent was just removed, deselect it
+      const selectedAgentId = state.selectedAgentId && !agents.has(state.selectedAgentId)
+        ? null
+        : state.selectedAgentId
+      return { ...state, agents, events, selectedAgentId }
     }
 
     case 'SELECT_AGENT':

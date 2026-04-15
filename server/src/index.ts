@@ -10,6 +10,7 @@ const PORT = 7777
 
 const app = express()
 const relay = new Relay()
+const terminatedSessions = new Set<string>()
 
 app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:4173'] }))
 app.use(express.json())
@@ -25,6 +26,9 @@ app.post('/api/events', (req, res) => {
     _timestamp: Date.now(),
     _id: crypto.randomUUID(),
   }
+  if (event.hook_event_name === 'SessionEnd') {
+    terminatedSessions.add(event.session_id)
+  }
   relay.push(event)
   res.sendStatus(200)
 })
@@ -33,7 +37,7 @@ const server = createServer(app)
 const wss = new WebSocketServer({ server, path: '/ws' })
 
 wss.on('connection', async (ws) => {
-  const agents = await bootstrap()
+  const agents = await bootstrap(terminatedSessions)
   ws.send(JSON.stringify({
     type: 'init',
     agents,

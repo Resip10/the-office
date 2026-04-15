@@ -1,4 +1,4 @@
-import { useReducer } from 'react'
+import { useReducer, useState } from 'react'
 import { dashboardReducer, initialState } from './reducer'
 import { useRelay } from './hooks/useRelay'
 import { AgentTree } from './components/AgentTree'
@@ -8,7 +8,15 @@ import { ConnectionBadge } from './components/ConnectionBadge'
 
 export default function App() {
   const [state, dispatch] = useReducer(dashboardReducer, initialState)
-  useRelay(dispatch)
+  // Incrementing reconnectKey forces useRelay to close and reopen the WebSocket,
+  // triggering a fresh bootstrap from the server (used by the Refresh button).
+  const [reconnectKey, setReconnectKey] = useState(0)
+  useRelay(dispatch, reconnectKey)
+
+  function handleRefresh() {
+    dispatch({ type: 'CLEAR' })
+    setReconnectKey(k => k + 1)
+  }
 
   return (
     <div className="flex flex-col h-full bg-canvas text-text-primary font-mono text-sm">
@@ -18,10 +26,10 @@ export default function App() {
         <div className="flex items-center gap-3">
           <ConnectionBadge connected={state.connected} />
           <button
-            onClick={() => dispatch({ type: 'CLEAR' })}
+            onClick={handleRefresh}
             className="text-xs text-text-muted hover:text-text-primary border border-border px-2 py-0.5 rounded"
           >
-            Clear All
+            Refresh
           </button>
         </div>
       </div>

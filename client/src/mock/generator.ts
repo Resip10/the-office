@@ -4,11 +4,14 @@ import type { Action, HookEvent, AgentSnapshot } from '../types'
 const P1 = '/home/user/my-project'
 const P2 = '/home/user/other-project'
 
-const S_MAIN = 'mock-main-0001'
-const S_REVIEWER = 'mock-reviewer-0002'
-const S_EXPLORER = 'mock-explorer-0003'
-const S_OTHER = 'mock-other-main-0004'
-const S_WRITER = 'mock-writer-0005'
+// Root sessions (separate Claude Code processes)
+const S_MAIN = 'mock-session-main-0001'
+const S_OTHER = 'mock-session-other-0004'
+
+// Subagent agent_ids (within their parent sessions)
+const A_REVIEWER = 'mock-agent-reviewer-0002'
+const A_EXPLORER = 'mock-agent-explorer-0003'
+const A_WRITER = 'mock-agent-writer-0005'
 
 let _seq = 0
 function makeEvent(session_id: string, hook_event_name: string, extras: Partial<HookEvent> = {}): HookEvent {
@@ -28,26 +31,30 @@ const INITIAL_SNAPSHOTS: AgentSnapshot[] = [
 type EventFactory = () => HookEvent
 
 const SCENARIO: EventFactory[] = [
-  () => makeEvent(S_REVIEWER, 'SubagentStart', { transcript_path: `${P1}/.sessions/r.jsonl`, parent_session_id: S_MAIN }),
-  () => makeEvent(S_REVIEWER, 'PreToolUse', { tool_name: 'Read', tool_input: { file_path: 'src/app.tsx' } }),
+  // Reviewer subagent starts in S_MAIN
+  () => makeEvent(S_MAIN, 'SubagentStart', { agent_id: A_REVIEWER, agent_type: 'code-reviewer', cwd: P1 }),
+  () => makeEvent(S_MAIN, 'PreToolUse', { agent_id: A_REVIEWER, tool_name: 'Read', tool_input: { file_path: 'src/app.tsx' } }),
+  // Second root session starts
   () => makeEvent(S_OTHER, 'SessionStart', { cwd: P2, transcript_path: `${P2}/.sessions/m.jsonl` }),
-  () => makeEvent(S_REVIEWER, 'PostToolUse', { tool_name: 'Read' }),
+  () => makeEvent(S_MAIN, 'PostToolUse', { agent_id: A_REVIEWER, tool_name: 'Read' }),
   () => makeEvent(S_OTHER, 'PreToolUse', { tool_name: 'Bash', tool_input: { command: 'npm test' } }),
-  () => makeEvent(S_REVIEWER, 'PreToolUse', { tool_name: 'Grep', tool_input: { pattern: 'useState', path: 'src/' } }),
-  () => makeEvent(S_EXPLORER, 'SubagentStart', { transcript_path: `${P1}/.sessions/e.jsonl`, parent_session_id: S_MAIN }),
+  () => makeEvent(S_MAIN, 'PreToolUse', { agent_id: A_REVIEWER, tool_name: 'Grep', tool_input: { pattern: 'useState', path: 'src/' } }),
+  // Explorer subagent starts in S_MAIN
+  () => makeEvent(S_MAIN, 'SubagentStart', { agent_id: A_EXPLORER, agent_type: 'Explore', cwd: P1 }),
   () => makeEvent(S_OTHER, 'PostToolUse', { tool_name: 'Bash' }),
-  () => makeEvent(S_REVIEWER, 'PostToolUse', { tool_name: 'Grep' }),
-  () => makeEvent(S_EXPLORER, 'PreToolUse', { tool_name: 'Read', tool_input: { file_path: 'src/index.ts' } }),
+  () => makeEvent(S_MAIN, 'PostToolUse', { agent_id: A_REVIEWER, tool_name: 'Grep' }),
+  () => makeEvent(S_MAIN, 'PreToolUse', { agent_id: A_EXPLORER, tool_name: 'Read', tool_input: { file_path: 'src/index.ts' } }),
   () => makeEvent(S_MAIN, 'Notification'),
-  () => makeEvent(S_EXPLORER, 'PostToolUse', { tool_name: 'Read' }),
-  () => makeEvent(S_WRITER, 'SubagentStart', { transcript_path: `${P2}/.sessions/w.jsonl`, parent_session_id: S_OTHER }),
-  () => makeEvent(S_EXPLORER, 'SubagentStop'),
-  () => makeEvent(S_REVIEWER, 'PreToolUse', { tool_name: 'Write', tool_input: { file_path: 'src/output.ts' } }),
-  () => makeEvent(S_WRITER, 'PreToolUse', { tool_name: 'Read', tool_input: { file_path: 'docs/spec.md' } }),
-  () => makeEvent(S_REVIEWER, 'PostToolUse', { tool_name: 'Write' }),
-  () => makeEvent(S_WRITER, 'PostToolUse', { tool_name: 'Read' }),
-  () => makeEvent(S_REVIEWER, 'SubagentStop'),
-  () => makeEvent(S_WRITER, 'SubagentStop'),
+  () => makeEvent(S_MAIN, 'PostToolUse', { agent_id: A_EXPLORER, tool_name: 'Read' }),
+  // Writer subagent starts in S_OTHER
+  () => makeEvent(S_OTHER, 'SubagentStart', { agent_id: A_WRITER, agent_type: 'general-purpose', cwd: P2 }),
+  () => makeEvent(S_MAIN, 'SubagentStop', { agent_id: A_EXPLORER }),
+  () => makeEvent(S_MAIN, 'PreToolUse', { agent_id: A_REVIEWER, tool_name: 'Write', tool_input: { file_path: 'src/output.ts' } }),
+  () => makeEvent(S_OTHER, 'PreToolUse', { agent_id: A_WRITER, tool_name: 'Read', tool_input: { file_path: 'docs/spec.md' } }),
+  () => makeEvent(S_MAIN, 'PostToolUse', { agent_id: A_REVIEWER, tool_name: 'Write' }),
+  () => makeEvent(S_OTHER, 'PostToolUse', { agent_id: A_WRITER, tool_name: 'Read' }),
+  () => makeEvent(S_MAIN, 'SubagentStop', { agent_id: A_REVIEWER }),
+  () => makeEvent(S_OTHER, 'SubagentStop', { agent_id: A_WRITER }),
   () => makeEvent(S_OTHER, 'Stop'),
   () => makeEvent(S_MAIN, 'Stop'),
 ]

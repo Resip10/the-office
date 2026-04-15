@@ -5,7 +5,7 @@ import type { Action } from '../types'
 const WS_URL = 'ws://localhost:7777/ws'
 const RECONNECT_DELAY = 3000
 
-export function useRelay(dispatch: Dispatch<Action>): void {
+export function useRelay(dispatch: Dispatch<Action>, reconnectKey = 0): void {
   useEffect(() => {
     const isMock = new URLSearchParams(window.location.search).has('mock')
 
@@ -58,5 +58,5 @@ export function useRelay(dispatch: Dispatch<Action>): void {
       if (reconnectTimer) clearTimeout(reconnectTimer)
       ws?.close()
     }
-  }, [dispatch])
+  }, [dispatch, reconnectKey])
 }

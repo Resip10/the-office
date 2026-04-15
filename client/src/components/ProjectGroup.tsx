@@ -24,6 +24,12 @@ function getDepth(agent: AgentState, allAgents: AgentState[]): number {
 export function ProjectGroup({ projectPath, agents, selectedId, onSelect }: Props) {
   const [collapsed, setCollapsed] = useState(false)
 
+  // Find names that appear more than once so AgentNode can show a disambiguating ID
+  const nameCounts = new Map<string, number>()
+  for (const a of agents) {
+    nameCounts.set(a.agentName, (nameCounts.get(a.agentName) ?? 0) + 1)
+  }
+
   return (
     <div className="mb-1">
       <button
@@ -41,6 +47,7 @@ export function ProjectGroup({ projectPath, agents, selectedId, onSelect }: Prop
           depth={getDepth(agent, agents)}
           selected={agent.sessionId === selectedId}
           onClick={() => onSelect(agent.sessionId)}
+          showId={(nameCounts.get(agent.agentName) ?? 0) > 1}
         />
       ))}
     </div>
