@@ -94,6 +94,7 @@ npm test -w client   # client tests (Vitest)
 
 ## Roadmap
 
-- **Phase 2:** Kill agents, view full conversations, spawn agents from dashboard
-- **Phase 3:** Claude Code plugin (auto-installs hooks + server), deployed client (Vercel), desktop app (Tauri/Electron)
-- **Phase 3+:** Generic adapter schema — support LangChain, OpenAI Agents SDK, AutoGen and any agent framework via thin HTTP adapters
+- **Phase 2 (Snapshot):** Conversation snapshot in agent detail — shows the initial task and latest assistant response, polled live from the session JSONL
+- **Phase 3 (Distribution):** Claude Code plugin (auto-installs hooks + server), deployed client (Vercel), desktop app (Tauri/Electron)
+- **Phase 4 (The Office):** Visual floor-plan mode — agents as animated characters at desks, status reflected through motion, projects as rooms. Toggle between list view and office view.
+- **Phase 4+:** Generic adapter schema — support LangChain, OpenAI Agents SDK, AutoGen and other frameworks via thin HTTP adapters

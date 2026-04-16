@@ -85,9 +85,11 @@ All tests must pass before committing. The reducer is the most critical — test
 
 ## Phase roadmap
 
-- **Phase 1 (current):** Observer — agent tree, detail panel, event stream, JSONL bootstrap, mock mode
-- **Phase 2:** Control — kill agents, view conversations, spawn agents via Claude Code SDK
-- **Phase 3:** Distribution — deployed client (Vercel) + local server, then desktop app (Tauri/Electron TBD)
+- **Phase 1 (done):** Observer — agent tree, detail panel, event stream, JSONL bootstrap, mock mode
+- **Phase 2 (Snapshot):** Read-only conversation snapshot in agent detail — initial task + latest assistant response, polled from session JSONL
+- **Phase 3 (Distribution):** Claude Code plugin (auto-installs hooks + server), deployed client (Vercel), desktop app (Tauri/Electron TBD)
+- **Phase 4 (The Office):** Visual floor-plan mode — agents as animated characters at desks, projects as rooms, toggle between list and office view
+- **Phase 4+:** Generic adapter schema — LangChain, OpenAI Agents SDK, AutoGen support via thin HTTP adapters
 
 ## Ports
 
