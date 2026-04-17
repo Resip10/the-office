@@ -70,10 +70,15 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
   const ts = event._timestamp
   const existing = next.get(id) ?? defaultAgent(event, agents)
 
+  // First value wins — subagents carry agent_transcript_path, root sessions carry transcript_path
+  const incomingPath = (event.agent_id ? event.agent_transcript_path : event.transcript_path) ?? undefined
+  const transcriptPath = existing.transcriptPath ?? incomingPath
+
   switch (event.hook_event_name) {
     case 'SessionStart':
       next.set(id, {
         ...existing,
+        transcriptPath,
         status: 'idle',
         projectPath: deriveProjectPath(event) || existing.projectPath,
         lastActivityAt: ts,
@@ -83,6 +88,7 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
     case 'SubagentStart':
       next.set(id, {
         ...existing,
+        transcriptPath,
         status: 'starting',
         agentName: event.agent_type ?? existing.agentName,
         agentType: event.agent_type ?? existing.agentType,
@@ -104,6 +110,7 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
       }
       next.set(id, {
         ...existing,
+        transcriptPath,
         status: 'working',
         currentTool: event.tool_name ?? null,
         currentToolInput: event.tool_input ?? null,
@@ -119,6 +126,7 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
       )
       next.set(id, {
         ...existing,
+        transcriptPath,
         status: 'idle',
         currentTool: null,
         currentToolInput: null,
@@ -134,6 +142,7 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
       )
       next.set(id, {
         ...existing,
+        transcriptPath,
         status: 'error',
         currentTool: null,
         currentToolInput: null,
@@ -144,16 +153,16 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
     }
 
     case 'Notification':
-      next.set(id, { ...existing, status: 'waiting', lastActivityAt: ts })
+      next.set(id, { ...existing, transcriptPath, status: 'waiting', lastActivityAt: ts })
       break
 
     case 'SubagentStop':
     case 'SessionEnd':
-      next.delete(id)
+      next.set(id, { ...existing, transcriptPath, status: 'done', lastActivityAt: ts })
       break
 
     case 'Stop':
-      next.set(id, { ...existing, status: 'idle', lastActivityAt: ts })
+      next.set(id, { ...existing, transcriptPath, status: 'idle', lastActivityAt: ts })
       break
   }
 
@@ -177,7 +186,6 @@ export function dashboardReducer(state: DashboardState, action: Action): Dashboa
     case 'EVENT': {
       const agents = applyEvent(state.agents, action.event)
       const events = [...state.events, action.event].slice(-MAX_EVENTS)
-      // If the selected agent was just removed, deselect it
       const selectedAgentId = state.selectedAgentId && !agents.has(state.selectedAgentId)
         ? null
         : state.selectedAgentId
