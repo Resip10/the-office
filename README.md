@@ -2,7 +2,7 @@
 
 **htop for AI agents.** Real-time dashboard for observing Claude Code agents across all your projects.
 
-![Status: Phase 1 — Observer](https://img.shields.io/badge/status-Phase%201%20Observer-blue)
+![Status: Phase 2 — Snapshot](https://img.shields.io/badge/status-Phase%202%20Snapshot-blue)
 
 ---
 
@@ -10,6 +10,7 @@
 
 - **Live agent tree** — every Claude Code agent on your machine, grouped by project; subagents appear nested under their parent
 - **Agent detail** — click any agent to see its current tool, tool history with timing, and duration
+- **Conversation snapshot** — shows the initial task, latest user ask, and latest assistant response, polled live from the session JSONL every 3 seconds
 - **Event stream** — live feed of every hook event as it fires
 - **JSONL bootstrap** — on connect, the server scans recent session files so the dashboard is populated immediately, even for sessions that started before the dashboard opened
 - **Refresh button** — reconnects WebSocket and re-bootstraps from disk; done agents are cleared automatically
@@ -94,7 +95,8 @@ npm test -w client   # client tests (Vitest)
 
 ## Roadmap
 
-- **Phase 2 (Snapshot):** Conversation snapshot in agent detail — shows the initial task and latest assistant response, polled live from the session JSONL
+- **Phase 1 (done):** Observer — live agent tree, detail panel, event stream, JSONL bootstrap, mock mode
+- **Phase 2 (done):** Conversation snapshot — Task / Latest ask / Latest response cards in agent detail, polled from session JSONL
 - **Phase 3 (Distribution):** Claude Code plugin (auto-installs hooks + server), deployed client (Vercel), desktop app (Tauri/Electron)
 - **Phase 4 (The Office):** Visual floor-plan mode — agents as animated characters at desks, status reflected through motion, projects as rooms. Toggle between list view and office view.
 - **Phase 4+:** Generic adapter schema — support LangChain, OpenAI Agents SDK, AutoGen and other frameworks via thin HTTP adapters
