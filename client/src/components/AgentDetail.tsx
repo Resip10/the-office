@@ -85,9 +85,17 @@ export function AgentDetail({ agent }: Props) {
               </div>
             </div>
           )}
+          {snapshot.latestUser && snapshot.latestUser !== snapshot.firstPrompt && (
+            <div className="bg-surface rounded p-2 border border-border">
+              <div className="text-[10px] text-text-muted mb-0.5">Latest ask</div>
+              <div className="text-text-primary leading-relaxed">
+                {truncate(snapshot.latestUser, 160)}
+              </div>
+            </div>
+          )}
           {snapshot.latestAssistant && (
             <div className="bg-canvas rounded p-2 border border-border/40">
-              <div className="text-[10px] text-text-muted mb-0.5">Latest</div>
+              <div className="text-[10px] text-text-muted mb-0.5">Latest response</div>
               <div className="text-text-primary leading-relaxed">
                 {truncate(snapshot.latestAssistant, 220)}
               </div>

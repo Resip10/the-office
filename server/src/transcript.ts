@@ -4,6 +4,7 @@ import { normalize } from 'path'
 
 export interface TranscriptSnapshot {
   firstPrompt: string | null
+  latestUser: string | null
   latestAssistant: string | null
   messageCount: number
 }
@@ -26,6 +27,7 @@ function isPureToolResult(content: unknown): boolean {
 
 export function extractSnapshot(lines: string[]): TranscriptSnapshot {
   let firstPrompt: string | null = null
+  let latestUser: string | null = null
   let latestAssistant: string | null = null
   let messageCount = 0
 
@@ -42,9 +44,10 @@ export function extractSnapshot(lines: string[]): TranscriptSnapshot {
       if (obj.type === 'user') {
         if (isPureToolResult(rawContent)) continue
         messageCount++
-        if (firstPrompt === null) {
-          const text = extractText(rawContent)
-          if (text) firstPrompt = text
+        const text = extractText(rawContent)
+        if (text) {
+          if (firstPrompt === null) firstPrompt = text
+          latestUser = text
         }
       } else {
         const text = extractText(rawContent)
@@ -58,7 +61,7 @@ export function extractSnapshot(lines: string[]): TranscriptSnapshot {
     }
   }
 
-  return { firstPrompt, latestAssistant, messageCount }
+  return { firstPrompt, latestUser, latestAssistant, messageCount }
 }
 
 export async function readSnapshot(filePath: string): Promise<TranscriptSnapshot> {

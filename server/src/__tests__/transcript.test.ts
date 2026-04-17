@@ -1,28 +1,45 @@
 import { extractSnapshot } from '../transcript'
 
 describe('extractSnapshot', () => {
-  it('extracts first user text and last assistant text', () => {
+  it('extracts first user text, last user text, and last assistant text', () => {
     const lines = [
       JSON.stringify({ type: 'user', message: { content: 'Fix the bug in reducer.ts' } }),
       JSON.stringify({ type: 'assistant', message: { content: [{ type: 'text', text: 'I will look at the file.' }] } }),
+      JSON.stringify({ type: 'user', message: { content: 'Now also fix the types' } }),
       JSON.stringify({ type: 'assistant', message: { content: [{ type: 'text', text: 'Done. The bug was on line 42.' }] } }),
     ]
     const result = extractSnapshot(lines)
     expect(result.firstPrompt).toBe('Fix the bug in reducer.ts')
+    expect(result.latestUser).toBe('Now also fix the types')
     expect(result.latestAssistant).toBe('Done. The bug was on line 42.')
-    expect(result.messageCount).toBe(3)
+    expect(result.messageCount).toBe(4)
   })
 
-  it('skips pure tool_result user messages for firstPrompt', () => {
+  it('latestUser equals firstPrompt when there is only one user message', () => {
+    const lines = [
+      JSON.stringify({ type: 'user', message: { content: 'Fix the bug' } }),
+      JSON.stringify({ type: 'assistant', message: { content: [{ type: 'text', text: 'Done.' }] } }),
+    ]
+    const result = extractSnapshot(lines)
+    expect(result.firstPrompt).toBe('Fix the bug')
+    expect(result.latestUser).toBe('Fix the bug')
+  })
+
+  it('skips pure tool_result user messages for firstPrompt and latestUser', () => {
     const lines = [
       JSON.stringify({
         type: 'user',
         message: { content: [{ type: 'tool_result', content: 'output', tool_use_id: 'tu-1' }] },
       }),
       JSON.stringify({ type: 'user', message: { content: 'Actually do this instead' } }),
+      JSON.stringify({
+        type: 'user',
+        message: { content: [{ type: 'tool_result', content: 'output2', tool_use_id: 'tu-2' }] },
+      }),
     ]
     const result = extractSnapshot(lines)
     expect(result.firstPrompt).toBe('Actually do this instead')
+    expect(result.latestUser).toBe('Actually do this instead')
   })
 
   it('skips tool_result user messages in messageCount', () => {
@@ -56,7 +73,7 @@ describe('extractSnapshot', () => {
 
   it('returns nulls for empty transcript', () => {
     const result = extractSnapshot([])
-    expect(result).toEqual({ firstPrompt: null, latestAssistant: null, messageCount: 0 })
+    expect(result).toEqual({ firstPrompt: null, latestUser: null, latestAssistant: null, messageCount: 0 })
   })
 
   it('ignores system, summary, result lines in messageCount', () => {

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 
 export interface TranscriptSnapshot {
   firstPrompt: string | null
+  latestUser: string | null
   latestAssistant: string | null
   messageCount: number
 }
