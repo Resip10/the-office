@@ -137,4 +137,58 @@ describe('dashboardReducer', () => {
       expect(state.connected).toBe(true)
     })
   })
+
+  describe('transcriptPath capture', () => {
+    it('stores transcript_path from SessionStart', () => {
+      const e: HookEvent = {
+        session_id: 'sess-1',
+        hook_event_name: 'SessionStart',
+        transcript_path: '/home/user/.claude/projects/foo/sess-1.jsonl',
+        cwd: '/home/user/foo',
+        _timestamp: 1000,
+        _id: 'e1',
+      }
+      const s1 = dashboardReducer(initialState, { type: 'EVENT', event: e })
+      expect(s1.agents.get('sess-1')?.transcriptPath).toBe(
+        '/home/user/.claude/projects/foo/sess-1.jsonl'
+      )
+    })
+
+    it('does not overwrite transcriptPath once set', () => {
+      const e1: HookEvent = {
+        session_id: 'sess-1',
+        hook_event_name: 'SessionStart',
+        transcript_path: '/path/first.jsonl',
+        _timestamp: 1000,
+        _id: 'e1',
+      }
+      const e2: HookEvent = {
+        session_id: 'sess-1',
+        hook_event_name: 'PreToolUse',
+        transcript_path: '/path/second.jsonl',
+        tool_name: 'Read',
+        _timestamp: 2000,
+        _id: 'e2',
+      }
+      const s1 = dashboardReducer(initialState, { type: 'EVENT', event: e1 })
+      const s2 = dashboardReducer(s1, { type: 'EVENT', event: e2 })
+      expect(s2.agents.get('sess-1')?.transcriptPath).toBe('/path/first.jsonl')
+    })
+
+    it('stores agent_transcript_path for subagents', () => {
+      const e: HookEvent = {
+        session_id: 'sess-1',
+        hook_event_name: 'SubagentStart',
+        agent_id: 'agent-abc',
+        agent_transcript_path: '/home/.claude/projects/foo/sess-1/subagents/agent-abc.jsonl',
+        cwd: '/home/user/foo',
+        _timestamp: 1000,
+        _id: 'e1',
+      }
+      const s1 = dashboardReducer(initialState, { type: 'EVENT', event: e })
+      expect(s1.agents.get('agent-abc')?.transcriptPath).toBe(
+        '/home/.claude/projects/foo/sess-1/subagents/agent-abc.jsonl'
+      )
+    })
+  })
 })

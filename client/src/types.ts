@@ -21,6 +21,7 @@ export interface AgentState {
   startedAt: number
   lastActivityAt: number
   projectPath: string
+  transcriptPath?: string  // absolute path to JSONL session file on the server
 }
 
 export interface AgentSnapshot {
