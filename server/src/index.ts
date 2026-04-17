@@ -4,6 +4,7 @@ import cors from 'cors'
 import { WebSocketServer } from 'ws'
 import { Relay } from './relay'
 import { bootstrap } from './bootstrap'
+import { readSnapshot } from './transcript'
 import type { HookEvent } from './types'
 
 const PORT = 7777
@@ -17,6 +18,18 @@ app.use(express.json())
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true })
+})
+
+app.get('/api/transcript/snapshot', async (req, res) => {
+  const { path: filePath } = req.query as { path?: string }
+  if (!filePath) return res.status(400).json({ error: 'path required' })
+  try {
+    const snapshot = await readSnapshot(filePath)
+    res.json(snapshot)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'read failed'
+    res.status(400).json({ error: message })
+  }
 })
 
 app.post('/api/events', (req, res) => {
