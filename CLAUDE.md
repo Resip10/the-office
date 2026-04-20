@@ -99,3 +99,28 @@ All tests must pass before committing. The reducer is the most critical — test
 ## Hook configuration (global, one-time setup)
 
 See README.md for the full `~/.claude/settings.json` snippet.
+
+## Development guidelines
+
+### Think before coding
+
+State assumptions explicitly before implementing. If multiple interpretations exist, surface them — don't pick silently. If something is unclear, stop and ask. This project has subtle invariants (pure reducer, silent hook errors, no DB) that are easy to break by assuming.
+
+### Simplicity first
+
+Minimum code that solves the problem. No abstractions for single-use code, no speculative flexibility, no error handling for impossible scenarios. Ask: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### Surgical changes
+
+Touch only what the task requires. Don't "improve" adjacent code, comments, or formatting. The reducer is especially sensitive — a stray side effect breaks everything silently. Every changed line should trace directly to the request.
+
+### Goal-driven execution
+
+For multi-step tasks, state a brief plan with verifiable outcomes before starting:
+
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+```
+
+"Fix the bug" → write a test that reproduces it, then make it pass. Tests must pass before and after any refactor.
