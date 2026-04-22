@@ -20,13 +20,11 @@
 - `desktop/src/main.ts` — tray setup, server spawn, browser open, first-run dialog
 - `desktop/src/installer.ts` — read/patch `~/.claude/settings.json` non-destructively
 - `desktop/src/__tests__/installer.test.ts` — unit tests for installer
-- `server/src/port-pool.ts` — `findFreePort(start, count)` extracted for testability
-- `server/src/__tests__/port-pool.test.ts` — unit tests for port pool
 - `.github/workflows/release.yml` — CI: build + publish installers on `v*` tag
 
 **Modified files:**
 - `package.json` (root) — add `"desktop"` to workspaces; add `dev:desktop`, `package` scripts
-- `server/src/index.ts` — use `findFreePort`, serve static files when `SERVE_STATIC` is set, print `OFFICE_PORT:<n>` to stdout after binding
+- `server/src/index.ts` — fixed port 7777 with EADDRINUSE handler, serve static files when `SERVE_STATIC` is set, print `OFFICE_PORT:<n>` to stdout after binding
 
 ---
 
@@ -163,46 +161,30 @@ git commit -m "feat(desktop): scaffold Electron workspace with builder config"
 
 ---
 
-## Task 2: Port pool + server static serving ✅
+## Task 2: Server static serving ✅
+
+> Port pool approach was dropped — hooks are hardcoded to `localhost:7777` so fallback ports are useless. Server now uses a single fixed port with EADDRINUSE error handling.
 
 **Files:**
-- Create: `server/src/port-pool.ts`
-- Create: `server/src/__tests__/port-pool.test.ts`
+- ~~`server/src/port-pool.ts`~~ — removed
+- ~~`server/src/__tests__/port-pool.test.ts`~~ — removed
 - Modify: `server/src/index.ts`
 
-- [x] **Step 1: Write the failing test**
+- [x] **Update `server/src/index.ts`** — fixed port 7777, EADDRINUSE → `OFFICE_PORT_ERROR` on stdout + exit 1, serve static files when `SERVE_STATIC` env is set, print `OFFICE_PORT:7777` after binding
 
-- [x] **Step 2: Run test — verify it fails**
+- [x] **Run all server tests** — 19/19 passing
 
-- [x] **Step 3: Write `server/src/port-pool.ts`**
-
-- [x] **Step 4: Run test — verify it passes**
-
-3/3 passing.
-
-- [x] **Step 5: Update `server/src/index.ts`**
-
-- [x] **Step 6: Run all server tests to verify nothing broke**
-
-22/22 passing (19 existing + 3 new).
-
-- [x] **Step 7: Smoke-test server still starts**
-
-- [x] **Step 8: Commit**
-
-```bash
-git commit -m "feat(server): extract port pool, serve static files in prod, announce bound port"
-```
+- [x] **Commit** — `refactor(server): remove port pool, use fixed port 7777 with EADDRINUSE error`
 
 ---
 
-## Task 3: installer.ts + tests
+## Task 3: installer.ts + tests ✅
 
 **Files:**
 - Create: `desktop/src/installer.ts`
 - Create: `desktop/src/__tests__/installer.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `desktop/src/__tests__/installer.test.ts`:
 
@@ -282,15 +264,9 @@ describe('hasHooks', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests — verify they fail**
+- [x] **Step 2: Run tests — verify they fail**
 
-```bash
-npm test -w desktop
-```
-
-Expected: FAIL — `Cannot find module '../installer'`
-
-- [ ] **Step 3: Write `desktop/src/installer.ts`**
+- [x] **Step 3: Write `desktop/src/installer.ts`**
 
 ```typescript
 import { readFileSync, writeFileSync, existsSync } from 'fs'
@@ -346,20 +322,11 @@ export function hasHooks(settingsPath: string): boolean {
 }
 ```
 
-- [ ] **Step 4: Run tests — verify they pass**
+- [x] **Step 4: Run tests — verify they pass**
 
-```bash
-npm test -w desktop
-```
+7/7 passing.
 
-Expected: PASS — 7 tests passing
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add desktop/src/installer.ts desktop/src/__tests__/installer.test.ts
-git commit -m "feat(desktop): add hooks installer with idempotent patch + hasHooks check"
-```
+- [x] **Step 5: Commit**
 
 ---
 
