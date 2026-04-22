@@ -7,7 +7,6 @@ import { WebSocketServer } from 'ws'
 import { Relay } from './relay'
 import { bootstrap } from './bootstrap'
 import { readSnapshot } from './transcript'
-import { findFreePort } from './port-pool'
 import type { HookEvent } from './types'
 
 const app = express()
@@ -69,17 +68,20 @@ wss.on('connection', async (ws) => {
   relay.addClient(ws)
 })
 
-async function start() {
-  const port = await findFreePort(7777, 10)
-  if (port === null) {
-    process.stderr.write('the-office: all ports 7777-7786 are occupied\n')
-    process.stdout.write('OFFICE_PORT_ERROR:all ports occupied\n')
-    process.exit(1)
-  }
-  server.listen(port, () => {
-    console.log(`the-office server running on http://localhost:${port}`)
-    process.stdout.write(`OFFICE_PORT:${port}\n`)
-  })
-}
+const PORT = 7777
 
-start()
+server.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    process.stderr.write(`the-office: port ${PORT} is already in use\n`)
+    process.stdout.write(`OFFICE_PORT_ERROR:port ${PORT} already in use\n`)
+  } else {
+    process.stderr.write(`the-office: ${err.message}\n`)
+    process.stdout.write(`OFFICE_PORT_ERROR:${err.message}\n`)
+  }
+  process.exit(1)
+})
+
+server.listen(PORT, () => {
+  console.log(`the-office server running on http://localhost:${PORT}`)
+  process.stdout.write(`OFFICE_PORT:${PORT}\n`)
+})
