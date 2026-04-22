@@ -330,14 +330,14 @@ export function hasHooks(settingsPath: string): boolean {
 
 ---
 
-## Task 4: main.ts — tray, server spawn, first-run dialog, open browser
+## Task 4: main.ts — tray, server spawn, first-run dialog, open browser ✅
 
 **Files:**
 - Create: `desktop/src/main.ts`
 
 No unit tests — Electron APIs require a running Electron process. Manual verification in Step 3.
 
-- [ ] **Step 1: Write `desktop/src/main.ts`**
+- [x] **Step 1: Write `desktop/src/main.ts`**
 
 ```typescript
 import { app, Tray, Menu, nativeImage, dialog, shell } from 'electron'
@@ -512,7 +512,7 @@ app.on('before-quit', () => {
 main()
 ```
 
-- [ ] **Step 2: Create placeholder icon directory**
+- [x] **Step 2: Create placeholder icon directory**
 
 ```bash
 mkdir -p desktop/assets
@@ -520,7 +520,7 @@ mkdir -p desktop/assets
 
 Create `desktop/assets/.gitkeep` (empty file) so git tracks the directory. The icon.png is optional — the app falls back to an empty image in dev. For real distribution, place a 32×32 PNG at `desktop/assets/icon.png`.
 
-- [ ] **Step 3: Compile desktop workspace**
+- [x] **Step 3: Compile desktop workspace**
 
 ```bash
 npm run build -w desktop
@@ -528,7 +528,7 @@ npm run build -w desktop
 
 Expected: `desktop/dist/main.js` and `desktop/dist/installer.js` created. No TypeScript errors.
 
-- [ ] **Step 4: Manually verify tray in dev mode**
+- [x] **Step 4: Manually verify tray in dev mode**
 
 First, make sure the server is built (needed for dev:desktop):
 
@@ -544,7 +544,7 @@ npm run dev:desktop
 
 Expected: Electron launches, a tray icon appears (may be invisible on dark taskbar — right-click the system tray area). Right-clicking shows the menu with "Open Dashboard" and "Quit". "Open Dashboard" opens `http://localhost:5173` in browser (Vite must be running separately). Quit kills Electron.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add desktop/src/main.ts desktop/assets/.gitkeep
