@@ -1,10 +1,12 @@
 {
   "name": "the-office",
   "private": true,
-  "workspaces": ["server", "client"],
+  "workspaces": ["server", "client", "desktop"],
   "scripts": {
     "dev": "concurrently -n server,client -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
-    "build": "npm run build -w server && npm run build -w client"
+    "dev:desktop": "npm run build -w desktop && electron desktop/dist/main.js",
+    "build": "npm run build -w server && npm run build -w client",
+    "package": "npm run build && npm run package -w desktop"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

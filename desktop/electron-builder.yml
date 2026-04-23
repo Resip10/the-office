@@ -1,0 +1,22 @@
+appId: com.the-office.app
+productName: The Office
+directories:
+  output: dist-electron
+files:
+  - desktop/dist/**
+  - server/dist/**
+  - client/dist/**
+  - package.json
+extraMetadata:
+  main: desktop/dist/main.js
+mac:
+  category: public.app-category.developer-tools
+  target: dmg
+win:
+  target: nsis
+linux:
+  target: AppImage
+publish:
+  provider: github
+  owner: Resip10
+  repo: the-office

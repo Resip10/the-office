@@ -1,4 +1,6 @@
 import { createServer } from 'http'
+import { existsSync } from 'fs'
+import { join } from 'path'
 import express from 'express'
 import cors from 'cors'
 import { WebSocketServer } from 'ws'
@@ -6,8 +8,6 @@ import { Relay } from './relay'
 import { bootstrap } from './bootstrap'
 import { readSnapshot } from './transcript'
 import type { HookEvent } from './types'
-
-const PORT = 7777
 
 const app = express()
 const relay = new Relay()
@@ -46,6 +46,15 @@ app.post('/api/events', (req, res) => {
   res.sendStatus(200)
 })
 
+// In production (spawned by Electron), serve compiled React client as static files.
+const staticDir = process.env.SERVE_STATIC
+if (staticDir && existsSync(staticDir)) {
+  app.use(express.static(staticDir))
+  app.get('*', (_req, res) => {
+    res.sendFile(join(staticDir, 'index.html'))
+  })
+}
+
 const server = createServer(app)
 const wss = new WebSocketServer({ server, path: '/ws' })
 
@@ -59,6 +68,20 @@ wss.on('connection', async (ws) => {
   relay.addClient(ws)
 })
 
+const PORT = 7777
+
+server.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    process.stderr.write(`the-office: port ${PORT} is already in use\n`)
+    process.stdout.write(`OFFICE_PORT_ERROR:port ${PORT} already in use\n`)
+  } else {
+    process.stderr.write(`the-office: ${err.message}\n`)
+    process.stdout.write(`OFFICE_PORT_ERROR:${err.message}\n`)
+  }
+  process.exit(1)
+})
+
 server.listen(PORT, () => {
   console.log(`the-office server running on http://localhost:${PORT}`)
+  process.stdout.write(`OFFICE_PORT:${PORT}\n`)
 })
