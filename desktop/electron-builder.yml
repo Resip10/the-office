@@ -1,4 +1,5 @@
 appId: com.the-office.app
+electronVersion: "33.4.11"
 productName: The Office
 directories:
   output: dist-electron
