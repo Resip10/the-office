@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
@@ -21,8 +22,12 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install --no-package-lock
+      - name: Install root dependencies
+        run: npm install
+
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm install
 
       - name: Build server + client
         run: npm run build
@@ -31,6 +36,7 @@ jobs:
         run: npm run build -w desktop
 
       - name: Package with electron-builder
+        working-directory: desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run package -w desktop
+        run: ./node_modules/.bin/electron-builder
