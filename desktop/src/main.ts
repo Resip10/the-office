@@ -1,4 +1,5 @@
 import { app, Tray, Menu, nativeImage, dialog, shell } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { spawn, ChildProcess } from 'child_process'
 import { join } from 'path'
 import { homedir } from 'os'
@@ -150,6 +151,7 @@ async function main() {
 
   if (app.isPackaged) {
     await startServer()
+    autoUpdater.checkForUpdatesAndNotify()
   } else {
     // Dev mode: dashboard is served by Vite at :5173; no server spawn needed.
     setTrayState(1, undefined) // sentinel so "Open Dashboard" is enabled
