@@ -560,7 +560,7 @@ git commit -m "feat(desktop): add tray app with server spawn, first-run dialog, 
 
 Auto-update only works in production (packaged) builds. In dev mode, `electron-updater` is a no-op when `app.isPackaged` is false.
 
-- [ ] **Step 1: Add auto-update import and call to `desktop/src/main.ts`**
+- [x] **Step 1: Add auto-update import and call to `desktop/src/main.ts`**
 
 Add the import at the top of the file (after the existing imports):
 
@@ -591,7 +591,7 @@ to:
   } else {
 ```
 
-- [ ] **Step 2: Compile and verify no TS errors**
+- [x] **Step 2: Compile and verify no TS errors**
 
 ```bash
 npm run build -w desktop
@@ -599,7 +599,7 @@ npm run build -w desktop
 
 Expected: compiles cleanly — `electron-updater` types are already available since it's in `dependencies`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add desktop/src/main.ts
@@ -615,7 +615,7 @@ git commit -m "feat(desktop): add auto-update check on startup via electron-upda
 
 Trigger: push of a `v*` tag (e.g. `v0.2.0`). Builds on all three platforms, publishes installers + `latest.yml` to GitHub Release.
 
-- [ ] **Step 1: Create `.github/workflows/release.yml`**
+- [x] **Step 1: Create `.github/workflows/release.yml`**
 
 ```yaml
 name: Release
@@ -657,14 +657,14 @@ jobs:
         run: npm run package -w desktop
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add .github/workflows/release.yml
 git commit -m "ci: add GitHub Actions release pipeline for Electron installers on v* tags"
 ```
 
-- [ ] **Step 3: Verify CI config is valid (optional local lint)**
+- [x] **Step 3: Verify CI config is valid (optional local lint)**
 
 ```bash
 npx action-validator .github/workflows/release.yml
@@ -676,12 +676,12 @@ If `action-validator` is not installed globally, skip this step — the CI will 
 
 ## Success criteria checklist (from spec §11)
 
-- [ ] `npm run dev` is unaffected — verify `npm run dev` still starts server + Vite with no errors
-- [ ] `npm run dev:desktop` starts Electron tray pointing at Vite `:5173`
-- [ ] All server tests pass: `npm test -w server`
-- [ ] All desktop tests pass: `npm test -w desktop`
+- [x] `npm run dev` is unaffected — verify `npm run dev` still starts server + Vite with no errors
+- [x] `npm run dev:desktop` starts Electron tray pointing at Vite `:5173`
+- [x] All server tests pass: `npm test -w server`
+- [x] All desktop tests pass: `npm test -w desktop`
 - [ ] `npm version patch && git push --tags` triggers CI (verify after Task 6 is merged)
-- [ ] Tray "Open Dashboard" opens the dashboard in browser
-- [ ] First-run dialog appears when `~/.claude/settings.json` has no hooks
+- [x] Tray "Open Dashboard" opens the dashboard in browser
+- [x] First-run dialog appears when `~/.claude/settings.json` has no hooks
 - [ ] Port fallback: if 7777 is occupied, server binds 7778 (covered by port-pool tests)
 - [ ] All-ports-occupied: tray shows error state with Retry option (manual test)
