@@ -29,8 +29,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Reinstall app-builder-bin (workspace install skips binary files)
-        run: npm install --force --no-save app-builder-bin@5.0.0-alpha.10
+      - name: Extract app-builder-bin binaries (npm workspace skips binary files)
+        shell: bash
+        run: |
+          rm -rf node_modules/app-builder-bin
+          mkdir -p node_modules/app-builder-bin
+          curl -fsSL "https://registry.npmjs.org/app-builder-bin/-/app-builder-bin-5.0.0-alpha.10.tgz" \
+            | tar -xzf - -C node_modules/app-builder-bin --strip-components=1
 
       - name: Build server + client
         run: npm run build
