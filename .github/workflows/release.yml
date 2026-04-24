@@ -35,15 +35,28 @@ jobs:
       - name: Build desktop (compile TS)
         run: npm run build -w desktop
 
-      - name: Extract app-builder-bin binaries
+      - name: Extract app-builder-bin to runner temp
         shell: bash
         run: |
+          EXTRACT_DIR="$RUNNER_TEMP/app-builder-bin"
           curl -fsSL "https://registry.npmjs.org/app-builder-bin/-/app-builder-bin-5.0.0-alpha.10.tgz" \
-            -o /tmp/app-builder-bin.tgz
-          rm -rf node_modules/app-builder-bin
-          mkdir -p node_modules/app-builder-bin
-          tar -xf /tmp/app-builder-bin.tgz -C node_modules/app-builder-bin --strip-components=1
-          node -e "const {appBuilderPath}=require('app-builder-bin');const fs=require('fs');if(!fs.existsSync(appBuilderPath)){throw new Error('binary missing: '+appBuilderPath)}console.log('OK:',appBuilderPath)"
+            -o "$RUNNER_TEMP/app-builder-bin.tgz"
+          rm -rf "$EXTRACT_DIR"
+          mkdir -p "$EXTRACT_DIR"
+          tar -xf "$RUNNER_TEMP/app-builder-bin.tgz" -C "$EXTRACT_DIR" --strip-components=1
+          BINARY_PATH=$(node -e "
+            const p = require('path'), { platform: pl, arch: ar } = process;
+            const d = p.join(process.env.RUNNER_TEMP, 'app-builder-bin');
+            let b;
+            if (pl === 'darwin') b = p.join(d, 'mac', 'app-builder_' + (ar === 'x64' ? 'amd64' : ar));
+            else if (pl === 'win32') b = p.join(d, 'win', ar, 'app-builder.exe');
+            else b = p.join(d, 'linux', ar, 'app-builder');
+            process.stdout.write(b);
+          ")
+          chmod +x "$BINARY_PATH" 2>/dev/null || true
+          echo "Binary: $BINARY_PATH"
+          ls -la "$BINARY_PATH"
+          echo "CUSTOM_APP_BUILDER_PATH=$BINARY_PATH" >> "$GITHUB_ENV"
 
       - name: Package with electron-builder
         env:
