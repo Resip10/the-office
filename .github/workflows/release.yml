@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -25,6 +28,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Reinstall app-builder-bin (workspace install skips binary files)
+        run: npm install --force --no-save app-builder-bin@5.0.0-alpha.10
 
       - name: Build server + client
         run: npm run build
