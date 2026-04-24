@@ -29,29 +29,21 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Extract app-builder-bin binaries (npm workspace skips binary files)
-        shell: bash
-        run: |
-          echo "=== Downloading tarball ==="
-          curl -fsSL "https://registry.npmjs.org/app-builder-bin/-/app-builder-bin-5.0.0-alpha.10.tgz" \
-            -o /tmp/app-builder-bin.tgz
-          echo "Tarball size: $(wc -c < /tmp/app-builder-bin.tgz) bytes"
-          echo "=== Tarball entries ==="
-          tar -tvf /tmp/app-builder-bin.tgz
-          echo "=== Deleting and recreating directory ==="
-          rm -rf node_modules/app-builder-bin
-          ls node_modules/ | grep app-builder || echo "(app-builder-bin directory gone)"
-          mkdir -p node_modules/app-builder-bin
-          echo "=== Extracting (verbose) ==="
-          tar -xvf /tmp/app-builder-bin.tgz -C node_modules/app-builder-bin --strip-components=1 2>&1
-          echo "=== Recursive listing after extraction ==="
-          ls -laR node_modules/app-builder-bin/
-
       - name: Build server + client
         run: npm run build
 
       - name: Build desktop (compile TS)
         run: npm run build -w desktop
+
+      - name: Extract app-builder-bin binaries
+        shell: bash
+        run: |
+          curl -fsSL "https://registry.npmjs.org/app-builder-bin/-/app-builder-bin-5.0.0-alpha.10.tgz" \
+            -o /tmp/app-builder-bin.tgz
+          rm -rf node_modules/app-builder-bin
+          mkdir -p node_modules/app-builder-bin
+          tar -xf /tmp/app-builder-bin.tgz -C node_modules/app-builder-bin --strip-components=1
+          node -e "const {appBuilderPath}=require('app-builder-bin');const fs=require('fs');if(!fs.existsSync(appBuilderPath)){throw new Error('binary missing: '+appBuilderPath)}console.log('OK:',appBuilderPath)"
 
       - name: Package with electron-builder
         env:
