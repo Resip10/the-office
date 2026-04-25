@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js",
     "start": "node dist/index.js",
     "test": "jest"
   },
@@ -15,6 +15,7 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "esbuild": "^0.25.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.12",
