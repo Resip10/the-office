@@ -24,3 +24,4 @@ publish:
   provider: github
   owner: Resip10
   repo: the-office
+  releaseType: release
