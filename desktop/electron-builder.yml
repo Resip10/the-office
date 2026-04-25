@@ -1,6 +1,7 @@
 appId: com.the-office.app
 electronVersion: "33.4.11"
 productName: The Office
+npmRebuild: false
 directories:
   output: dist-electron
 files:
