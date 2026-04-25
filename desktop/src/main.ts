@@ -1,6 +1,5 @@
-import { app, Tray, Menu, nativeImage, dialog, shell } from 'electron'
+import { app, Tray, Menu, nativeImage, dialog, shell, utilityProcess } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import { spawn, ChildProcess } from 'child_process'
 import { join } from 'path'
 import { homedir } from 'os'
 import { installHooks, hasHooks } from './installer'
@@ -8,7 +7,7 @@ import { installHooks, hasHooks } from './installer'
 const SETTINGS_PATH = join(homedir(), '.claude', 'settings.json')
 
 let tray: Tray | null = null
-let serverProcess: ChildProcess | null = null
+let serverProcess: Electron.UtilityProcess | null = null
 let boundPort: number | null = null
 
 function getServerScriptPath(): string {
@@ -85,13 +84,15 @@ async function promptInstall() {
 function spawnServer(): Promise<number> {
   return new Promise((resolve, reject) => {
     const clientDist = getClientDistPath()
-    serverProcess = spawn(process.execPath, [getServerScriptPath()], {
+    const child = utilityProcess.fork(getServerScriptPath(), [], {
       env: { ...process.env, SERVE_STATIC: clientDist },
+      stdio: 'pipe',
     })
+    serverProcess = child
 
     let resolved = false
 
-    serverProcess.stdout?.on('data', (data: Buffer) => {
+    child.stdout?.on('data', (data: Buffer) => {
       const text = data.toString()
       const portMatch = text.match(/OFFICE_PORT:(\d+)/)
       const errMatch = text.match(/OFFICE_PORT_ERROR:(.+)/)
@@ -104,15 +105,14 @@ function spawnServer(): Promise<number> {
       }
     })
 
-    serverProcess.stderr?.on('data', (data: Buffer) => {
+    child.stderr?.on('data', (data: Buffer) => {
       console.error('[server]', data.toString())
     })
 
-    serverProcess.on('error', (err) => { if (!resolved) { resolved = true; reject(err) } })
-    serverProcess.on('exit', (code) => {
-      if (!resolved && code !== 0) {
+    child.on('exit', (exitCode) => {
+      if (!resolved) {
         resolved = true
-        reject(new Error(`Server exited with code ${code}`))
+        reject(new Error(`Server exited with code ${exitCode}`))
       }
     })
 
@@ -135,6 +135,11 @@ async function startServer() {
 }
 
 async function main() {
+  if (!app.requestSingleInstanceLock()) {
+    app.quit()
+    return
+  }
+
   await app.whenReady()
 
   const iconPath = join(__dirname, '..', 'assets', 'icon.png')
