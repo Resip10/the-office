@@ -38,12 +38,15 @@ jobs:
       - name: Extract app-builder-bin to runner temp
         shell: bash
         run: |
-          EXTRACT_DIR="$RUNNER_TEMP/app-builder-bin"
+          # On Windows, RUNNER_TEMP is a Windows path (D:\...) — convert to Unix path for bash/tar
+          TMP="$(cygpath -u "${RUNNER_TEMP}" 2>/dev/null || echo "${RUNNER_TEMP}")"
+          EXTRACT_DIR="$TMP/app-builder-bin"
           curl -fsSL "https://registry.npmjs.org/app-builder-bin/-/app-builder-bin-5.0.0-alpha.10.tgz" \
-            -o "$RUNNER_TEMP/app-builder-bin.tgz"
+            -o "$TMP/app-builder-bin.tgz"
           rm -rf "$EXTRACT_DIR"
           mkdir -p "$EXTRACT_DIR"
-          tar -xf "$RUNNER_TEMP/app-builder-bin.tgz" -C "$EXTRACT_DIR" --strip-components=1
+          tar -xf "$TMP/app-builder-bin.tgz" -C "$EXTRACT_DIR" --strip-components=1
+          # Node.js computes native-format path (Windows backslashes on win32)
           BINARY_PATH=$(node -e "
             const p = require('path'), { platform: pl, arch: ar } = process;
             const d = p.join(process.env.RUNNER_TEMP, 'app-builder-bin');
@@ -53,9 +56,11 @@ jobs:
             else b = p.join(d, 'linux', ar, 'app-builder');
             process.stdout.write(b);
           ")
-          chmod +x "$BINARY_PATH" 2>/dev/null || true
+          # Convert back to Unix path for bash operations (chmod, ls)
+          BINARY_PATH_UNIX="$(cygpath -u "$BINARY_PATH" 2>/dev/null || echo "$BINARY_PATH")"
+          chmod +x "$BINARY_PATH_UNIX" 2>/dev/null || true
           echo "Binary: $BINARY_PATH"
-          ls -la "$BINARY_PATH"
+          ls -la "$BINARY_PATH_UNIX"
           echo "CUSTOM_APP_BUILDER_PATH=$BINARY_PATH" >> "$GITHUB_ENV"
 
       - name: Package with electron-builder

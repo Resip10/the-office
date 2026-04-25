@@ -5,12 +5,14 @@ npmRebuild: false
 directories:
   output: dist-electron
 files:
-  - desktop/dist/**
-  - server/dist/**
-  - client/dist/**
-  - package.json
+  - dist/**
 extraMetadata:
-  main: desktop/dist/main.js
+  main: dist/main.js
+extraResources:
+  - from: "../server/dist"
+    to: "server/dist"
+  - from: "../client/dist"
+    to: "client/dist"
 mac:
   category: public.app-category.developer-tools
   target: dmg
