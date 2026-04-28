@@ -680,8 +680,8 @@ If `action-validator` is not installed globally, skip this step — the CI will 
 - [x] `npm run dev:desktop` starts Electron tray pointing at Vite `:5173`
 - [x] All server tests pass: `npm test -w server`
 - [x] All desktop tests pass: `npm test -w desktop`
-- [ ] `npm version patch && git push --tags` triggers CI (verify after Task 6 is merged)
+- [x] `npm version patch && git push --tags` triggers CI (verified: v0.1.0, v0.1.1, v0.1.2 released)
 - [x] Tray "Open Dashboard" opens the dashboard in browser
 - [x] First-run dialog appears when `~/.claude/settings.json` has no hooks
-- [ ] Port fallback: if 7777 is occupied, server binds 7778 (covered by port-pool tests)
-- [ ] All-ports-occupied: tray shows error state with Retry option (manual test)
+- ~~[ ] Port fallback: if 7777 is occupied, server binds 7778 (covered by port-pool tests)~~ — canceled, port pool dropped
+- ~~[ ] All-ports-occupied: tray shows error state with Retry option (manual test)~~ — canceled, port pool dropped
