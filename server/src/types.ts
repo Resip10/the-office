@@ -14,6 +14,17 @@ export interface HookEvent {
   _id: string
 }
 
+export interface EnrichmentData {
+  model: string
+  inputTokens: number
+  outputTokens: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
+  costUSD: number
+  turnDurationMs: number
+  isSidechain: boolean
+}
+
 export interface AgentSnapshot {
   sessionId: string
   agentName: string
@@ -21,12 +32,14 @@ export interface AgentSnapshot {
   status: 'idle' | 'done'
   startedAt: number
   parentSessionId: string | null
+  hasHooks: boolean
 }
 
 export interface InitPayload {
   type: 'init'
   agents: AgentSnapshot[]
   recentEvents: HookEvent[]
+  hooksInstalled: boolean
 }
 
 export interface EventPayload {
@@ -34,4 +47,15 @@ export interface EventPayload {
   event: HookEvent
 }
 
-export type WSMessage = InitPayload | EventPayload
+export interface SessionDiscoveredPayload {
+  type: 'session_discovered'
+  payload: AgentSnapshot
+}
+
+export interface EnrichPayload {
+  type: 'enrich'
+  sessionId: string
+  data: EnrichmentData
+}
+
+export type WSMessage = InitPayload | EventPayload | SessionDiscoveredPayload | EnrichPayload
