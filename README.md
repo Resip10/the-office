@@ -2,16 +2,17 @@
 
 **htop for AI agents.** Real-time dashboard for observing Claude Code agents across all your projects.
 
-![Status: Phase 3 — Desktop App](https://img.shields.io/badge/status-Phase%203%20Desktop-blue)
+![Status: Phase 3.5 — Resilience & Enrichment](https://img.shields.io/badge/status-Phase%203.5%20Resilience-blue)
 
 ---
 
 ## What it does
 
 - **Live agent tree** — every Claude Code agent on your machine, grouped by project; subagents nested under their parent
+- **Works without hooks** — JSONL file watcher discovers agents and infers status automatically (~500ms lag); hooks give real-time updates
+- **Token & cost panel** — model, context window fill %, input/output/cache tokens, cost, and turn duration per agent
 - **Agent detail** — current tool, tool history with timing, and conversation snapshot (initial task / latest ask / latest response)
 - **Event stream** — live feed of every hook event as it fires
-- **JSONL bootstrap** — on connect, scans recent session files so the dashboard is populated immediately, even for sessions that started before it opened
 - **Mock mode** — develop and demo without Claude Code running (`?mock=true`)
 
 ## Download
@@ -22,7 +23,7 @@ Grab the latest installer from [Releases](https://github.com/Resip10/the-office/
 - **macOS** — `The-Office-x.x.x-arm64.dmg`
 - **Linux** — `The-Office-x.x.x.AppImage`
 
-On first launch the app lives in your system tray and asks permission to configure Claude Code hooks automatically. Updates are applied in the background.
+On first launch the app lives in your system tray. Use the tray menu to install or remove Claude Code hooks — the dashboard works without them via JSONL file watching. Updates are applied in the background.
 
 ## Dev setup
 
@@ -58,19 +59,22 @@ The hook uses `curl -s` + `|| true` so a stopped server never blocks or errors C
 ## Architecture
 
 ```
-Claude Code hooks
+Claude Code hooks (optional)
       │ HTTP POST :7777/api/events
       ▼
-  Express server (server/)
-      │ stamp _id + _timestamp → ring buffer (500) → broadcast
+  Express server ──── chokidar JSONL watcher
+      │                     │ discovers agents + extracts enrichment
+      │ ring buffer (500) ◄─┘
+      ▼
+  WebSocket broadcast
       ▼
   React frontend (client/)
-      │ useReducer: HookEvent → AgentState transitions
+      │ useReducer: HookEvent / SESSION_DISCOVERED / ENRICH → AgentState
       ▼
   AgentTree / AgentDetail / EventStream
 ```
 
-On WebSocket connect, the server scans `~/.claude/projects/**/*.jsonl` (last 4h), deduplicates by `sessionId`, skips done sessions, and sends the result alongside the ring buffer. The frontend uses `agent_id` (from `SubagentStart`) as the map key for subagents so they nest correctly under their parent in the tree. Refreshing the page or clicking Refresh re-runs this bootstrap.
+Two ingestion paths feed the relay: hook events (real-time) and the JSONL watcher (polling fallback). On WebSocket connect the server bootstraps agents from recent session files. Refreshing or clicking Refresh re-runs bootstrap.
 
 ## Development
 
@@ -87,6 +91,6 @@ npm test -w desktop  # desktop tests (Jest)
 - **Phase 1 (done):** Observer — live agent tree, detail panel, event stream, JSONL bootstrap, mock mode
 - **Phase 2 (done):** Conversation snapshot — initial task, latest ask, latest response polled from session JSONL
 - **Phase 3 (done):** Desktop app — Electron tray (macOS/Windows/Linux), auto-installs hooks, auto-updates via GitHub Releases
-- **Phase 3.5:** Resilience & enrichment — hookless mode via JSONL file watching, token/cost/model metadata, hooks management UI
+- **Phase 3.5 (done):** Resilience & enrichment — hookless mode via JSONL file watching, token/cost/model metadata, hooks management UI
 - **Phase 4 (The Office):** Visual floor-plan mode — agents as animated characters at desks, projects as rooms, toggle between list and office view
 - **Phase 4+:** Generic adapter schema — LangChain, OpenAI Agents SDK, AutoGen support via thin HTTP adapters
