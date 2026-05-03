@@ -220,7 +220,10 @@ export function dashboardReducer(state: DashboardState, action: Action): Dashboa
       const existing = state.agents.get(action.sessionId)
       if (!existing) return state
       const agents = new Map(state.agents)
-      agents.set(action.sessionId, { ...existing, enrichment: action.data })
+      const enrichment = existing.enrichment
+        ? { ...action.data, inputTokens: Math.max(existing.enrichment.inputTokens, action.data.inputTokens) }
+        : action.data
+      agents.set(action.sessionId, { ...existing, enrichment })
       return { ...state, agents }
     }
 

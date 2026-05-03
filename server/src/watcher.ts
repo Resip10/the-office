@@ -127,7 +127,10 @@ export function startWatcher(relay: Relay, hookSessions: Set<string>): FSWatcher
         }
       }
 
-      const enrich = extractEnrichment(newLines)
+      // Use full file for enrichment — input_tokens is cumulative per API call,
+      // so the last assistant line in the file has the real current context size.
+      const allLines = fd.toString('utf-8').trim().split('\n').filter(Boolean)
+      const enrich = extractEnrichment(allLines)
       if (enrich) {
         relay.broadcastRaw({ type: 'enrich', sessionId: state.sessionId, data: enrich })
       }
