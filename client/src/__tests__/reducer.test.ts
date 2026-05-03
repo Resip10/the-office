@@ -19,6 +19,7 @@ function snapshot(overrides: Partial<AgentSnapshot> = {}): AgentSnapshot {
     status: 'idle',
     startedAt: 1000,
     parentSessionId: null,
+    hasHooks: false,
     ...overrides,
   }
 }
@@ -112,7 +113,7 @@ describe('dashboardReducer', () => {
 
   describe('INIT', () => {
     it('seeds agents from snapshots', () => {
-      const state = dashboardReducer(initialState, { type: 'INIT', agents: [snapshot()], recentEvents: [] })
+      const state = dashboardReducer(initialState, { type: 'INIT', agents: [snapshot()], recentEvents: [], hooksInstalled: false })
       expect(state.agents.has('sess-001')).toBe(true)
       expect(state.agents.get('sess-001')?.agentName).toBe('main')
     })
@@ -122,6 +123,7 @@ describe('dashboardReducer', () => {
         type: 'INIT',
         agents: [snapshot()],
         recentEvents: [event({ hook_event_name: 'PreToolUse', tool_name: 'Read', _id: 'e2', _timestamp: 2000 })],
+        hooksInstalled: false,
       })
       expect(state.agents.get('sess-001')?.status).toBe('working')
     })
@@ -135,6 +137,118 @@ describe('dashboardReducer', () => {
       expect(state.agents.size).toBe(0)
       expect(state.events).toHaveLength(0)
       expect(state.connected).toBe(true)
+    })
+  })
+
+  describe('SESSION_DISCOVERED', () => {
+    it('adds a new agent with hasHooks: false', () => {
+      const state = dashboardReducer(initialState, {
+        type: 'SESSION_DISCOVERED',
+        agent: snapshot({ sessionId: 'new-001', agentName: 'discovered', hasHooks: false }),
+      })
+      const agent = state.agents.get('new-001')
+      expect(agent).toBeDefined()
+      expect(agent!.hasHooks).toBe(false)
+      expect(agent!.agentName).toBe('discovered')
+    })
+
+    it('is idempotent — does not overwrite existing agent', () => {
+      const withAgent = dashboardReducer(initialState, {
+        type: 'EVENT',
+        event: event({ hook_event_name: 'SessionStart', session_id: 'sess-001' }),
+      })
+      const state = dashboardReducer(withAgent, {
+        type: 'SESSION_DISCOVERED',
+        agent: snapshot({ sessionId: 'sess-001', agentName: 'overwrite-attempt', hasHooks: false }),
+      })
+      expect(state.agents.get('sess-001')?.agentName).not.toBe('overwrite-attempt')
+    })
+  })
+
+  describe('ENRICH', () => {
+    it('merges enrichment data into the agent', () => {
+      const withAgent = dashboardReducer(initialState, {
+        type: 'EVENT',
+        event: event({ hook_event_name: 'SessionStart' }),
+      })
+      const enrichment = {
+        model: 'claude-opus-4-7',
+        inputTokens: 42000,
+        outputTokens: 8000,
+        cacheReadTokens: 1000,
+        cacheWriteTokens: 500,
+        costUSD: 0.05,
+        turnDurationMs: 2000,
+        isSidechain: false,
+      }
+      const state = dashboardReducer(withAgent, {
+        type: 'ENRICH',
+        sessionId: 'sess-001',
+        data: enrichment,
+      })
+      expect(state.agents.get('sess-001')?.enrichment).toEqual(enrichment)
+    })
+
+    it('is a no-op for unknown sessionId', () => {
+      const state = dashboardReducer(initialState, {
+        type: 'ENRICH',
+        sessionId: 'unknown',
+        data: { model: 'x', inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, costUSD: 0, turnDurationMs: 0, isSidechain: false },
+      })
+      expect(state).toBe(initialState)
+    })
+  })
+
+  describe('waitingSince', () => {
+    it('sets waitingSince when Notification received', () => {
+      const before = Date.now()
+      const state = dashboardReducer(initialState, {
+        type: 'EVENT',
+        event: event({ hook_event_name: 'Notification', _timestamp: Date.now() }),
+      })
+      expect(state.agents.get('sess-001')?.waitingSince).toBeGreaterThanOrEqual(before)
+    })
+
+    it('clears waitingSince on PreToolUse', () => {
+      const withWaiting = dashboardReducer(initialState, {
+        type: 'EVENT',
+        event: event({ hook_event_name: 'Notification', _timestamp: 1000 }),
+      })
+      const state = dashboardReducer(withWaiting, {
+        type: 'EVENT',
+        event: event({ hook_event_name: 'PreToolUse', tool_name: 'Read', _timestamp: 2000 }),
+      })
+      expect(state.agents.get('sess-001')?.waitingSince).toBeNull()
+    })
+  })
+
+  describe('hasHooks', () => {
+    it('sets hasHooks: true on first real hook event for a new agent', () => {
+      const state = dashboardReducer(initialState, {
+        type: 'EVENT',
+        event: event({ hook_event_name: 'SessionStart' }),
+      })
+      expect(state.agents.get('sess-001')?.hasHooks).toBe(true)
+    })
+
+    it('SESSION_DISCOVERED agent starts with hasHooks: false', () => {
+      const state = dashboardReducer(initialState, {
+        type: 'SESSION_DISCOVERED',
+        agent: snapshot({ hasHooks: false }),
+      })
+      expect(state.agents.get('sess-001')?.hasHooks).toBe(false)
+    })
+  })
+
+  describe('INIT hooksInstalled', () => {
+    it('stores hooksInstalled from init payload', () => {
+      const state = dashboardReducer(initialState, {
+        type: 'INIT',
+        agents: [],
+        recentEvents: [],
+        hooksInstalled: true,
+      })
+      expect(state.hooksInstalled).toBe(true)
     })
   })
 
