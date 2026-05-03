@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remove hooks from Claude Code</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #f0f6fc; margin: 0; padding: 24px; font-size: 13px; line-height: 1.5; }
+    h1 { font-size: 16px; margin: 0 0 12px; color: #f0f6fc; }
+    p { margin: 0 0 12px; color: #8b949e; }
+    ul { margin: 0 0 12px; padding-left: 20px; color: #8b949e; }
+    li { margin: 2px 0; }
+    .buttons { display: flex; gap: 8px; margin-top: 20px; }
+    button { border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+    .danger { background: #da3633; color: #f0f6fc; }
+    .danger:hover { background: #f85149; }
+    .secondary { background: #21262d; color: #f0f6fc; border: 1px solid #30363d; }
+    .secondary:hover { background: #30363d; }
+  </style>
+</head>
+<body>
+  <h1>Remove hooks from Claude Code</h1>
+  <p>The dashboard still works via JSONL file watching after removal — just with ~500ms lag instead of real-time updates.</p>
+  <p>These 9 hook events will be removed from <code>~/.claude/settings.json</code>:</p>
+  <ul>
+    <li>SessionStart, SessionEnd</li>
+    <li>SubagentStart, SubagentStop</li>
+    <li>PreToolUse, PostToolUse, PostToolUseFailure</li>
+    <li>Stop, Notification</li>
+  </ul>
+  <div class="buttons">
+    <button class="danger" onclick="window.electronAPI.removeHooks()">Remove hooks</button>
+    <button class="secondary" onclick="window.electronAPI.closeWindow()">Keep hooks</button>
+  </div>
+</body>
+</html>

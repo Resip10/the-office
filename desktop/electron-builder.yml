@@ -1,18 +1,15 @@
 appId: com.the-office.app
-electronVersion: "33.4.11"
 productName: The Office
-npmRebuild: false
 directories:
   output: dist-electron
 files:
-  - dist/**
+  - desktop/dist/**
+  - desktop/assets/**
+  - server/dist/**
+  - client/dist/**
+  - package.json
 extraMetadata:
-  main: dist/main.js
-extraResources:
-  - from: "../server/dist"
-    to: "server/dist"
-  - from: "../client/dist"
-    to: "client/dist"
+  main: desktop/dist/main.js
 mac:
   category: public.app-category.developer-tools
   target: dmg
@@ -24,4 +21,3 @@ publish:
   provider: github
   owner: Resip10
   repo: the-office
-  releaseType: release

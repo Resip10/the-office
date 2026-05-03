@@ -12,7 +12,7 @@ export class Relay {
     if (this.buffer.length > BUFFER_SIZE) {
       this.buffer.shift()
     }
-    this.broadcast({ type: 'event', event })
+    this.broadcastRaw({ type: 'event', event })
   }
 
   getRecent(): HookEvent[] {
@@ -24,7 +24,7 @@ export class Relay {
     ws.on('close', () => this.clients.delete(ws))
   }
 
-  private broadcast(msg: unknown): void {
+  broadcastRaw(msg: unknown): void {
     const data = JSON.stringify(msg)
     for (const client of this.clients) {
       if (client.readyState === 1 /* OPEN */) {
