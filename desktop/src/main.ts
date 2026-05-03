@@ -38,7 +38,7 @@ function getAssetPath(filename: string): string {
 function openHooksWindow(htmlFile: string, title: string): void {
   const win = new BrowserWindow({
     width: 480,
-    height: 300,
+    height: 380,
     resizable: false,
     title,
     webPreferences: {
