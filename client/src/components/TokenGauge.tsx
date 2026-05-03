@@ -16,12 +16,14 @@ function fmtNum(n: number): string {
 
 export function TokenGauge({ enrichment, compact = false }: Props) {
   const contextWindow = getContextWindow(enrichment.model)
-  const fillPct = contextWindow ? Math.min(100, (enrichment.inputTokens / contextWindow) * 100) : null
+  // Total context = uncached new tokens + cache read + cache write (all count against context window)
+  const totalTokens = enrichment.inputTokens + enrichment.cacheReadTokens + enrichment.cacheWriteTokens
+  const fillPct = contextWindow ? Math.min(100, (totalTokens / contextWindow) * 100) : null
 
   if (compact) {
     const label = contextWindow
-      ? `${fmtK(enrichment.inputTokens)} / ${fmtK(contextWindow)}`
-      : `${fmtK(enrichment.inputTokens)} tokens`
+      ? `${fmtK(totalTokens)} / ${fmtK(contextWindow)}`
+      : `${fmtK(totalTokens)} tokens`
 
     return (
       <div className="flex items-center gap-1.5 mt-0.5" title={fillPct ? `Context: ${fillPct.toFixed(1)}%` : undefined}>
@@ -58,7 +60,7 @@ export function TokenGauge({ enrichment, compact = false }: Props) {
             </div>
           )}
           <span className="text-text-primary">
-            {fmtNum(enrichment.inputTokens)}
+            {fmtNum(totalTokens)}
             {contextWindow ? ` / ${fmtNum(contextWindow)} tokens (${fillPct!.toFixed(0)}%)` : ' tokens'}
           </span>
         </div>
