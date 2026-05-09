@@ -5,11 +5,10 @@ import { AgentTree } from './components/AgentTree'
 import { AgentDetail } from './components/AgentDetail'
 import { EventStream } from './components/EventStream'
 import { ConnectionBadge } from './components/ConnectionBadge'
+import { HooksBanner } from './components/HooksBanner'
 
 export default function App() {
   const [state, dispatch] = useReducer(dashboardReducer, initialState)
-  // Incrementing reconnectKey forces useRelay to close and reopen the WebSocket,
-  // triggering a fresh bootstrap from the server (used by the Refresh button).
   const [reconnectKey, setReconnectKey] = useState(0)
   useRelay(dispatch, reconnectKey)
 
@@ -33,6 +32,9 @@ export default function App() {
           </button>
         </div>
       </div>
+
+      {/* Hooks banner — shown only when hooks not installed and not dismissed */}
+      <HooksBanner hooksInstalled={state.hooksInstalled} />
 
       {/* Main panels */}
       <div className="flex flex-1 overflow-hidden">

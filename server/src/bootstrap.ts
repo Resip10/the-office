@@ -128,5 +128,6 @@ export function parseJSONLSession(filePath: string, lines: string[]): AgentSnaps
     status: isDone ? 'done' : 'idle',
     startedAt,
     parentSessionId,
+    hasHooks: false,
   }
 }

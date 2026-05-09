@@ -1,5 +1,6 @@
 import type { AgentState } from '../types'
 import { ToolHistory } from './ToolHistory'
+import { TokenGauge } from './TokenGauge'
 import { useTranscriptSnapshot } from '../hooks/useTranscriptSnapshot'
 
 function formatDuration(startedAt: number): string {
@@ -101,6 +102,14 @@ export function AgentDetail({ agent }: Props) {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Tokens & Cost */}
+      {agent.enrichment && (
+        <div>
+          <div className="text-text-muted uppercase tracking-wider text-[10px] mb-2">Tokens & Cost</div>
+          <TokenGauge enrichment={agent.enrichment} />
         </div>
       )}
 

@@ -5,6 +5,7 @@ export const initialState: DashboardState = {
   events: [],
   selectedAgentId: null,
   connected: false,
+  hooksInstalled: false,
 }
 
 const MAX_EVENTS = 5000
@@ -23,6 +24,9 @@ function snapshotToAgent(snap: AgentSnapshot): AgentState {
     startedAt: snap.startedAt,
     lastActivityAt: snap.startedAt,
     projectPath: snap.projectPath,
+    hasHooks: snap.hasHooks,
+    enrichment: null,
+    waitingSince: null,
   }
 }
 
@@ -33,8 +37,6 @@ function normalizePath(p: string): string {
 function deriveProjectPath(event: HookEvent): string {
   if (event.cwd) return normalizePath(event.cwd)
   if (!event.transcript_path) return ''
-  // transcript_path: ~/.claude/projects/<encoded>/sessions/<file>.jsonl
-  // Extract the part between the last 'projects/' and '/sessions/'
   const normalized = event.transcript_path.replace(/\\/g, '/')
   const projectsIdx = normalized.lastIndexOf('/projects/')
   const sessionsIdx = normalized.indexOf('/sessions/', projectsIdx)
@@ -45,7 +47,6 @@ function deriveProjectPath(event: HookEvent): string {
 function defaultAgent(event: HookEvent, agents: Map<string, AgentState>): AgentState {
   const key = event.agent_id ?? event.session_id
   const isSubagent = !!event.agent_id
-  // Subagents always use parent's projectPath so they appear in the same group
   const projectPath = isSubagent
     ? (agents.get(event.session_id)?.projectPath ?? deriveProjectPath(event))
     : deriveProjectPath(event)
@@ -61,6 +62,9 @@ function defaultAgent(event: HookEvent, agents: Map<string, AgentState>): AgentS
     startedAt: event._timestamp,
     lastActivityAt: event._timestamp,
     projectPath,
+    hasHooks: false,
+    enrichment: null,
+    waitingSince: null,
   }
 }
 
@@ -70,7 +74,6 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
   const ts = event._timestamp
   const existing = next.get(id) ?? defaultAgent(event, agents)
 
-  // First value wins — subagents carry agent_transcript_path, root sessions carry transcript_path
   const incomingPath = (event.agent_id ? event.agent_transcript_path : event.transcript_path) ?? undefined
   const transcriptPath = existing.transcriptPath ?? incomingPath
 
@@ -93,7 +96,6 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
         agentName: event.agent_type ?? existing.agentName,
         agentType: event.agent_type ?? existing.agentType,
         parentSessionId: event.agent_id ? event.session_id : (event.parent_session_id ?? existing.parentSessionId),
-        // Always inherit parent's projectPath so subagent stays in the same group
         projectPath: existing.projectPath || next.get(event.session_id)?.projectPath || deriveProjectPath(event),
         lastActivityAt: ts,
       })
@@ -116,6 +118,7 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
         currentToolInput: event.tool_input ?? null,
         toolHistory: [...existing.toolHistory, toolCall].slice(-MAX_TOOL_HISTORY),
         lastActivityAt: ts,
+        waitingSince: null,
       })
       break
     }
@@ -132,6 +135,7 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
         currentToolInput: null,
         toolHistory: history,
         lastActivityAt: ts,
+        waitingSince: null,
       })
       break
     }
@@ -148,22 +152,35 @@ function applyEvent(agents: Map<string, AgentState>, event: HookEvent): Map<stri
         currentToolInput: null,
         toolHistory: history,
         lastActivityAt: ts,
+        waitingSince: null,
       })
       break
     }
 
     case 'Notification':
-      next.set(id, { ...existing, transcriptPath, status: 'waiting', lastActivityAt: ts })
+      next.set(id, {
+        ...existing,
+        transcriptPath,
+        status: 'waiting',
+        lastActivityAt: ts,
+        waitingSince: Date.now(),
+      })
       break
 
     case 'SubagentStop':
     case 'SessionEnd':
-      next.set(id, { ...existing, transcriptPath, status: 'done', lastActivityAt: ts })
+      next.set(id, { ...existing, transcriptPath, status: 'done', lastActivityAt: ts, waitingSince: null })
       break
 
     case 'Stop':
-      next.set(id, { ...existing, transcriptPath, status: 'idle', lastActivityAt: ts })
+      next.set(id, { ...existing, transcriptPath, status: 'idle', lastActivityAt: ts, waitingSince: null })
       break
+  }
+
+  // Any real hook event means this agent has hooks
+  const updated = next.get(id)
+  if (updated && !updated.hasHooks) {
+    next.set(id, { ...updated, hasHooks: true })
   }
 
   return next
@@ -180,7 +197,7 @@ export function dashboardReducer(state: DashboardState, action: Action): Dashboa
         agents = applyEvent(agents, ev)
       }
       const events = action.recentEvents.slice(-MAX_EVENTS)
-      return { ...state, agents, events }
+      return { ...state, agents, events, hooksInstalled: action.hooksInstalled }
     }
 
     case 'EVENT': {
@@ -190,6 +207,24 @@ export function dashboardReducer(state: DashboardState, action: Action): Dashboa
         ? null
         : state.selectedAgentId
       return { ...state, agents, events, selectedAgentId }
+    }
+
+    case 'SESSION_DISCOVERED': {
+      if (state.agents.has(action.agent.sessionId)) return state
+      const agents = new Map(state.agents)
+      agents.set(action.agent.sessionId, snapshotToAgent(action.agent))
+      return { ...state, agents }
+    }
+
+    case 'ENRICH': {
+      const existing = state.agents.get(action.sessionId)
+      if (!existing) return state
+      const agents = new Map(state.agents)
+      const enrichment = existing.enrichment
+        ? { ...action.data, inputTokens: Math.max(existing.enrichment.inputTokens, action.data.inputTokens) }
+        : action.data
+      agents.set(action.sessionId, { ...existing, enrichment })
+      return { ...state, agents }
     }
 
     case 'SELECT_AGENT':

@@ -9,19 +9,33 @@ export interface ToolCall {
   status: 'running' | 'success' | 'failure'
 }
 
+export interface EnrichmentData {
+  model: string
+  inputTokens: number
+  outputTokens: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
+  costUSD: number
+  turnDurationMs: number
+  isSidechain: boolean
+}
+
 export interface AgentState {
-  sessionId: string       // unique map key: session_id for root agents, agent_id for subagents
+  sessionId: string
   agentName: string
-  agentType?: string      // e.g. 'general-purpose', 'Explore' — present on subagents
+  agentType?: string
   status: AgentStatus
-  parentSessionId: string | null  // null for root agents; root's session_id for subagents
+  parentSessionId: string | null
   currentTool: string | null
   currentToolInput: unknown | null
   toolHistory: ToolCall[]
   startedAt: number
   lastActivityAt: number
   projectPath: string
-  transcriptPath?: string  // absolute path to JSONL session file on the server
+  transcriptPath?: string
+  hasHooks: boolean
+  enrichment: EnrichmentData | null
+  waitingSince: number | null
 }
 
 export interface AgentSnapshot {
@@ -31,6 +45,7 @@ export interface AgentSnapshot {
   status: 'idle' | 'done'
   startedAt: number
   parentSessionId: string | null
+  hasHooks: boolean
 }
 
 export interface HookEvent {
@@ -54,11 +69,14 @@ export interface DashboardState {
   events: HookEvent[]
   selectedAgentId: string | null
   connected: boolean
+  hooksInstalled: boolean
 }
 
 export type Action =
-  | { type: 'INIT'; agents: AgentSnapshot[]; recentEvents: HookEvent[] }
+  | { type: 'INIT'; agents: AgentSnapshot[]; recentEvents: HookEvent[]; hooksInstalled: boolean }
   | { type: 'EVENT'; event: HookEvent }
+  | { type: 'SESSION_DISCOVERED'; agent: AgentSnapshot }
+  | { type: 'ENRICH'; sessionId: string; data: EnrichmentData }
   | { type: 'SELECT_AGENT'; sessionId: string | null }
   | { type: 'CONNECTED'; connected: boolean }
   | { type: 'CLEAR' }

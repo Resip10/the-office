@@ -1,17 +1,20 @@
 import { createServer } from 'http'
-import { existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
+import { homedir } from 'os'
 import express from 'express'
 import cors from 'cors'
 import { WebSocketServer } from 'ws'
 import { Relay } from './relay'
 import { bootstrap } from './bootstrap'
 import { readSnapshot } from './transcript'
+import { startWatcher } from './watcher'
 import type { HookEvent } from './types'
 
 const app = express()
 const relay = new Relay()
 const terminatedSessions = new Set<string>()
+const hookSessions = new Set<string>()
 
 app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:4173'] }))
 app.use(express.json())
@@ -42,7 +45,22 @@ app.post('/api/events', (req, res) => {
   if (event.hook_event_name === 'SessionEnd') {
     terminatedSessions.add(event.session_id)
   }
+  hookSessions.add(event.session_id)
   relay.push(event)
+  res.sendStatus(200)
+})
+
+// Signal the Electron main process to open the hooks-setup window.
+// When not running as a utilityProcess (e.g. npm run dev), parentPort is undefined — no-op.
+app.post('/api/hooks/setup', (_req, res) => {
+  ;(process as NodeJS.Process & { parentPort?: { postMessage(v: unknown): void } })
+    .parentPort?.postMessage({ type: 'open-hooks-setup' })
+  res.sendStatus(200)
+})
+
+app.post('/api/hooks/remove', (_req, res) => {
+  ;(process as NodeJS.Process & { parentPort?: { postMessage(v: unknown): void } })
+    .parentPort?.postMessage({ type: 'open-hooks-remove' })
   res.sendStatus(200)
 })
 
@@ -58,12 +76,24 @@ if (staticDir && existsSync(staticDir)) {
 const server = createServer(app)
 const wss = new WebSocketServer({ server, path: '/ws' })
 
+function checkHooksInstalled(): boolean {
+  const settingsPath = join(homedir(), '.claude', 'settings.json')
+  if (!existsSync(settingsPath)) return false
+  try {
+    return readFileSync(settingsPath, 'utf8').includes('localhost:7777')
+  } catch {
+    return false
+  }
+}
+
 wss.on('connection', async (ws) => {
   const agents = await bootstrap(terminatedSessions)
+  const snapshots = agents.map(a => ({ ...a, hasHooks: false }))
   ws.send(JSON.stringify({
     type: 'init',
-    agents,
+    agents: snapshots,
     recentEvents: relay.getRecent(),
+    hooksInstalled: checkHooksInstalled(),
   }))
   relay.addClient(ws)
 })
@@ -84,4 +114,5 @@ server.on('error', (err: NodeJS.ErrnoException) => {
 server.listen(PORT, () => {
   console.log(`the-office server running on http://localhost:${PORT}`)
   process.stdout.write(`OFFICE_PORT:${PORT}\n`)
+  startWatcher(relay, hookSessions)
 })

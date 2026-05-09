@@ -1,7 +1,7 @@
 import { writeFileSync, readFileSync, mkdirSync, rmSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
-import { installHooks, hasHooks } from '../installer'
+import { installHooks, hasHooks, uninstallHooks } from '../installer'
 
 const HOOK_EVENTS = [
   'SessionStart', 'SessionEnd', 'SubagentStart', 'SubagentStop',
@@ -53,6 +53,54 @@ describe('installHooks', () => {
     writeFileSync(settingsPath, 'not valid json')
     const result = installHooks(settingsPath)
     expect(result).toBe(false)
+  })
+})
+
+describe('uninstallHooks', () => {
+  it('returns false when file does not exist', () => {
+    expect(uninstallHooks(settingsPath)).toBe(false)
+  })
+
+  it('returns false when file contains invalid JSON', () => {
+    writeFileSync(settingsPath, 'not json')
+    expect(uninstallHooks(settingsPath)).toBe(false)
+  })
+
+  it('removes all The Office hook entries and returns true', () => {
+    installHooks(settingsPath)
+    const result = uninstallHooks(settingsPath)
+    expect(result).toBe(true)
+    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    expect(settings.hooks).toEqual({})
+  })
+
+  it('does not remove other hooks', () => {
+    const other = { type: 'command', command: 'echo hello' }
+    writeFileSync(settingsPath, JSON.stringify({
+      hooks: {
+        SessionStart: [{ hooks: [other] }],
+      },
+    }, null, 2))
+    installHooks(settingsPath)
+    uninstallHooks(settingsPath)
+    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    // The Office hook removed; other hook stays
+    expect(settings.hooks.SessionStart[0].hooks).toEqual([other])
+  })
+
+  it('deletes empty hook arrays after removal', () => {
+    installHooks(settingsPath)
+    uninstallHooks(settingsPath)
+    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    for (const key of Object.keys(settings.hooks ?? {})) {
+      expect(settings.hooks[key].length).toBeGreaterThan(0)
+    }
+  })
+
+  it('is idempotent — calling twice is safe', () => {
+    installHooks(settingsPath)
+    uninstallHooks(settingsPath)
+    expect(() => uninstallHooks(settingsPath)).not.toThrow()
   })
 })
 
