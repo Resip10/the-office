@@ -2,6 +2,17 @@ import { useEffect } from 'react'
 import type { Dispatch } from 'react'
 import type { Action, EnrichmentData, AgentSnapshot } from '../types'
 
+interface WsPayload {
+  type: string
+  agents?: AgentSnapshot[]
+  recentEvents?: unknown[]
+  hooksInstalled?: boolean
+  event?: { hook_event_name: string; session_id: string; agent_id?: string }
+  payload?: AgentSnapshot
+  sessionId?: string
+  data?: EnrichmentData
+}
+
 const WS_URL = 'ws://localhost:7777/ws'
 const RECONNECT_DELAY = 3000
 const POST_TOOL_DEBOUNCE_MS = 300
@@ -38,16 +49,7 @@ export function useRelay(dispatch: Dispatch<Action>, reconnectKey = 0): void {
 
       ws.onmessage = (msg) => {
         try {
-          const payload = JSON.parse(msg.data as string) as {
-            type: string
-            agents?: AgentSnapshot[]
-            recentEvents?: unknown[]
-            hooksInstalled?: boolean
-            event?: { hook_event_name: string; session_id: string; agent_id?: string }
-            payload?: AgentSnapshot
-            sessionId?: string
-            data?: EnrichmentData
-          }
+          const payload = JSON.parse(msg.data as string) as WsPayload
 
           if (payload.type === 'init') {
             dispatch({
