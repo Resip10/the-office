@@ -166,7 +166,7 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 
 ---
 
-### Task 4: Commands and app state
+### Task 4: Commands and app state ✅ (done 2026-10-19)
 
 **Files:**
 - Create: `desktop/src/core/commands.ts`, `desktop/src/core/app-state.ts`, tests `commands.test.ts`, `app-state.test.ts`
@@ -182,15 +182,15 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   export async function togglePin(path: string, id: string): Promise<AppState>
   ```
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
   - `copyCommand` → `cd "C:\\work\\my app"; claude --resume 0c29cf4c-54bc-4ff4-9393-82f33c39613d`; non-ASCII path preserved verbatim
   - `resumeInvocation win32 with wt` → `{ file: 'wt.exe', args: ['-d', path, 'claude', '--resume', id], cwd: path }`
   - `resumeInvocation win32 without wt` → `{ file: 'cmd.exe', args: ['/c', 'start', '""', 'powershell', '-NoExit', '-Command', 'claude --resume ' + id], cwd: path }`
   - `resumeInvocation darwin` → `file: 'osascript'`, args contain `do script` with single-quoted path; a `'` in path is escaped
   - `returns null for invalid id` (`'abc; rm -rf /'`) and for `projectPath: null`
   - `togglePin adds then removes`; `loadAppState` on garbage → `{ pins: [] }`; write is temp-then-rename (file never half-written: assert no `.tmp` left)
-- [ ] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: Commit** `feat(core): resume commands and pin state`
+- [x] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
+- [x] **Step 5: Commit** `feat(core): resume commands and pin state`
 
 ---
 
