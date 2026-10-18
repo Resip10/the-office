@@ -101,7 +101,7 @@ interface SessionRecord {
   fileSize: number
   contextTokens: number | null // last assistant usage: input + cache_read + cache_creation
   model: string | null       // last assistant message.model
-  costUSD: number | null     // last cost-state.totalCostUSD
+  costUSD: number | null     // last cost-state.totalCostUSD — Claude Code's API-price estimate, not a bill; label "≈ API cost" (subscription plans pay flat)
   prUrls: string[]           // pr-link records
   lastPrompt: string | null  // last last-prompt.lastPrompt
   awaySummary: string | null // latest system:away_summary content (P1 uses it)
@@ -172,6 +172,6 @@ Rules:
 
 ## 11. Open questions (not blocking v1)
 
-- Exact set of `status` values in `sessions/<pid>.json` (seen: `busy`). Unknown values are displayed raw until mapped.
+- Exact set of `status` values in `sessions/<pid>.json` (seen: `busy` while working, `idle` while waiting for the next prompt; permission-prompt value still unknown). Unknown values are displayed raw until mapped.
 - Whether desktop-app Code tab sessions resume cleanly via `claude --resume` on this Claude Code version (known issue #32992). v1 just tries; P1 handoff is the fallback.
 - Rename write-back to Claude (`custom-title`) vs app-only — decide in P1.

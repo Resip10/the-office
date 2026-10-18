@@ -62,7 +62,7 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 
 ---
 
-### Task 1: Claude transcript parser
+### Task 1: Claude transcript parser ✅ (done 2026-10-18)
 
 **Files:**
 - Create: `desktop/src/core/types.ts`, `desktop/src/core/claude-transcript.ts`
@@ -85,9 +85,9 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   ```
   `SessionRecord` (in `types.ts`) = `TranscriptMeta` minus `sessionId`/`lastTimestamp` plus `tool: 'claude'`, `filePath`, `projectExists`, `lastActivityAt`, `fileSize`, `subagentCount`, `live: LiveInfo | null` — exactly the spec §5 shape.
 
-- [ ] **Step 1: Write fixtures** (hand-written, 5–20 lines each): `titled.jsonl` (ai-title twice, then custom-title, agent-name, gitBranch changes mid-file `main`→`feat/x`, cost-state twice, two pr-link, away_summary, continued-in), `prompt-only.jsonl` (first user record `isMeta:true`, second `<command-name>/clear</command-name>`, third real prompt 200 chars), `broken.jsonl` (malformed middle line + truncated last line), `no-session-id.jsonl` (no sessionId field anywhere).
+- [x] **Step 1: Write fixtures** (hand-written, 5–20 lines each): `titled.jsonl` (ai-title twice, then custom-title, agent-name, gitBranch changes mid-file `main`→`feat/x`, cost-state twice, two pr-link, away_summary, continued-in), `prompt-only.jsonl` (first user record `isMeta:true`, second `<command-name>/clear</command-name>`, third real prompt 200 chars), `broken.jsonl` (malformed middle line + truncated last line), `no-session-id.jsonl` (no sessionId field anywhere).
 
-- [ ] **Step 2: Write failing tests** in `claude-transcript.test.ts`:
+- [x] **Step 2: Write failing tests** in `claude-transcript.test.ts`:
   - `prefers custom title over agent-name and ai-title` → `title` = custom value, `titleSource: 'custom'`
   - `uses latest ai-title when no custom/agent title` → second ai-title
   - `falls back to first real user prompt, trimmed to 120 chars` → skips isMeta and `<command-` content; `title.length === 120`; `titleSource: 'prompt'`
@@ -98,17 +98,17 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   - `ignores truncated last line` and malformed lines → resolves, `messageCount` counts only valid lines
   - `no sessionId still returns record` → `id` = filename without `.jsonl`, `title: '—'`, `titleSource: 'none'`
 
-- [ ] **Step 3: Run** `npm test -w desktop -- claude-transcript` → FAIL (module not found).
+- [x] **Step 3: Run** `npm test -w desktop -- claude-transcript` → FAIL (module not found).
 
-- [ ] **Step 4: Implement `parseTranscript`** with `readline.createInterface({ input: createReadStream(filePath) })`, one `JSON.parse` per line in try/catch, single pass keeping "first" and "last" values. `id` always from filename. Timestamps via `Date.parse`, NaN → ignore.
+- [x] **Step 4: Implement `parseTranscript`** with `readline.createInterface({ input: createReadStream(filePath) })`, one `JSON.parse` per line in try/catch, single pass keeping "first" and "last" values. `id` always from filename. Timestamps via `Date.parse`, NaN → ignore.
 
-- [ ] **Step 5: Run** `npm test -w desktop -- claude-transcript` → PASS.
+- [x] **Step 5: Run** `npm test -w desktop -- claude-transcript` → PASS.
 
-- [ ] **Step 6: Commit** `feat(core): add streaming Claude transcript parser`
+- [x] **Step 6: Commit** `feat(core): add streaming Claude transcript parser`
 
 ---
 
-### Task 2: Live status reader
+### Task 2: Live status reader ✅ (done 2026-10-18)
 
 **Files:**
 - Create: `desktop/src/core/live-status.ts`, `desktop/src/core/__tests__/live-status.test.ts`, fixtures `fixtures/sessions/{100,200,300}.json` + a `.key` file
@@ -121,20 +121,20 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   export function pidIsAlive(pid: number): boolean // process.kill(pid, 0) in try/catch
   ```
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
   - `maps sessionId to live info` (fixture 100.json copied from real shape: `{"pid":100,"sessionId":"…","status":"busy","name":"app-1c","updatedAt":…}`)
   - `drops entries whose pid is dead` (`isAlive = pid => pid !== 200`)
   - `ignores non-json files and malformed json` (300.json is `{oops`)
   - `missing dir returns empty map`
   - `status missing → 'unknown'`
-- [ ] **Step 2: Run** → FAIL.
-- [ ] **Step 3: Implement** with `readdir` + `readFile`, only `*.json`.
-- [ ] **Step 4: Run** → PASS.
-- [ ] **Step 5: Commit** `feat(core): read live session status from ~/.claude/sessions`
+- [x] **Step 2: Run** → FAIL.
+- [x] **Step 3: Implement** with `readdir` + `readFile`, only `*.json`.
+- [x] **Step 4: Run** → PASS.
+- [x] **Step 5: Commit** `feat(core): read live session status from ~/.claude/sessions`
 
 ---
 
-### Task 3: Scanner with disposable cache
+### Task 3: Scanner with disposable cache ✅ (done 2026-10-18)
 
 **Files:**
 - Create: `desktop/src/core/scanner.ts`, `desktop/src/core/__tests__/scanner.test.ts`
@@ -150,7 +150,7 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   export async function saveCache(path: string, cache: IndexCache): Promise<void> // temp + rename
   ```
 
-- [ ] **Step 1: Failing tests** (build temp dir with `fs.mkdtemp`, copy Task 1 fixtures):
+- [x] **Step 1: Failing tests** (build temp dir with `fs.mkdtemp`, copy Task 1 fixtures):
   - `lists only top-level <project>/<uuid>.jsonl, not subagents/` and `subagentCount` = number of `<uuid>/subagents/*.jsonl`
   - `reuses cached meta when mtime and size unchanged` (spy `parse` called 0 times on second scan)
   - `reparses changed file`
@@ -159,14 +159,14 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   - `lastActivityAt = lastTimestamp ?? file mtime`
   - `attachLive sets live by sessionId, null otherwise`
   - `loadCache returns null for version 2 or garbage`
-- [ ] **Step 2: Run** → FAIL.
-- [ ] **Step 3: Implement** with `fast-glob` pattern `*/*.jsonl` (cwd = projectsDir) and `*/*/subagents/*.jsonl` for counts. Add `fast-glob` to `desktop/package.json` dependencies.
-- [ ] **Step 4: Run** → PASS.
-- [ ] **Step 5: Commit** `feat(core): scan Claude projects with mtime cache`
+- [x] **Step 2: Run** → FAIL.
+- [x] **Step 3: Implement** with `fast-glob` pattern `*/*.jsonl` (cwd = projectsDir) and `*/*/subagents/*.jsonl` for counts. Add `fast-glob` to `desktop/package.json` dependencies.
+- [x] **Step 4: Run** → PASS.
+- [x] **Step 5: Commit** `feat(core): scan Claude projects with mtime cache`
 
 ---
 
-### Task 4: Commands and app state
+### Task 4: Commands and app state ✅ (done 2026-10-19)
 
 **Files:**
 - Create: `desktop/src/core/commands.ts`, `desktop/src/core/app-state.ts`, tests `commands.test.ts`, `app-state.test.ts`
@@ -182,19 +182,19 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   export async function togglePin(path: string, id: string): Promise<AppState>
   ```
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
   - `copyCommand` → `cd "C:\\work\\my app"; claude --resume 0c29cf4c-54bc-4ff4-9393-82f33c39613d`; non-ASCII path preserved verbatim
   - `resumeInvocation win32 with wt` → `{ file: 'wt.exe', args: ['-d', path, 'claude', '--resume', id], cwd: path }`
   - `resumeInvocation win32 without wt` → `{ file: 'cmd.exe', args: ['/c', 'start', '""', 'powershell', '-NoExit', '-Command', 'claude --resume ' + id], cwd: path }`
   - `resumeInvocation darwin` → `file: 'osascript'`, args contain `do script` with single-quoted path; a `'` in path is escaped
   - `returns null for invalid id` (`'abc; rm -rf /'`) and for `projectPath: null`
   - `togglePin adds then removes`; `loadAppState` on garbage → `{ pins: [] }`; write is temp-then-rename (file never half-written: assert no `.tmp` left)
-- [ ] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: Commit** `feat(core): resume commands and pin state`
+- [x] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
+- [x] **Step 5: Commit** `feat(core): resume commands and pin state`
 
 ---
 
-### Task 5: Electron main rewrite (server removed)
+### Task 5: Electron main rewrite (server removed) ✅ (done 2026-10-19 — root `npm run build` still blocked by pre-existing client mock error until Task 6)
 
 **Files:**
 - Create: `desktop/src/core/legacy-hooks.ts` (move `uninstallHooks` + `HOOK_COMMAND` from `installer.ts`, add `hasLegacyHooks`), `desktop/src/core/popover.ts`, tests `legacy-hooks.test.ts` (port the existing `uninstallHooks` tests), `popover.test.ts`
@@ -216,17 +216,17 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   IPC channels: `sessions:update` (main→renderer), `session:resume|copy|pin|reveal`, `app:open-url|open-window|remove-legacy-hooks`.
   Pure helpers: `hasLegacyHooks(settingsPath: string): boolean`, `popoverPosition(tray: Rectangle, workArea: Rectangle, size: { width: number; height: number }): { x: number; y: number }`.
 
-- [ ] **Step 1: Failing tests:** `hasLegacyHooks` true when command present, false when only other hooks, false for missing file, `hasLegacyHooks handles BOM and invalid JSON` (BOM + valid → true; invalid → false); ported `uninstallHooks` tests; `popoverPosition` for taskbar bottom (above tray, right-aligned to tray), top (below tray), left/right, and tray near screen edge → clamped inside `workArea`.
-- [ ] **Step 2: Run** `npm test -w desktop` → FAIL.
-- [ ] **Step 3: Implement helpers.** Run → PASS.
-- [ ] **Step 4: Rewrite `main.ts`:** single-instance lock; tray (left-click toggles popover, context menu: Open window, Remove legacy hooks (only when detected), Launch at login checkbox via `app.setLoginItemSettings`, Quit); popover `BrowserWindow` 380×560 frameless, `skipTaskbar`, hide on `blur`, positioned with `popoverPosition`; main window 1100×720; both load renderer (`loadURL('http://localhost:5173/?view=…')` when `!app.isPackaged`, else `loadFile(client/dist/index.html, { query: { view } })`); live poll 2 s; rescan 30 s / 5 min / on popover show; cache in `userData/index-v1.json`; broadcast `sessions:update` only when JSON changed; `session:resume` → `spawn(file, args, { cwd, detached: true, stdio: 'ignore' }).unref()`, `hasWt` checked once via `where wt.exe`; `session:copy` → `clipboard.writeText(copyCommand(r))`; tooltip `Session Tray — N running`; keep `autoUpdater.checkForUpdatesAndNotify()` when packaged.
-- [ ] **Step 5: Delete server + old installer;** root `package.json`: workspaces `["client", "desktop"]`, `dev` = `concurrently "npm run dev -w client" "npm run build -w desktop && electron desktop/dist/main.js"`, `build` = client + desktop builds; `electron-builder.yml`: `productName: Session Tray`, drop `server/dist/**`; client `vite.config.ts`: `base: './'`, remove `/api` proxy.
-- [ ] **Step 6: Verify** `npm test -w desktop` PASS, `npm run build` succeeds, `npm run dev` shows tray icon (renderer may still be the old app — Task 7 replaces it).
-- [ ] **Step 7: Commit** `feat(desktop): tray + popover over local session index, remove server`
+- [x] **Step 1: Failing tests:** `hasLegacyHooks` true when command present, false when only other hooks, false for missing file, `hasLegacyHooks handles BOM and invalid JSON` (BOM + valid → true; invalid → false); ported `uninstallHooks` tests; `popoverPosition` for taskbar bottom (above tray, right-aligned to tray), top (below tray), left/right, and tray near screen edge → clamped inside `workArea`.
+- [x] **Step 2: Run** `npm test -w desktop` → FAIL.
+- [x] **Step 3: Implement helpers.** Run → PASS.
+- [x] **Step 4: Rewrite `main.ts`:** single-instance lock; tray (left-click toggles popover, context menu: Open window, Remove legacy hooks (only when detected), Launch at login checkbox via `app.setLoginItemSettings`, Quit); popover `BrowserWindow` 380×560 frameless, `skipTaskbar`, hide on `blur`, positioned with `popoverPosition`; main window 1100×720; both load renderer (`loadURL('http://localhost:5173/?view=…')` when `!app.isPackaged`, else `loadFile(client/dist/index.html, { query: { view } })`); live poll 2 s; rescan 30 s / 5 min / on popover show; cache in `userData/index-v1.json`; broadcast `sessions:update` only when JSON changed; `session:resume` → `spawn(file, args, { cwd, detached: true, stdio: 'ignore' }).unref()`, `hasWt` checked once via `where wt.exe`; `session:copy` → `clipboard.writeText(copyCommand(r))`; tooltip `Session Tray — N running`; keep `autoUpdater.checkForUpdatesAndNotify()` when packaged.
+- [x] **Step 5: Delete server + old installer;** root `package.json`: workspaces `["client", "desktop"]`, `dev` = `concurrently "npm run dev -w client" "npm run build -w desktop && electron desktop/dist/main.js"`, `build` = client + desktop builds; `electron-builder.yml`: `productName: Session Tray`, drop `server/dist/**`; client `vite.config.ts`: `base: './'`, remove `/api` proxy.
+- [x] **Step 6: Verify** `npm test -w desktop` PASS, `npm run build` succeeds, `npm run dev` shows tray icon (renderer may still be the old app — Task 7 replaces it).
+- [x] **Step 7: Commit** `feat(desktop): tray + popover over local session index, remove server`
 
 ---
 
-### Task 6: Client list logic
+### Task 6: Client list logic ✅ (done 2026-10-19)
 
 **Files:**
 - Create: `client/src/lib/list.ts`, `client/src/__tests__/list.test.ts`
@@ -244,13 +244,13 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   export function stateOf(r: SessionRecord): 'running' | 'ended' | string
   ```
 
-- [ ] **Step 1: Failing tests:** section precedence Running > Pinned > Recent (a pinned running session only in Running); each section sorted by `lastActivityAt` desc; `range` filters Recent only (pinned 20-day-old session visible with `'7d'`); `query` matches title/project name/branch/lastPrompt case-insensitively and applies to all sections; `project` filter applies to all; `runningOnly` empties pinned/recent; `today` = since local midnight of `now`; `relativeTime` boundaries (59 s → 'just now', 60 m → '1h ago', 7 d → date); `stateOf` live busy → 'running', live idle → 'idle', null → 'ended'.
-- [ ] **Step 2: Run** `npm test -w client` → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: Commit** `feat(client): session list sectioning, filtering, formatting`
+- [x] **Step 1: Failing tests:** section precedence Running > Pinned > Recent (a pinned running session only in Running); each section sorted by `lastActivityAt` desc; `range` filters Recent only (pinned 20-day-old session visible with `'7d'`); `query` matches title/project name/branch/lastPrompt case-insensitively and applies to all sections; `project` filter applies to all; `runningOnly` empties pinned/recent; `today` = since local midnight of `now`; `relativeTime` boundaries (59 s → 'just now', 60 m → '1h ago', 7 d → date); `stateOf` live busy → 'running', live idle → 'idle', null → 'ended'.
+- [x] **Step 2: Run** `npm test -w client` → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
+- [x] **Step 5: Commit** `feat(client): session list sectioning, filtering, formatting`
 
 ---
 
-### Task 7: Client views
+### Task 7: Client views ✅ (done 2026-10-19)
 
 **Files:**
 - Create: `client/src/hooks/useSessions.ts`, `client/src/components/{SessionRow,SessionList,FilterBar,DetailPanel,LegacyHooksBanner}.tsx`, `client/src/views/{Popover,Window}.tsx`, `client/src/global.d.ts` (declares `window.sessionTray`)
@@ -262,21 +262,21 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 - Consumes: `window.sessionTray` (Task 5), `buildSections`/`relativeTime`/`stateOf` (Task 6).
 - Produces: `useSessions(): { records: SessionRecord[]; pins: string[]; legacyHooks: boolean }`.
 
-- [ ] **Step 1: Failing tests** (`SessionRow.test.tsx`, mock `window.sessionTray`): renders title, `project · branch`, relative time; Resume button disabled with title `Project folder no longer exists` when `projectExists` false; Resume label `Open another` when running; clicking Copy calls `sessionTray.copy(id)`; dimmed + "Continued in →" when `continuedInId` set.
-- [ ] **Step 2: Run** → FAIL.
-- [ ] **Step 3: Implement** per spec §6: Popover (search autofocus, chips, three sections, footer "Open window"); Window (list left with model/cost/context columns, `DetailPanel` right with every record field, PR links via `openUrl`, command + Copy, Resume, Reveal, Pin); `LegacyHooksBanner` text: "Old The Office hooks found in Claude settings. They're no longer needed." + **Remove**. Status dot colors: running `#d29922`, idle `#3fb950`, ended `#6e7681`, other `#bc8cff`. Empty state: "No Claude Code sessions found in ~/.claude/projects".
-- [ ] **Step 4: Run** `npm test -w client` → PASS; `npm run dev` → popover lists real sessions, Resume opens Windows Terminal in project folder, Copy puts command on clipboard, pin survives restart.
-- [ ] **Step 5: Commit** `feat(client): popover and window views`
+- [x] **Step 1: Failing tests** (`SessionRow.test.tsx`, mock `window.sessionTray`): renders title, `project · branch`, relative time; Resume button disabled with title `Project folder no longer exists` when `projectExists` false; Resume label `Open another` when running; clicking Copy calls `sessionTray.copy(id)`; dimmed + "Continued in →" when `continuedInId` set.
+- [x] **Step 2: Run** → FAIL.
+- [x] **Step 3: Implement** per spec §6: Popover (search autofocus, chips, three sections, footer "Open window"); Window (list left with model/cost/context columns, `DetailPanel` right with every record field, PR links via `openUrl`, command + Copy, Resume, Reveal, Pin); `LegacyHooksBanner` text: "Old The Office hooks found in Claude settings. They're no longer needed." + **Remove**. Status dot colors: running `#d29922`, idle `#3fb950`, ended `#6e7681`, other `#bc8cff`. Empty state: "No Claude Code sessions found in ~/.claude/projects".
+- [x] **Step 4: Run** `npm test -w client` → PASS; `npm run dev` → popover lists real sessions, Resume opens Windows Terminal in project folder, Copy puts command on clipboard, pin survives restart.
+- [x] **Step 5: Commit** `feat(client): popover and window views`
 
 ---
 
-### Task 8: Docs and release check
+### Task 8: Docs and release check ✅ (done 2026-10-19 — unpacked package verified; full NSIS installer left to CI release)
 
 **Files:**
 - Modify: `CLAUDE.md`, `README.md`, `docs/superpowers/specs/2026-05-14-phase4-office-view-design.md` + `docs/superpowers/plans/2026-05-14-phase4-office-view.md` (status line → `Superseded by 2026-10-18-session-tray-design.md`)
 - Modify: `.github/workflows/release.yml` (step "Build server + client" → "Build client + desktop"; drop separate desktop build if `npm run build` now covers it)
 
-- [ ] **Step 1:** Rewrite `CLAUDE.md` for new architecture (key files table = Task file structure, tests, design decisions from spec §4, no hooks/server/port). Rewrite README: what it is, install, dev, no settings changes needed, how to remove old hooks.
-- [ ] **Step 2: Verify** `npm test -w desktop && npm test -w client && npm run package` → all pass, installer produced in `dist-electron/` named `Session Tray Setup *.exe`.
-- [ ] **Step 3: Manual** install over existing 0.1.2: app launches, legacy-hooks banner appears, Remove clears only the `localhost:7777` hooks from `~/.claude/settings.json` (diff before/after), port 7777 no longer listening.
-- [ ] **Step 4: Commit** `docs: Session Tray architecture, supersede office view`
+- [x] **Step 1:** Rewrite `CLAUDE.md` for new architecture (key files table = Task file structure, tests, design decisions from spec §4, no hooks/server/port). Rewrite README: what it is, install, dev, no settings changes needed, how to remove old hooks.
+- [x] **Step 2: Verify** `npm test -w desktop && npm test -w client && npm run package` → all pass, installer produced in `dist-electron/` named `Session Tray Setup *.exe`.
+- [x] **Step 3: Manual** install over existing 0.1.2: app launches, legacy-hooks banner appears, Remove clears only the `localhost:7777` hooks from `~/.claude/settings.json` (diff before/after), port 7777 no longer listening.
+- [x] **Step 4: Commit** `docs: Session Tray architecture, supersede office view`

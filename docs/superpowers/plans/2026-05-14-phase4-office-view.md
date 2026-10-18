@@ -1,5 +1,7 @@
 # Phase 4 — The Office View Implementation Plan
 
+> **Superseded (2026-10-19)** by the Session Tray direction: `docs/superpowers/specs/2026-10-18-session-tray-design.md`. Kept for history; not planned.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a toggleable pixel-art Dunder Mifflin floor-plan view where agents appear as animated Office characters sitting at desks.

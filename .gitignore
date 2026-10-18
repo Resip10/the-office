@@ -16,3 +16,6 @@ build/
 .superpowers/
 .claude/
 .worktrees/
+
+# Packaged app output
+dist-electron/

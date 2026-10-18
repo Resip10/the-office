@@ -1,15 +1,18 @@
 appId: com.the-office.app
-productName: The Office
+productName: Session Tray
+# No native modules; skipping rebuild also stops electron-builder from pruning the shared workspace node_modules.
+npmRebuild: false
 directories:
   output: dist-electron
+# Paths are relative to desktop/ (the app dir). The renderer lives outside it, so it ships as an extra resource.
 files:
-  - desktop/dist/**
-  - desktop/assets/**
-  - server/dist/**
-  - client/dist/**
+  - dist/**
+  - "!dist/**/__tests__/**"
+  - assets/**
   - package.json
-extraMetadata:
-  main: desktop/dist/main.js
+extraResources:
+  - from: ../client/dist
+    to: client/dist
 mac:
   category: public.app-category.developer-tools
   target: dmg

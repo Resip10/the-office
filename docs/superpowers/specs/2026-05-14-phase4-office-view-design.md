@@ -1,6 +1,9 @@
 # Phase 4 — The Office View Design Spec
+
+> **Superseded (2026-10-19)** by the Session Tray direction: `docs/superpowers/specs/2026-10-18-session-tray-design.md`. Kept for history; not planned.
+
 **Date:** 2026-05-14
-**Status:** Approved
+**Status:** Superseded
 **Phase:** 4
 
 ---

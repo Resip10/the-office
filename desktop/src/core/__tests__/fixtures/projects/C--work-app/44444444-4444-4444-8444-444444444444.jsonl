@@ -1,0 +1,3 @@
+{"type":"user","sessionId":"44444444-4444-4444-8444-444444444444","cwd":"C:\\work\\app","timestamp":"2026-10-02T09:00:00.000Z","uuid":"u1","message":{"role":"user","content":"Fix the build"}}
+{"type":"ai-title","aiTitle":"Build fix","sessionId":"44444444-4444-4444-8444-444444444444"}
+{"type":"ai-title","aiTitle":"Build fix and CI cache","sessionId":"44444444-4444-4444-8444-444444444444"}
