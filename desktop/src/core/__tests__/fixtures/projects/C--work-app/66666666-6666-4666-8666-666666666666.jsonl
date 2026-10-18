@@ -1,0 +1,4 @@
+{"type":"user","sessionId":"66666666-6666-4666-8666-666666666666","cwd":"C:workapp","timestamp":"2026-10-04T12:00:00.000Z","uuid":"u1","message":{"role":"user","content":"Hello"}}
+{not json
+{"type":"assistant","sessionId":"66666666-6666-4666-8666-666666666666","cwd":"C:workapp","timestamp":"2026-10-04T12:00:05.000Z","uuid":"a1","message":{"role":"assistant","model":"claude-haiku-5-5","content":[{"type":"text","text":"Hi"}]}}
+{"type":"user","sessionId":"66666666-6666-4666-8666-666666666666","timestamp":"2026-10-04T

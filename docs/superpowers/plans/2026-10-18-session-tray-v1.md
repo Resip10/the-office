@@ -62,7 +62,7 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 
 ---
 
-### Task 1: Claude transcript parser
+### Task 1: Claude transcript parser ✅ (done 2026-10-18)
 
 **Files:**
 - Create: `desktop/src/core/types.ts`, `desktop/src/core/claude-transcript.ts`
@@ -85,9 +85,9 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   ```
   `SessionRecord` (in `types.ts`) = `TranscriptMeta` minus `sessionId`/`lastTimestamp` plus `tool: 'claude'`, `filePath`, `projectExists`, `lastActivityAt`, `fileSize`, `subagentCount`, `live: LiveInfo | null` — exactly the spec §5 shape.
 
-- [ ] **Step 1: Write fixtures** (hand-written, 5–20 lines each): `titled.jsonl` (ai-title twice, then custom-title, agent-name, gitBranch changes mid-file `main`→`feat/x`, cost-state twice, two pr-link, away_summary, continued-in), `prompt-only.jsonl` (first user record `isMeta:true`, second `<command-name>/clear</command-name>`, third real prompt 200 chars), `broken.jsonl` (malformed middle line + truncated last line), `no-session-id.jsonl` (no sessionId field anywhere).
+- [x] **Step 1: Write fixtures** (hand-written, 5–20 lines each): `titled.jsonl` (ai-title twice, then custom-title, agent-name, gitBranch changes mid-file `main`→`feat/x`, cost-state twice, two pr-link, away_summary, continued-in), `prompt-only.jsonl` (first user record `isMeta:true`, second `<command-name>/clear</command-name>`, third real prompt 200 chars), `broken.jsonl` (malformed middle line + truncated last line), `no-session-id.jsonl` (no sessionId field anywhere).
 
-- [ ] **Step 2: Write failing tests** in `claude-transcript.test.ts`:
+- [x] **Step 2: Write failing tests** in `claude-transcript.test.ts`:
   - `prefers custom title over agent-name and ai-title` → `title` = custom value, `titleSource: 'custom'`
   - `uses latest ai-title when no custom/agent title` → second ai-title
   - `falls back to first real user prompt, trimmed to 120 chars` → skips isMeta and `<command-` content; `title.length === 120`; `titleSource: 'prompt'`
@@ -98,13 +98,13 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   - `ignores truncated last line` and malformed lines → resolves, `messageCount` counts only valid lines
   - `no sessionId still returns record` → `id` = filename without `.jsonl`, `title: '—'`, `titleSource: 'none'`
 
-- [ ] **Step 3: Run** `npm test -w desktop -- claude-transcript` → FAIL (module not found).
+- [x] **Step 3: Run** `npm test -w desktop -- claude-transcript` → FAIL (module not found).
 
-- [ ] **Step 4: Implement `parseTranscript`** with `readline.createInterface({ input: createReadStream(filePath) })`, one `JSON.parse` per line in try/catch, single pass keeping "first" and "last" values. `id` always from filename. Timestamps via `Date.parse`, NaN → ignore.
+- [x] **Step 4: Implement `parseTranscript`** with `readline.createInterface({ input: createReadStream(filePath) })`, one `JSON.parse` per line in try/catch, single pass keeping "first" and "last" values. `id` always from filename. Timestamps via `Date.parse`, NaN → ignore.
 
-- [ ] **Step 5: Run** `npm test -w desktop -- claude-transcript` → PASS.
+- [x] **Step 5: Run** `npm test -w desktop -- claude-transcript` → PASS.
 
-- [ ] **Step 6: Commit** `feat(core): add streaming Claude transcript parser`
+- [x] **Step 6: Commit** `feat(core): add streaming Claude transcript parser`
 
 ---
 

@@ -101,7 +101,7 @@ interface SessionRecord {
   fileSize: number
   contextTokens: number | null // last assistant usage: input + cache_read + cache_creation
   model: string | null       // last assistant message.model
-  costUSD: number | null     // last cost-state.totalCostUSD
+  costUSD: number | null     // last cost-state.totalCostUSD — Claude Code's API-price estimate, not a bill; label "≈ API cost" (subscription plans pay flat)
   prUrls: string[]           // pr-link records
   lastPrompt: string | null  // last last-prompt.lastPrompt
   awaySummary: string | null // latest system:away_summary content (P1 uses it)
