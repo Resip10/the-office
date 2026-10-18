@@ -108,7 +108,7 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 
 ---
 
-### Task 2: Live status reader
+### Task 2: Live status reader ✅ (done 2026-10-18)
 
 **Files:**
 - Create: `desktop/src/core/live-status.ts`, `desktop/src/core/__tests__/live-status.test.ts`, fixtures `fixtures/sessions/{100,200,300}.json` + a `.key` file
@@ -121,16 +121,16 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   export function pidIsAlive(pid: number): boolean // process.kill(pid, 0) in try/catch
   ```
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
   - `maps sessionId to live info` (fixture 100.json copied from real shape: `{"pid":100,"sessionId":"…","status":"busy","name":"app-1c","updatedAt":…}`)
   - `drops entries whose pid is dead` (`isAlive = pid => pid !== 200`)
   - `ignores non-json files and malformed json` (300.json is `{oops`)
   - `missing dir returns empty map`
   - `status missing → 'unknown'`
-- [ ] **Step 2: Run** → FAIL.
-- [ ] **Step 3: Implement** with `readdir` + `readFile`, only `*.json`.
-- [ ] **Step 4: Run** → PASS.
-- [ ] **Step 5: Commit** `feat(core): read live session status from ~/.claude/sessions`
+- [x] **Step 2: Run** → FAIL.
+- [x] **Step 3: Implement** with `readdir` + `readFile`, only `*.json`.
+- [x] **Step 4: Run** → PASS.
+- [x] **Step 5: Commit** `feat(core): read live session status from ~/.claude/sessions`
 
 ---
 
