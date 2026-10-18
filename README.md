@@ -1,96 +1,68 @@
-# the-office
+# Session Tray
 
-**htop for AI agents.** Real-time dashboard for observing Claude Code agents across all your projects.
-
-![Status: Phase 3.5 — Resilience & Enrichment](https://img.shields.io/badge/status-Phase%203.5%20Resilience-blue)
+**Every local Claude Code session, one click away.** A small tray app that lists your sessions across all projects, shows what each one was about, and resumes any of them in a terminal.
 
 ---
 
 ## What it does
 
-- **Live agent tree** — every Claude Code agent on your machine, grouped by project; subagents nested under their parent
-- **Works without hooks** — JSONL file watcher discovers agents and infers status automatically (~500ms lag); hooks give real-time updates
-- **Token & cost panel** — model, context window fill %, input/output/cache tokens, cost, and turn duration per agent
-- **Agent detail** — current tool, tool history with timing, and conversation snapshot (initial task / latest ask / latest response)
-- **Event stream** — live feed of every hook event as it fires
-- **Mock mode** — develop and demo without Claude Code running (`?mock=true`)
+- **All sessions, one list.** Every Claude Code transcript in `~/.claude/projects`, from the CLI, IDE extensions and the desktop app, grouped into Running, Pinned and Recent.
+- **Live status without setup.** Running and idle sessions come from Claude Code's own `~/.claude/sessions` files. No hooks, no server, no settings changes.
+- **Useful rows.** Title (your `/rename`, Claude's auto-title, or the first prompt), project, git branch, last activity, message count. The window adds model, context size, ≈ API cost, PR links, the last prompt and Claude's recap.
+- **One click back to work.** Resume opens a terminal in the project folder running `claude --resume <id>`, or copy the command to run it yourself.
+- **Search and filters.** By title, project, branch or prompt; Today / 7 days / 30 days / All; by project; running only.
+- **Pins.** Keep the sessions you come back to at the top.
+
+"≈ API cost" is Claude Code's own estimate at API prices. On a Pro or Max subscription you are not billed this amount.
 
 ## Download
 
-Grab the latest installer from [Releases](https://github.com/Resip10/the-office/releases):
+Grab the latest installer from [Releases](https://github.com/Resip10/the-office/releases) (Windows `.exe`, macOS `.dmg`, Linux `.AppImage`).
 
-- **Windows** — `The-Office-Setup-x.x.x.exe`
-- **macOS** — `The-Office-x.x.x-arm64.dmg`
-- **Linux** — `The-Office-x.x.x.AppImage`
+The app lives in your system tray: left-click for the session list, right-click for Open window, Launch at login and Quit. Updates install in the background.
 
-On first launch the app lives in your system tray. Use the tray menu to install or remove Claude Code hooks — the dashboard works without them via JSONL file watching. Updates are applied in the background.
+### Upgrading from The Office
 
-## Dev setup
+Older versions added `curl … localhost:7777` hooks to `~/.claude/settings.json`. They are no longer needed. The app shows a banner (and a tray menu item) to remove them; only those exact hooks are removed, your other hooks stay.
+
+## Resume
+
+| Platform | What Resume runs |
+|---|---|
+| Windows with Windows Terminal | `wt.exe -d <project> powershell.exe -NoExit -Command "claude --resume <id>"` |
+| Windows without it | a PowerShell window in the project folder |
+| macOS | Terminal.app via `osascript` |
+
+Resume is disabled when the project folder no longer exists; Copy still works.
+
+## Development
 
 ```bash
 git clone https://github.com/Resip10/the-office.git
 cd the-office
 npm install
-npm run dev        # server :7777 + client :5173
+npm run dev          # Vite :5173 + Electron tray app
+npm test -w desktop  # Jest — transcript parser, scanner, live status, commands
+npm test -w client   # Vitest — list logic and views
+npm run package      # build + installer in desktop/dist-electron
 ```
-
-### Configure hooks manually (dev only)
-
-Add to `~/.claude/settings.json` — the desktop app does this automatically for non-dev users:
-
-```json
-{
-  "hooks": {
-    "SessionStart":        [{"hooks": [{"type": "command", "command": "curl -s -X POST http://localhost:7777/api/events -H 'Content-Type: application/json' -d @- 2>/dev/null || true"}]}],
-    "SessionEnd":          [{"hooks": [{"type": "command", "command": "curl -s -X POST http://localhost:7777/api/events -H 'Content-Type: application/json' -d @- 2>/dev/null || true"}]}],
-    "SubagentStart":       [{"hooks": [{"type": "command", "command": "curl -s -X POST http://localhost:7777/api/events -H 'Content-Type: application/json' -d @- 2>/dev/null || true"}]}],
-    "SubagentStop":        [{"hooks": [{"type": "command", "command": "curl -s -X POST http://localhost:7777/api/events -H 'Content-Type: application/json' -d @- 2>/dev/null || true"}]}],
-    "PreToolUse":          [{"hooks": [{"type": "command", "command": "curl -s -X POST http://localhost:7777/api/events -H 'Content-Type: application/json' -d @- 2>/dev/null || true"}]}],
-    "PostToolUse":         [{"hooks": [{"type": "command", "command": "curl -s -X POST http://localhost:7777/api/events -H 'Content-Type: application/json' -d @- 2>/dev/null || true"}]}],
-    "Stop":                [{"hooks": [{"type": "command", "command": "curl -s -X POST http://localhost:7777/api/events -H 'Content-Type: application/json' -d @- 2>/dev/null || true"}]}],
-    "Notification":        [{"hooks": [{"type": "command", "command": "curl -s -X POST http://localhost:7777/api/events -H 'Content-Type: application/json' -d @- 2>/dev/null || true"}]}],
-    "PostToolUseFailure":  [{"hooks": [{"type": "command", "command": "curl -s -X POST http://localhost:7777/api/events -H 'Content-Type: application/json' -d @- 2>/dev/null || true"}]}]
-  }
-}
-```
-
-The hook uses `curl -s` + `|| true` so a stopped server never blocks or errors Claude Code.
 
 ## Architecture
 
 ```
-Claude Code hooks (optional)
-      │ HTTP POST :7777/api/events
-      ▼
-  Express server ──── chokidar JSONL watcher
-      │                     │ discovers agents + extracts enrichment
-      │ ring buffer (500) ◄─┘
-      ▼
-  WebSocket broadcast
-      ▼
-  React frontend (client/)
-      │ useReducer: HookEvent / SESSION_DISCOVERED / ENRICH → AgentState
-      ▼
-  AgentTree / AgentDetail / EventStream
+~/.claude/projects/<project>/<uuid>.jsonl ─┐
+~/.claude/sessions/<pid>.json ─────────────┤→ Electron main: scan (cached by mtime/size), live status every 2 s
+                                           │        │ IPC
+                                           └────────▼
+                                 React renderer: tray popover + window
 ```
 
-Two ingestion paths feed the relay: hook events (real-time) and the JSONL watcher (polling fallback). On WebSocket connect the server bootstraps agents from recent session files. Refreshing or clicking Refresh re-runs bootstrap.
-
-## Development
-
-```bash
-npm run dev          # start server :7777 + client :5173
-npm run dev:desktop  # start Electron tray (dev mode, points at Vite)
-npm test -w server   # server tests (Jest)
-npm test -w client   # client tests (Vitest)
-npm test -w desktop  # desktop tests (Jest)
-```
+The app only reads `~/.claude`. Its own data (pins, the scan cache) lives in the app's user-data folder and can be deleted at any time.
 
 ## Roadmap
 
-- **Phase 1 (done):** Observer — live agent tree, detail panel, event stream, JSONL bootstrap, mock mode
-- **Phase 2 (done):** Conversation snapshot — initial task, latest ask, latest response polled from session JSONL
-- **Phase 3 (done):** Desktop app — Electron tray (macOS/Windows/Linux), auto-installs hooks, auto-updates via GitHub Releases
-- **Phase 3.5 (done):** Resilience & enrichment — hookless mode via JSONL file watching, token/cost/model metadata, hooks management UI
-- **Phase 4 (The Office):** Visual floor-plan mode — agents as animated characters at desks, projects as rooms, toggle between list and office view
-- **Phase 4+:** Generic adapter schema — LangChain, OpenAI Agents SDK, AutoGen support via thin HTTP adapters
+- **v1 (done):** list, metadata, search and filters, copy and resume, pins
+- **Next:** handoff summary and "Continue in…", stale-session cleanup, message peek, rename
+- **Later:** waiting-for-input badge, git hints, cost totals, Codex sessions, global hotkey
+
+Design: [`docs/superpowers/specs/2026-10-18-session-tray-design.md`](docs/superpowers/specs/2026-10-18-session-tray-design.md)

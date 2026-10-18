@@ -29,11 +29,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build server + client
+      - name: Build client + desktop
         run: npm run build
-
-      - name: Build desktop (compile TS)
-        run: npm run build -w desktop
 
       - name: Extract app-builder-bin to runner temp
         shell: bash

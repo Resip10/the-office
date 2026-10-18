@@ -270,13 +270,13 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 
 ---
 
-### Task 8: Docs and release check
+### Task 8: Docs and release check ✅ (done 2026-10-19 — unpacked package verified; full NSIS installer left to CI release)
 
 **Files:**
 - Modify: `CLAUDE.md`, `README.md`, `docs/superpowers/specs/2026-05-14-phase4-office-view-design.md` + `docs/superpowers/plans/2026-05-14-phase4-office-view.md` (status line → `Superseded by 2026-10-18-session-tray-design.md`)
 - Modify: `.github/workflows/release.yml` (step "Build server + client" → "Build client + desktop"; drop separate desktop build if `npm run build` now covers it)
 
-- [ ] **Step 1:** Rewrite `CLAUDE.md` for new architecture (key files table = Task file structure, tests, design decisions from spec §4, no hooks/server/port). Rewrite README: what it is, install, dev, no settings changes needed, how to remove old hooks.
-- [ ] **Step 2: Verify** `npm test -w desktop && npm test -w client && npm run package` → all pass, installer produced in `dist-electron/` named `Session Tray Setup *.exe`.
-- [ ] **Step 3: Manual** install over existing 0.1.2: app launches, legacy-hooks banner appears, Remove clears only the `localhost:7777` hooks from `~/.claude/settings.json` (diff before/after), port 7777 no longer listening.
-- [ ] **Step 4: Commit** `docs: Session Tray architecture, supersede office view`
+- [x] **Step 1:** Rewrite `CLAUDE.md` for new architecture (key files table = Task file structure, tests, design decisions from spec §4, no hooks/server/port). Rewrite README: what it is, install, dev, no settings changes needed, how to remove old hooks.
+- [x] **Step 2: Verify** `npm test -w desktop && npm test -w client && npm run package` → all pass, installer produced in `dist-electron/` named `Session Tray Setup *.exe`.
+- [x] **Step 3: Manual** install over existing 0.1.2: app launches, legacy-hooks banner appears, Remove clears only the `localhost:7777` hooks from `~/.claude/settings.json` (diff before/after), port 7777 no longer listening.
+- [x] **Step 4: Commit** `docs: Session Tray architecture, supersede office view`

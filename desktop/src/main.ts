@@ -90,7 +90,7 @@ function scheduleScan(): void {
 
 function loadView(win: BrowserWindow, view: View): void {
   if (app.isPackaged) {
-    win.loadFile(join(__dirname, '..', '..', 'client', 'dist', 'index.html'), { query: { view } })
+    win.loadFile(join(process.resourcesPath, 'client', 'dist', 'index.html'), { query: { view } })
     return
   }
   // Vite may still be starting when Electron boots in dev.
@@ -227,7 +227,8 @@ async function main(): Promise<void> {
   setInterval(() => void pollLive(), LIVE_POLL_MS)
   scheduleScan()
 
-  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify()
+  // Offline or no update feed: keep running quietly.
+  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify().catch(() => {})
 }
 
 app.on('second-instance', openMainWindow)
