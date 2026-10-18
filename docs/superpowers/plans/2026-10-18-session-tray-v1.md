@@ -226,7 +226,7 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 
 ---
 
-### Task 6: Client list logic
+### Task 6: Client list logic ✅ (done 2026-10-19)
 
 **Files:**
 - Create: `client/src/lib/list.ts`, `client/src/__tests__/list.test.ts`
@@ -244,9 +244,9 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   export function stateOf(r: SessionRecord): 'running' | 'ended' | string
   ```
 
-- [ ] **Step 1: Failing tests:** section precedence Running > Pinned > Recent (a pinned running session only in Running); each section sorted by `lastActivityAt` desc; `range` filters Recent only (pinned 20-day-old session visible with `'7d'`); `query` matches title/project name/branch/lastPrompt case-insensitively and applies to all sections; `project` filter applies to all; `runningOnly` empties pinned/recent; `today` = since local midnight of `now`; `relativeTime` boundaries (59 s → 'just now', 60 m → '1h ago', 7 d → date); `stateOf` live busy → 'running', live idle → 'idle', null → 'ended'.
-- [ ] **Step 2: Run** `npm test -w client` → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: Commit** `feat(client): session list sectioning, filtering, formatting`
+- [x] **Step 1: Failing tests:** section precedence Running > Pinned > Recent (a pinned running session only in Running); each section sorted by `lastActivityAt` desc; `range` filters Recent only (pinned 20-day-old session visible with `'7d'`); `query` matches title/project name/branch/lastPrompt case-insensitively and applies to all sections; `project` filter applies to all; `runningOnly` empties pinned/recent; `today` = since local midnight of `now`; `relativeTime` boundaries (59 s → 'just now', 60 m → '1h ago', 7 d → date); `stateOf` live busy → 'running', live idle → 'idle', null → 'ended'.
+- [x] **Step 2: Run** `npm test -w client` → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
+- [x] **Step 5: Commit** `feat(client): session list sectioning, filtering, formatting`
 
 ---
 
