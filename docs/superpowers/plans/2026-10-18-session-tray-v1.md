@@ -250,7 +250,7 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 
 ---
 
-### Task 7: Client views
+### Task 7: Client views ✅ (done 2026-10-19)
 
 **Files:**
 - Create: `client/src/hooks/useSessions.ts`, `client/src/components/{SessionRow,SessionList,FilterBar,DetailPanel,LegacyHooksBanner}.tsx`, `client/src/views/{Popover,Window}.tsx`, `client/src/global.d.ts` (declares `window.sessionTray`)
@@ -262,11 +262,11 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 - Consumes: `window.sessionTray` (Task 5), `buildSections`/`relativeTime`/`stateOf` (Task 6).
 - Produces: `useSessions(): { records: SessionRecord[]; pins: string[]; legacyHooks: boolean }`.
 
-- [ ] **Step 1: Failing tests** (`SessionRow.test.tsx`, mock `window.sessionTray`): renders title, `project · branch`, relative time; Resume button disabled with title `Project folder no longer exists` when `projectExists` false; Resume label `Open another` when running; clicking Copy calls `sessionTray.copy(id)`; dimmed + "Continued in →" when `continuedInId` set.
-- [ ] **Step 2: Run** → FAIL.
-- [ ] **Step 3: Implement** per spec §6: Popover (search autofocus, chips, three sections, footer "Open window"); Window (list left with model/cost/context columns, `DetailPanel` right with every record field, PR links via `openUrl`, command + Copy, Resume, Reveal, Pin); `LegacyHooksBanner` text: "Old The Office hooks found in Claude settings. They're no longer needed." + **Remove**. Status dot colors: running `#d29922`, idle `#3fb950`, ended `#6e7681`, other `#bc8cff`. Empty state: "No Claude Code sessions found in ~/.claude/projects".
-- [ ] **Step 4: Run** `npm test -w client` → PASS; `npm run dev` → popover lists real sessions, Resume opens Windows Terminal in project folder, Copy puts command on clipboard, pin survives restart.
-- [ ] **Step 5: Commit** `feat(client): popover and window views`
+- [x] **Step 1: Failing tests** (`SessionRow.test.tsx`, mock `window.sessionTray`): renders title, `project · branch`, relative time; Resume button disabled with title `Project folder no longer exists` when `projectExists` false; Resume label `Open another` when running; clicking Copy calls `sessionTray.copy(id)`; dimmed + "Continued in →" when `continuedInId` set.
+- [x] **Step 2: Run** → FAIL.
+- [x] **Step 3: Implement** per spec §6: Popover (search autofocus, chips, three sections, footer "Open window"); Window (list left with model/cost/context columns, `DetailPanel` right with every record field, PR links via `openUrl`, command + Copy, Resume, Reveal, Pin); `LegacyHooksBanner` text: "Old The Office hooks found in Claude settings. They're no longer needed." + **Remove**. Status dot colors: running `#d29922`, idle `#3fb950`, ended `#6e7681`, other `#bc8cff`. Empty state: "No Claude Code sessions found in ~/.claude/projects".
+- [x] **Step 4: Run** `npm test -w client` → PASS; `npm run dev` → popover lists real sessions, Resume opens Windows Terminal in project folder, Copy puts command on clipboard, pin survives restart.
+- [x] **Step 5: Commit** `feat(client): popover and window views`
 
 ---
 

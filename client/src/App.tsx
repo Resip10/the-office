@@ -1,8 +1,8 @@
-// Placeholder until the popover and window views land (plan Task 7).
+import { Popover } from './views/Popover'
+import { Window } from './views/Window'
+
+const view = new URLSearchParams(window.location.search).get('view') === 'window' ? 'window' : 'popover'
+
 export default function App() {
-  return (
-    <div className="flex h-full items-center justify-center bg-canvas text-text-muted font-mono text-sm">
-      Session Tray
-    </div>
-  )
+  return view === 'window' ? <Window /> : <Popover />
 }
