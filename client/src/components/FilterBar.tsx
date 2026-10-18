@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { Filters, TimeRange } from '../lib/list'
 import { projectName } from '../lib/list'
 
@@ -14,10 +15,19 @@ const chip = (active: boolean) =>
 
 export function FilterBar({ filters, onChange, projects }: Props) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch })
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // The popover window is reused, so autoFocus only fires on the first open.
+  useEffect(() => {
+    const focusSearch = () => searchRef.current?.focus()
+    window.addEventListener('focus', focusSearch)
+    return () => window.removeEventListener('focus', focusSearch)
+  }, [])
 
   return (
     <div className="flex flex-col gap-2 p-3 border-b border-border">
       <input
+        ref={searchRef}
         autoFocus
         type="search"
         value={filters.query}

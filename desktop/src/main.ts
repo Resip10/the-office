@@ -9,6 +9,7 @@ import { copyCommand, resumeInvocation } from './core/commands'
 import { loadAppState, togglePin } from './core/app-state'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
+import { scanDue, unknownLiveIds } from './core/refresh'
 import type { LiveInfo, SessionRecord, SessionsPayload } from './core/types'
 
 const CLAUDE_DIR = join(homedir(), '.claude')
@@ -17,8 +18,7 @@ const SESSIONS_DIR = join(CLAUDE_DIR, 'sessions')
 const SETTINGS_PATH = join(CLAUDE_DIR, 'settings.json')
 
 const LIVE_POLL_MS = 2_000
-const SCAN_VISIBLE_MS = 30_000
-const SCAN_HIDDEN_MS = 300_000
+const SCAN_TICK_MS = 10_000
 const POPOVER_SIZE = { width: 380, height: 560 }
 
 type View = 'popover' | 'window'
@@ -35,6 +35,8 @@ let pins: string[] = []
 let legacyHooks = false
 let lastPayload = ''
 let scanning = false
+let lastScanAt = 0
+const rescannedForLive = new Set<string>()
 let hasWt = false
 
 const cachePath = () => join(app.getPath('userData'), 'index-v1.json')
@@ -63,11 +65,12 @@ async function rescan(): Promise<void> {
     const result = await scanClaude({ projectsDir: PROJECTS_DIR, cache })
     records = result.records
     cache = result.cache
-    await saveCache(cachePath(), cache)
+    if (result.changed) await saveCache(cachePath(), cache)
   } catch {
     // keep last good list
   } finally {
     scanning = false
+    lastScanAt = Date.now()
   }
   broadcast()
 }
@@ -75,17 +78,18 @@ async function rescan(): Promise<void> {
 async function pollLive(): Promise<void> {
   live = await readLiveSessions(SESSIONS_DIR, pidIsAlive)
   legacyHooks = hasLegacyHooks(SETTINGS_PATH)
-  // A brand-new session is live before its transcript has been scanned.
-  if ([...live.keys()].some(id => !findRecord(id))) void rescan()
+  // A brand-new session is live before its transcript has been scanned; rescan once per such session.
+  const unknown = unknownLiveIds(live.keys(), new Set(records.map(r => r.id)), rescannedForLive)
+  if (unknown.length > 0) {
+    unknown.forEach(id => rescannedForLive.add(id))
+    void rescan()
+  }
   broadcast()
 }
 
-function scheduleScan(): void {
+function scanTick(): void {
   const visible = openWindows().some(w => w.isVisible())
-  setTimeout(async () => {
-    await rescan()
-    scheduleScan()
-  }, visible ? SCAN_VISIBLE_MS : SCAN_HIDDEN_MS)
+  if (scanDue({ visible, lastScanAt, now: Date.now() })) void rescan()
 }
 
 function loadView(win: BrowserWindow, view: View): void {
@@ -225,7 +229,7 @@ async function main(): Promise<void> {
   await pollLive()
   await rescan()
   setInterval(() => void pollLive(), LIVE_POLL_MS)
-  scheduleScan()
+  setInterval(scanTick, SCAN_TICK_MS)
 
   // Offline or no update feed: keep running quietly.
   if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify().catch(() => {})

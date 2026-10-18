@@ -59,6 +59,17 @@ describe('scanClaude', () => {
     expect(second.records).toEqual(first.records)
   })
 
+  it('reports changed only when the cache differs from the one passed in', async () => {
+    const first = await scanClaude({ projectsDir, cache: null })
+    expect(first.changed).toBe(true)
+    const second = await scanClaude({ projectsDir, cache: first.cache })
+    expect(second.changed).toBe(false)
+    appendFileSync(join(projectsDir, 'C--local-app', `${LOCAL}.jsonl`), '{"type":"mode"}\n')
+    expect((await scanClaude({ projectsDir, cache: second.cache })).changed).toBe(true)
+    unlinkSync(join(projectsDir, 'C--local-app', `${LOCAL}.jsonl`))
+    expect((await scanClaude({ projectsDir, cache: second.cache })).changed).toBe(true)
+  })
+
   it('reparses changed file', async () => {
     const first = await scanClaude({ projectsDir, cache: null })
     const file = join(projectsDir, 'C--local-app', `${LOCAL}.jsonl`)

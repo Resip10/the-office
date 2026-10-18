@@ -33,10 +33,12 @@ describe('resumeInvocation', () => {
     expect(inv?.cwd).toBe('C:\\a;b')
   })
 
-  it('win32 without wt opens a powershell console in the project', () => {
+  // A detached powershell gets no console on Windows and silently does nothing;
+  // `start` gives it a new console window.
+  it('win32 without wt opens a powershell console in the project via cmd start', () => {
     expect(resumeInvocation({ id: ID, projectPath: PATH }, 'win32', false)).toEqual({
-      file: 'powershell.exe',
-      args: ['-NoExit', '-Command', `claude --resume ${ID}`],
+      file: 'cmd.exe',
+      args: ['/c', 'start', 'powershell.exe', '-NoExit', '-Command', `claude --resume ${ID}`],
       cwd: PATH,
     })
   })

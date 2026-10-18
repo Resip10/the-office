@@ -14,12 +14,13 @@ export async function scanClaude(opts: {
   projectsDir: string
   cache: IndexCache | null
   parse?: typeof parseTranscript
-}): Promise<{ records: SessionRecord[]; cache: IndexCache }> {
+}): Promise<{ records: SessionRecord[]; cache: IndexCache; changed: boolean }> {
   const { projectsDir, parse = parseTranscript } = opts
   const prev = opts.cache?.entries ?? {}
   const cache: IndexCache = { version: 1, entries: {} }
+  let changed = opts.cache === null
 
-  if (!existsSync(projectsDir)) return { records: [], cache }
+  if (!existsSync(projectsDir)) return { records: [], cache, changed: changed || Object.keys(prev).length > 0 }
 
   const [transcripts, subagents] = await Promise.all([
     fg('*/*.jsonl', { cwd: projectsDir }),
@@ -38,7 +39,9 @@ export async function scanClaude(opts: {
     try {
       const { mtimeMs, size } = await stat(filePath)
       const hit = prev[filePath]
-      const meta = hit && hit.mtimeMs === mtimeMs && hit.size === size ? hit.meta : await parse(filePath)
+      const fresh = hit && hit.mtimeMs === mtimeMs && hit.size === size
+      const meta = fresh ? hit.meta : await parse(filePath)
+      if (!fresh) changed = true
       cache.entries[filePath] = { mtimeMs, size, meta }
 
       const { sessionId: _sessionId, lastTimestamp, ...rest } = meta
@@ -58,7 +61,9 @@ export async function scanClaude(opts: {
   }
 
   records.sort((a, b) => b.lastActivityAt - a.lastActivityAt)
-  return { records, cache }
+  // Every kept entry came from prev or a reparse, so a smaller count means files were deleted.
+  if (Object.keys(cache.entries).length !== Object.keys(prev).length) changed = true
+  return { records, cache, changed }
 }
 
 export function attachLive(records: SessionRecord[], live: Map<string, LiveInfo>): SessionRecord[] {

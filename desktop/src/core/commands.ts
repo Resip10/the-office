@@ -23,7 +23,8 @@ export function resumeInvocation(r: Target, platform: NodeJS.Platform, hasWt: bo
   if (platform === 'win32') {
     // Run claude inside powershell so the window stays open after claude exits.
     const shell = ['powershell.exe', '-NoExit', '-Command', resume]
-    if (!hasWt) return { file: shell[0], args: shell.slice(1), cwd }
+    // A detached powershell gets no console and silently does nothing; `start` opens a new console window.
+    if (!hasWt) return { file: 'cmd.exe', args: ['/c', 'start', ...shell], cwd }
     // `;` separates commands in wt's command line.
     return { file: 'wt.exe', args: ['-d', cwd.replace(/;/g, '\\;'), ...shell], cwd }
   }
