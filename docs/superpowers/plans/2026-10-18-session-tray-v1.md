@@ -134,7 +134,7 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 
 ---
 
-### Task 3: Scanner with disposable cache
+### Task 3: Scanner with disposable cache ✅ (done 2026-10-18)
 
 **Files:**
 - Create: `desktop/src/core/scanner.ts`, `desktop/src/core/__tests__/scanner.test.ts`
@@ -150,7 +150,7 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   export async function saveCache(path: string, cache: IndexCache): Promise<void> // temp + rename
   ```
 
-- [ ] **Step 1: Failing tests** (build temp dir with `fs.mkdtemp`, copy Task 1 fixtures):
+- [x] **Step 1: Failing tests** (build temp dir with `fs.mkdtemp`, copy Task 1 fixtures):
   - `lists only top-level <project>/<uuid>.jsonl, not subagents/` and `subagentCount` = number of `<uuid>/subagents/*.jsonl`
   - `reuses cached meta when mtime and size unchanged` (spy `parse` called 0 times on second scan)
   - `reparses changed file`
@@ -159,10 +159,10 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   - `lastActivityAt = lastTimestamp ?? file mtime`
   - `attachLive sets live by sessionId, null otherwise`
   - `loadCache returns null for version 2 or garbage`
-- [ ] **Step 2: Run** → FAIL.
-- [ ] **Step 3: Implement** with `fast-glob` pattern `*/*.jsonl` (cwd = projectsDir) and `*/*/subagents/*.jsonl` for counts. Add `fast-glob` to `desktop/package.json` dependencies.
-- [ ] **Step 4: Run** → PASS.
-- [ ] **Step 5: Commit** `feat(core): scan Claude projects with mtime cache`
+- [x] **Step 2: Run** → FAIL.
+- [x] **Step 3: Implement** with `fast-glob` pattern `*/*.jsonl` (cwd = projectsDir) and `*/*/subagents/*.jsonl` for counts. Add `fast-glob` to `desktop/package.json` dependencies.
+- [x] **Step 4: Run** → PASS.
+- [x] **Step 5: Commit** `feat(core): scan Claude projects with mtime cache`
 
 ---
 
