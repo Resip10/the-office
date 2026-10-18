@@ -35,3 +35,9 @@ export interface SessionRecord extends Omit<TranscriptMeta, 'sessionId' | 'lastT
   subagentCount: number
   live: LiveInfo | null
 }
+
+export interface SessionsPayload {
+  records: SessionRecord[]
+  pins: string[]
+  legacyHooks: boolean
+}

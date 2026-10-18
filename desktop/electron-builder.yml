@@ -1,11 +1,11 @@
 appId: com.the-office.app
-productName: The Office
+productName: Session Tray
 directories:
   output: dist-electron
 files:
   - desktop/dist/**
+  - "!desktop/dist/**/__tests__/**"
   - desktop/assets/**
-  - server/dist/**
   - client/dist/**
   - package.json
 extraMetadata:

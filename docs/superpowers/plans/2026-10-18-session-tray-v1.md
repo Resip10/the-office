@@ -194,7 +194,7 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
 
 ---
 
-### Task 5: Electron main rewrite (server removed)
+### Task 5: Electron main rewrite (server removed) ✅ (done 2026-10-19 — root `npm run build` still blocked by pre-existing client mock error until Task 6)
 
 **Files:**
 - Create: `desktop/src/core/legacy-hooks.ts` (move `uninstallHooks` + `HOOK_COMMAND` from `installer.ts`, add `hasLegacyHooks`), `desktop/src/core/popover.ts`, tests `legacy-hooks.test.ts` (port the existing `uninstallHooks` tests), `popover.test.ts`
@@ -216,13 +216,13 @@ Deleted: `server/` workspace, `client/src/{reducer.ts,mock/,hooks/useRelay.ts,ho
   IPC channels: `sessions:update` (main→renderer), `session:resume|copy|pin|reveal`, `app:open-url|open-window|remove-legacy-hooks`.
   Pure helpers: `hasLegacyHooks(settingsPath: string): boolean`, `popoverPosition(tray: Rectangle, workArea: Rectangle, size: { width: number; height: number }): { x: number; y: number }`.
 
-- [ ] **Step 1: Failing tests:** `hasLegacyHooks` true when command present, false when only other hooks, false for missing file, `hasLegacyHooks handles BOM and invalid JSON` (BOM + valid → true; invalid → false); ported `uninstallHooks` tests; `popoverPosition` for taskbar bottom (above tray, right-aligned to tray), top (below tray), left/right, and tray near screen edge → clamped inside `workArea`.
-- [ ] **Step 2: Run** `npm test -w desktop` → FAIL.
-- [ ] **Step 3: Implement helpers.** Run → PASS.
-- [ ] **Step 4: Rewrite `main.ts`:** single-instance lock; tray (left-click toggles popover, context menu: Open window, Remove legacy hooks (only when detected), Launch at login checkbox via `app.setLoginItemSettings`, Quit); popover `BrowserWindow` 380×560 frameless, `skipTaskbar`, hide on `blur`, positioned with `popoverPosition`; main window 1100×720; both load renderer (`loadURL('http://localhost:5173/?view=…')` when `!app.isPackaged`, else `loadFile(client/dist/index.html, { query: { view } })`); live poll 2 s; rescan 30 s / 5 min / on popover show; cache in `userData/index-v1.json`; broadcast `sessions:update` only when JSON changed; `session:resume` → `spawn(file, args, { cwd, detached: true, stdio: 'ignore' }).unref()`, `hasWt` checked once via `where wt.exe`; `session:copy` → `clipboard.writeText(copyCommand(r))`; tooltip `Session Tray — N running`; keep `autoUpdater.checkForUpdatesAndNotify()` when packaged.
-- [ ] **Step 5: Delete server + old installer;** root `package.json`: workspaces `["client", "desktop"]`, `dev` = `concurrently "npm run dev -w client" "npm run build -w desktop && electron desktop/dist/main.js"`, `build` = client + desktop builds; `electron-builder.yml`: `productName: Session Tray`, drop `server/dist/**`; client `vite.config.ts`: `base: './'`, remove `/api` proxy.
-- [ ] **Step 6: Verify** `npm test -w desktop` PASS, `npm run build` succeeds, `npm run dev` shows tray icon (renderer may still be the old app — Task 7 replaces it).
-- [ ] **Step 7: Commit** `feat(desktop): tray + popover over local session index, remove server`
+- [x] **Step 1: Failing tests:** `hasLegacyHooks` true when command present, false when only other hooks, false for missing file, `hasLegacyHooks handles BOM and invalid JSON` (BOM + valid → true; invalid → false); ported `uninstallHooks` tests; `popoverPosition` for taskbar bottom (above tray, right-aligned to tray), top (below tray), left/right, and tray near screen edge → clamped inside `workArea`.
+- [x] **Step 2: Run** `npm test -w desktop` → FAIL.
+- [x] **Step 3: Implement helpers.** Run → PASS.
+- [x] **Step 4: Rewrite `main.ts`:** single-instance lock; tray (left-click toggles popover, context menu: Open window, Remove legacy hooks (only when detected), Launch at login checkbox via `app.setLoginItemSettings`, Quit); popover `BrowserWindow` 380×560 frameless, `skipTaskbar`, hide on `blur`, positioned with `popoverPosition`; main window 1100×720; both load renderer (`loadURL('http://localhost:5173/?view=…')` when `!app.isPackaged`, else `loadFile(client/dist/index.html, { query: { view } })`); live poll 2 s; rescan 30 s / 5 min / on popover show; cache in `userData/index-v1.json`; broadcast `sessions:update` only when JSON changed; `session:resume` → `spawn(file, args, { cwd, detached: true, stdio: 'ignore' }).unref()`, `hasWt` checked once via `where wt.exe`; `session:copy` → `clipboard.writeText(copyCommand(r))`; tooltip `Session Tray — N running`; keep `autoUpdater.checkForUpdatesAndNotify()` when packaged.
+- [x] **Step 5: Delete server + old installer;** root `package.json`: workspaces `["client", "desktop"]`, `dev` = `concurrently "npm run dev -w client" "npm run build -w desktop && electron desktop/dist/main.js"`, `build` = client + desktop builds; `electron-builder.yml`: `productName: Session Tray`, drop `server/dist/**`; client `vite.config.ts`: `base: './'`, remove `/api` proxy.
+- [x] **Step 6: Verify** `npm test -w desktop` PASS, `npm run build` succeeds, `npm run dev` shows tray icon (renderer may still be the old app — Task 7 replaces it).
+- [x] **Step 7: Commit** `feat(desktop): tray + popover over local session index, remove server`
 
 ---
 
