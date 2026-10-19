@@ -10,6 +10,21 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-18-session-tray-design.md` (product vision: `docs/product/session-tray-plan.md`)
 
+## Status — complete (2026-10-19)
+
+All 8 tasks done and released as **v0.2.0** (Windows `.exe`, macOS `.dmg`, Linux `.AppImage`).
+
+| PR | What |
+|---|---|
+| #4 | Tasks 1–8 + final-review fixes (resume without Windows Terminal, poll-driven rescans, stale list, search focus) |
+| #5 | Version 0.2.0 |
+| #6 | Restore `releaseType: release` (v0.2.0 had been created as a draft) |
+| #7 | The 7 minor items deferred from the final review (reused PIDs, odd hook settings, `$`/backtick paths, compact-summary titles, async folder checks, "Scanning…" state, small-screen popover) |
+
+Tests at completion: desktop 81, client 51. Not yet checked by hand: installing 0.2.0 over 0.1.2 / auto-update.
+
+Next: P1 design round (spec §9) — handoff summary, Continue in…, stale detection + archive, message peek, rename.
+
 ## Global Constraints
 
 - Never write to `~/.claude` except `uninstallHooks` on explicit user click.

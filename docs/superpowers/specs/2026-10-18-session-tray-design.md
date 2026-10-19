@@ -1,6 +1,6 @@
 # Session Tray — Design Spec
 **Date:** 2026-10-18
-**Status:** Approved (v1 scope)
+**Status:** v1 implemented and released as v0.2.0 (2026-10-19; plan `docs/superpowers/plans/2026-10-18-session-tray-v1.md`). P1 not started.
 **Supersedes:** Phase 4 office view (`2026-05-14-phase4-office-view-design.md`) and the hook-driven observer direction of Phases 1–3.5
 **Product doc:** `docs/product/session-tray-plan.md` (the full product vision; this spec scopes and grounds it)
 
@@ -160,7 +160,8 @@ Rules:
 
 ## 9. Roadmap after v1
 
-- **P1:** handoff summary (tier 1 = latest `away_summary` / `isCompactSummary` text; tier 2 = extract: goal, last prompt, files touched, branch, last answer) with Copy; "Continue in…" (new `claude` in project folder seeded with summary); stale detection + archive (prefer Claude's `cleanupPeriodDays` / `claude purge` before custom file moves; any move = write new, then remove old, with undo); detail message peek; rename (app-owned).
+- **v1 (done, v0.2.0):** everything in §§4–8, plus the review follow-ups listed in the plan's Status section.
+- **P1 (next):** handoff summary (tier 1 = latest `away_summary` / `isCompactSummary` text; tier 2 = extract: goal, last prompt, files touched, branch, last answer) with Copy; "Continue in…" (new `claude` in project folder seeded with summary); stale detection + archive (prefer Claude's `cleanupPeriodDays` / `claude purge` before custom file moves; any move = write new, then remove old, with undo); detail message peek; rename (app-owned).
 - **P2:** waiting-for-input badge (needs a reliable status value from session files — verify what Claude writes when blocked on a permission prompt); git hints (branch merged, worktree gone); token/cost totals; tags and notes.
 - **P3:** Codex adapter (`~/.codex/sessions`, read-only sqlite), LLM-polished summaries, global hotkey, full-text index, CLI / `/sessions` command.
 
@@ -175,3 +176,4 @@ Rules:
 - Exact set of `status` values in `sessions/<pid>.json` (seen: `busy` while working, `idle` while waiting for the next prompt; permission-prompt value still unknown). Unknown values are displayed raw until mapped.
 - Whether desktop-app Code tab sessions resume cleanly via `claude --resume` on this Claude Code version (known issue #32992). v1 just tries; P1 handoff is the fallback.
 - Rename write-back to Claude (`custom-title`) vs app-only — decide in P1.
+- Crashed-session detection compares `procStart` with the real process start time on Windows only; macOS still relies on pid existence.
