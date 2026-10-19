@@ -8,8 +8,9 @@ export interface Rect {
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max)
 
 // Place the popover against the taskbar edge the tray sits on, centred on the tray icon,
-// and always fully inside the display's work area.
-export function popoverPosition(tray: Rect, workArea: Rect, size: { width: number; height: number }): { x: number; y: number } {
+// and always fully inside the display's work area (shrinking it on displays smaller than the popover).
+export function popoverPosition(tray: Rect, workArea: Rect, wanted: { width: number; height: number }): Rect {
+  const size = { width: Math.min(wanted.width, workArea.width), height: Math.min(wanted.height, workArea.height) }
   const right = workArea.x + workArea.width
   const bottom = workArea.y + workArea.height
   const centreX = tray.x + tray.width / 2 - size.width / 2
@@ -25,5 +26,7 @@ export function popoverPosition(tray: Rect, workArea: Rect, size: { width: numbe
   return {
     x: Math.round(clamp(x, workArea.x, right - size.width)),
     y: Math.round(clamp(y, workArea.y, bottom - size.height)),
+    width: size.width,
+    height: size.height,
   }
 }

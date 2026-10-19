@@ -40,7 +40,7 @@ const byId = (records: SessionRecord[], id: string) => records.find(r => r.id ==
 describe('scanClaude', () => {
   it('lists only top-level <project>/<uuid>.jsonl, not subagents/', async () => {
     const { records } = await scanClaude({ projectsDir, cache: null })
-    expect(records).toHaveLength(6)
+    expect(records).toHaveLength(7)
     expect(records.every(r => !r.filePath.includes('subagents'))).toBe(true)
     expect(records.every(r => r.tool === 'claude')).toBe(true)
   })
@@ -94,6 +94,14 @@ describe('scanClaude', () => {
     expect(byId(records, TITLED)?.projectExists).toBe(false)
     expect(byId(records, NO_SESSION)?.projectExists).toBe(false)
     expect(byId(records, LOCAL)?.projectExists).toBe(true)
+  })
+
+  it('checks each distinct project folder once per scan, asynchronously', async () => {
+    const pathExists = jest.fn(async (p: string) => p === appDir)
+    const { records } = await scanClaude({ projectsDir, cache: null, pathExists })
+    expect(pathExists.mock.calls.map(([p]) => p).sort()).toEqual([appDir, 'C:\\work\\app'].sort())
+    expect(byId(records, LOCAL)?.projectExists).toBe(true)
+    expect(byId(records, TITLED)?.projectExists).toBe(false)
   })
 
   it('lastActivityAt = lastTimestamp ?? file mtime', async () => {

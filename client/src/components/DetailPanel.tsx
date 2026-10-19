@@ -29,7 +29,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Props) {
   const [copied, setCopied] = useState(false)
   const state = stateOf(r)
-  const command = copyCommand(r)
+  const command = copyCommand(r, window.sessionTray.platform)
 
   function copy() {
     window.sessionTray.copy(r.id)

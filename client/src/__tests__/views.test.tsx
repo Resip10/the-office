@@ -22,7 +22,7 @@ function mockBridge(payload: SessionsPayload) {
   window.sessionTray = {
     onUpdate: vi.fn(cb => { cb(payload); return () => {} }),
     resume: vi.fn(), copy: vi.fn(), togglePin: vi.fn(), reveal: vi.fn(),
-    openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(),
+    openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(), platform: 'win32' as const,
   }
 }
 
@@ -44,6 +44,14 @@ describe('Popover', () => {
     render(<Popover />)
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
     expect(window.sessionTray.removeLegacyHooks).toHaveBeenCalled()
+  })
+
+  it("shows 'Scanning…', not the empty state, until the first payload arrives", () => {
+    mockBridge({ records: [], pins: [], legacyHooks: false })
+    window.sessionTray.onUpdate = vi.fn(() => () => {}) // never delivers
+    render(<Popover />)
+    expect(screen.getByText('Scanning…')).toBeInTheDocument()
+    expect(screen.queryByText('No Claude Code sessions found in ~/.claude/projects')).toBeNull()
   })
 
   it('empty state when there are no sessions', () => {
@@ -68,9 +76,16 @@ describe('Window', () => {
     expect(screen.getByText('Select a session to see details')).toBeInTheDocument()
     fireEvent.click(screen.getByText('Pick me'))
     expect(screen.getByRole('heading', { name: 'Pick me' })).toBeInTheDocument()
-    expect(screen.getByText(`cd "C:\\projects\\app"; claude --resume ${A}`)).toBeInTheDocument()
+    expect(screen.getByText(`cd 'C:\\projects\\app'; claude --resume ${A}`)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'https://github.com/acme/app/pull/7' }))
     expect(window.sessionTray.openUrl).toHaveBeenCalledWith('https://github.com/acme/app/pull/7')
+  })
+
+  it("resume command uses the bridge platform's quoting (PowerShell doubles ')", () => {
+    mockBridge({ records: [rec(A, { title: 'Quote', projectPath: "C:\\Bob's app" })], pins: [], legacyHooks: false })
+    render(<Window />)
+    fireEvent.click(screen.getByText('Quote'))
+    expect(screen.getByText(`cd 'C:\\Bob''s app'; claude --resume ${A}`)).toBeInTheDocument()
   })
 
   it("'Continued in →' selects the successor, even outside the time range", () => {

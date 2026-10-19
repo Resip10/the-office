@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs'
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { HOOK_COMMAND, hasLegacyHooks, uninstallHooks } from '../legacy-hooks'
@@ -85,6 +85,19 @@ describe('uninstallHooks', () => {
     writeFileSync(settingsPath, '﻿' + JSON.stringify({ hooks: { Stop: [{ hooks: [legacy] }] } }))
     expect(uninstallHooks(settingsPath)).toBe(true)
     expect(readSettings()).toEqual({ hooks: {} })
+  })
+
+  it('does not throw on matchers without a hooks array, and keeps them', () => {
+    const odd = { matcher: 'Bash' }
+    writeFileSync(settingsPath, JSON.stringify({ hooks: { PreToolUse: [odd, { hooks: [legacy] }], Stop: 'nonsense' } }))
+    expect(() => uninstallHooks(settingsPath)).not.toThrow()
+    expect(readSettings().hooks).toEqual({ PreToolUse: [odd], Stop: 'nonsense' })
+  })
+
+  it('writes through a temp file and leaves none behind', () => {
+    writeLegacySettings()
+    uninstallHooks(settingsPath)
+    expect(readdirSync(tmpDir)).toEqual(['settings.json'])
   })
 
   it('is idempotent — calling twice is safe', () => {

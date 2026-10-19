@@ -1,9 +1,11 @@
 import { existsSync } from 'fs'
-import { readFile, rename, stat, writeFile } from 'fs/promises'
+import { access, readFile, rename, stat, writeFile } from 'fs/promises'
 import { join } from 'path'
 import fg from 'fast-glob'
 import { parseTranscript } from './claude-transcript'
 import type { LiveInfo, SessionRecord, TranscriptMeta } from './types'
+
+const folderExists = (path: string) => access(path).then(() => true, () => false)
 
 export interface IndexCache {
   version: 1
@@ -14,8 +16,15 @@ export async function scanClaude(opts: {
   projectsDir: string
   cache: IndexCache | null
   parse?: typeof parseTranscript
+  pathExists?: (path: string) => Promise<boolean>
 }): Promise<{ records: SessionRecord[]; cache: IndexCache; changed: boolean }> {
-  const { projectsDir, parse = parseTranscript } = opts
+  const { projectsDir, parse = parseTranscript, pathExists = folderExists } = opts
+  // Async and once per folder: an unreachable network path must not block the main process per record.
+  const projectChecks = new Map<string, Promise<boolean>>()
+  const projectExists = (path: string) => {
+    if (!projectChecks.has(path)) projectChecks.set(path, pathExists(path))
+    return projectChecks.get(path) as Promise<boolean>
+  }
   const prev = opts.cache?.entries ?? {}
   const cache: IndexCache = { version: 1, entries: {} }
   let changed = opts.cache === null
@@ -49,7 +58,7 @@ export async function scanClaude(opts: {
         ...rest,
         tool: 'claude',
         filePath,
-        projectExists: meta.projectPath !== null && existsSync(meta.projectPath),
+        projectExists: meta.projectPath !== null && await projectExists(meta.projectPath),
         lastActivityAt: lastTimestamp ?? mtimeMs,
         fileSize: size,
         subagentCount: subagentCounts.get(meta.id) ?? 0,

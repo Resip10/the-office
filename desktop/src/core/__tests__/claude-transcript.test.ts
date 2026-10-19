@@ -7,6 +7,7 @@ const NO_SESSION = '33333333-3333-4333-8333-333333333333'
 const AI_TITLED = '44444444-4444-4444-8444-444444444444'
 const PROMPT_ONLY = '55555555-5555-4555-8555-555555555555'
 const BROKEN = '66666666-6666-4666-8666-666666666666'
+const COMPACTED = '88888888-8888-4888-8888-888888888888'
 
 const parse = (id: string) => parseTranscript(join(DIR, `${id}.jsonl`))
 
@@ -29,6 +30,12 @@ describe('parseTranscript', () => {
     expect(meta.title.startsWith('Refactor the payment module')).toBe(true)
     expect(meta.title.length).toBe(120)
     expect(meta.title).not.toMatch(/\s{2,}/)
+  })
+
+  it('skips the compact summary when titling from the first prompt', async () => {
+    const meta = await parse(COMPACTED)
+    expect(meta.title).toBe('Next: wire the tray menu')
+    expect(meta.titleSource).toBe('prompt')
   })
 
   it('takes identity and location fields', async () => {

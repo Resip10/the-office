@@ -94,7 +94,8 @@ export async function parseTranscript(filePath: string): Promise<TranscriptMeta>
         meta.messageCount++
         const msg = (obj.message ?? {}) as Rec
         if (obj.type === 'user') {
-          firstPrompt ??= promptText(msg.content)
+          // After compaction the first user record is Claude's summary, not something the user typed.
+          if (obj.isCompactSummary !== true) firstPrompt ??= promptText(msg.content)
         } else {
           meta.model = str(msg.model) ?? meta.model
           const usage = msg.usage as Rec | undefined

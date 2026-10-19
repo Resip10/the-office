@@ -2,10 +2,12 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type { SessionsPayload } from './core/types'
 
 contextBridge.exposeInMainWorld('sessionTray', {
+  platform: process.platform,
   onUpdate(cb: (p: SessionsPayload) => void): () => void {
     const handler = (_e: IpcRendererEvent, p: SessionsPayload) => cb(p)
     ipcRenderer.on('sessions:update', handler)
-    void ipcRenderer.invoke('sessions:get').then(cb)
+    // null = main has not finished its first scan; the first broadcast will deliver data.
+    void ipcRenderer.invoke('sessions:get').then((p: SessionsPayload | null) => { if (p) cb(p) })
     return () => { ipcRenderer.removeListener('sessions:update', handler) }
   },
   resume: (id: string) => ipcRenderer.send('session:resume', id),

@@ -18,7 +18,7 @@ function rec(over: Partial<SessionRecord> = {}): SessionRecord {
 
 const api = {
   onUpdate: vi.fn(() => () => {}), resume: vi.fn(), copy: vi.fn(), togglePin: vi.fn(), reveal: vi.fn(),
-  openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(),
+  openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(), platform: 'win32' as const,
 }
 
 beforeEach(() => {

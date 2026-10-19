@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { SessionsPayload } from '../../../desktop/src/core/types'
 
-const EMPTY: SessionsPayload = { records: [], pins: [], legacyHooks: false }
-
-export function useSessions(): SessionsPayload {
-  const [payload, setPayload] = useState<SessionsPayload>(EMPTY)
+// null until main sends the first payload (sent only after its first scan).
+export function useSessions(): SessionsPayload | null {
+  const [payload, setPayload] = useState<SessionsPayload | null>(null)
   useEffect(() => window.sessionTray?.onUpdate(setPayload), [])
   return payload
 }
