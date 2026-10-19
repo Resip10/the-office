@@ -4,6 +4,7 @@ import type { SessionsPayload } from '../../desktop/src/core/types'
 declare global {
   interface Window {
     sessionTray: {
+      platform: NodeJS.Platform
       onUpdate(cb: (p: SessionsPayload) => void): () => void
       resume(id: string): void
       copy(id: string): void

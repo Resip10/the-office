@@ -4,17 +4,30 @@ const ID = '0c29cf4c-54bc-4ff4-9393-82f33c39613d'
 const PATH = 'C:\\work\\my app'
 
 describe('copyCommand', () => {
-  it('cds into the quoted project path and resumes', () => {
-    expect(copyCommand({ id: ID, projectPath: PATH })).toBe(`cd "C:\\work\\my app"; claude --resume ${ID}`)
+  it('cds into the single-quoted project path and resumes', () => {
+    expect(copyCommand({ id: ID, projectPath: PATH }, 'win32')).toBe(`cd 'C:\\work\\my app'; claude --resume ${ID}`)
   })
 
   it('keeps non-ASCII paths verbatim', () => {
-    expect(copyCommand({ id: ID, projectPath: "C:\\Users\\Ім'я\\праект" }))
-      .toBe(`cd "C:\\Users\\Ім'я\\праект"; claude --resume ${ID}`)
+    expect(copyCommand({ id: ID, projectPath: 'C:\\Users\\Ігар\\праект' }, 'win32'))
+      .toBe(`cd 'C:\\Users\\Ігар\\праект'; claude --resume ${ID}`)
+  })
+
+  it('$ and backtick in the path stay literal (no shell expansion)', () => {
+    expect(copyCommand({ id: ID, projectPath: 'C:\\work\\$money`s' }, 'win32'))
+      .toBe(`cd 'C:\\work\\$money\`s'; claude --resume ${ID}`)
+  })
+
+  it("win32 doubles ' for PowerShell", () => {
+    expect(copyCommand({ id: ID, projectPath: "C:\\Bob's app" }, 'win32')).toBe(`cd 'C:\\Bob''s app'; claude --resume ${ID}`)
+  })
+
+  it("darwin escapes ' for bash/zsh", () => {
+    expect(copyCommand({ id: ID, projectPath: "/Users/Bob's app" }, 'darwin')).toBe(`cd '/Users/Bob'\\''s app'; claude --resume ${ID}`)
   })
 
   it('omits cd when project path is unknown', () => {
-    expect(copyCommand({ id: ID, projectPath: null })).toBe(`claude --resume ${ID}`)
+    expect(copyCommand({ id: ID, projectPath: null }, 'win32')).toBe(`claude --resume ${ID}`)
   })
 })
 

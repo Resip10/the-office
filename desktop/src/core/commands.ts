@@ -10,9 +10,14 @@ export interface Invocation {
 
 const SESSION_ID = /^[0-9a-f-]{36}$/
 
-export function copyCommand(r: Target): string {
+// Single quotes keep $ and backticks literal; only the quote itself is escaped, differently per shell.
+export function copyCommand(r: Target, platform: NodeJS.Platform): string {
   const resume = `claude --resume ${r.id}`
-  return r.projectPath ? `cd "${r.projectPath}"; ${resume}` : resume
+  if (!r.projectPath) return resume
+  const quoted = platform === 'win32'
+    ? `'${r.projectPath.replace(/'/g, "''")}'`
+    : `'${r.projectPath.replace(/'/g, `'\\''`)}'`
+  return `cd ${quoted}; ${resume}`
 }
 
 export function resumeInvocation(r: Target, platform: NodeJS.Platform, hasWt: boolean): Invocation | null {

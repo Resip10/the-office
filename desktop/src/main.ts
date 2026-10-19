@@ -4,7 +4,7 @@ import { execFile, spawn } from 'child_process'
 import { homedir } from 'os'
 import { join } from 'path'
 import { attachLive, loadCache, saveCache, scanClaude, type IndexCache } from './core/scanner'
-import { pidIsAlive, readLiveSessions } from './core/live-status'
+import { createPidChecker, pidIsAlive, readLiveSessions } from './core/live-status'
 import { copyCommand, resumeInvocation } from './core/commands'
 import { loadAppState, togglePin } from './core/app-state'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
@@ -35,9 +35,23 @@ let pins: string[] = []
 let legacyHooks = false
 let lastPayload = ''
 let scanning = false
+// Until the first scan finishes the record list is empty, which would read as "no sessions".
+let scannedOnce = false
 let lastScanAt = 0
 const rescannedForLive = new Set<string>()
 let hasWt = false
+
+// Process start time as a FILETIME string, matching procStart in ~/.claude/sessions/<pid>.json (Windows only).
+function processStartTime(pid: number): Promise<string | null> {
+  if (process.platform !== 'win32') return Promise.resolve(null)
+  const command = `(Get-Process -Id ${Math.trunc(pid)}).StartTime.ToFileTimeUtc()`
+  return new Promise(resolve => {
+    execFile('powershell.exe', ['-NoProfile', '-Command', command], { windowsHide: true }, (err, out) => {
+      resolve(err ? null : out.trim() || null)
+    })
+  })
+}
+const isSessionAlive = createPidChecker({ pidExists: pidIsAlive, startTimeOf: processStartTime })
 
 const cachePath = () => join(app.getPath('userData'), 'index-v1.json')
 const statePath = () => join(app.getPath('userData'), 'app-state.json')
@@ -49,6 +63,7 @@ function payload(): SessionsPayload {
 }
 
 function broadcast(): void {
+  if (!scannedOnce) return
   const p = payload()
   const json = JSON.stringify(p)
   if (json === lastPayload) return
@@ -70,13 +85,14 @@ async function rescan(): Promise<void> {
     // keep last good list
   } finally {
     scanning = false
+    scannedOnce = true
     lastScanAt = Date.now()
   }
   broadcast()
 }
 
 async function pollLive(): Promise<void> {
-  live = await readLiveSessions(SESSIONS_DIR, pidIsAlive)
+  live = await readLiveSessions(SESSIONS_DIR, isSessionAlive)
   legacyHooks = hasLegacyHooks(SETTINGS_PATH)
   // A brand-new session is live before its transcript has been scanned; rescan once per such session.
   const unknown = unknownLiveIds(live.keys(), new Set(records.map(r => r.id)), rescannedForLive)
@@ -129,8 +145,7 @@ function togglePopover(): void {
   }
   const trayBounds = tray.getBounds()
   const { workArea } = screen.getDisplayNearestPoint({ x: trayBounds.x, y: trayBounds.y })
-  const { x, y } = popoverPosition(trayBounds, workArea, POPOVER_SIZE)
-  popover.setPosition(x, y)
+  popover.setBounds(popoverPosition(trayBounds, workArea, POPOVER_SIZE))
   popover.show()
   popover.focus()
   void rescan()
@@ -178,7 +193,8 @@ function buildMenu(): Menu {
   return Menu.buildFromTemplate(items)
 }
 
-ipcMain.handle('sessions:get', () => payload())
+// null tells the renderer to keep showing "Scanning…"; the first broadcast follows the first scan.
+ipcMain.handle('sessions:get', () => (scannedOnce ? payload() : null))
 
 ipcMain.on('session:resume', (_e, id: unknown) => {
   const r = findRecord(id)
@@ -190,7 +206,7 @@ ipcMain.on('session:resume', (_e, id: unknown) => {
 
 ipcMain.on('session:copy', (_e, id: unknown) => {
   const r = findRecord(id)
-  if (r) clipboard.writeText(copyCommand(r))
+  if (r) clipboard.writeText(copyCommand(r, process.platform))
 })
 
 ipcMain.on('session:pin', async (_e, id: unknown) => {

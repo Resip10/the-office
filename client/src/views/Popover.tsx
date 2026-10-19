@@ -16,7 +16,7 @@ export function Popover() {
           pins={s.pins}
           listedIds={s.listedIds}
           now={s.now}
-          totalCount={s.records.length}
+          totalCount={s.loading ? null : s.records.length}
           selectedId={s.selectedId}
           onSelect={s.select}
         />

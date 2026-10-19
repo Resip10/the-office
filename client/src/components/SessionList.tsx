@@ -7,7 +7,7 @@ interface Props {
   pins: string[]
   listedIds: Set<string>
   now: number
-  totalCount: number
+  totalCount: number | null // null while the first scan is running
   selectedId: string | null
   onSelect: (id: string) => void
   wide?: boolean
@@ -16,6 +16,9 @@ interface Props {
 const TITLES: Array<[keyof Sections, string]> = [['running', 'Running'], ['pinned', 'Pinned'], ['recent', 'Recent']]
 
 export function SessionList({ sections, pins, listedIds, now, totalCount, selectedId, onSelect, wide }: Props) {
+  if (totalCount === null) {
+    return <p className="p-4 text-sm text-text-muted">Scanning…</p>
+  }
   if (totalCount === 0) {
     return <p className="p-4 text-sm text-text-muted">No Claude Code sessions found in ~/.claude/projects</p>
   }

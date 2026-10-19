@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, readFileSync, renameSync, writeFileSync } from 'fs'
 
 // Exact command the old The Office installer wrote into ~/.claude/settings.json.
 export const HOOK_COMMAND =
@@ -32,17 +32,23 @@ export function uninstallHooks(settingsPath: string): boolean {
   let changed = false
   for (const [event, matchers] of Object.entries(settings.hooks)) {
     if (!Array.isArray(matchers)) continue
+    // Matchers without a hooks array are not ours; keep them as they are.
     const filtered = matchers
-      .map(matcher => ({ ...matcher, hooks: matcher.hooks.filter(h => h.command !== HOOK_COMMAND) }))
-      .filter(matcher => matcher.hooks.length > 0)
+      .map(matcher => Array.isArray(matcher?.hooks)
+        ? { ...matcher, hooks: matcher.hooks.filter(h => h?.command !== HOOK_COMMAND) }
+        : matcher)
+      .filter(matcher => !Array.isArray(matcher?.hooks) || matcher.hooks.length > 0)
 
-    if (filtered.length !== matchers.length || filtered.some((m, i) => m.hooks.length !== matchers[i].hooks.length)) {
-      changed = true
-    }
+    if (JSON.stringify(filtered) !== JSON.stringify(matchers)) changed = true
     if (filtered.length === 0) delete settings.hooks[event]
     else settings.hooks[event] = filtered
   }
 
-  if (changed) writeFileSync(settingsPath, JSON.stringify(settings, null, 2))
+  if (changed) {
+    // Claude Code reads this file too; never leave it half-written.
+    const tmp = `${settingsPath}.tmp`
+    writeFileSync(tmp, JSON.stringify(settings, null, 2))
+    renameSync(tmp, settingsPath)
+  }
   return true
 }

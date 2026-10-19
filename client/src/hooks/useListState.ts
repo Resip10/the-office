@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react'
 import { buildSections, type Filters } from '../lib/list'
+import type { SessionsPayload } from '../../../desktop/src/core/types'
 import { useNow, useSessions } from './useSessions'
 
+const EMPTY: SessionsPayload = { records: [], pins: [], legacyHooks: false }
 const DEFAULT_FILTERS: Filters = { query: '', range: '7d', project: null, runningOnly: false }
 
 // Everything both views share: data, filters, sections and the selected session.
 export function useListState() {
-  const { records, pins, legacyHooks } = useSessions()
+  const payload = useSessions()
+  const { records, pins, legacyHooks } = payload ?? EMPTY
+  const loading = payload === null
   const now = useNow()
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -26,5 +30,5 @@ export function useListState() {
     requestAnimationFrame(() => document.querySelector(`[data-session-id="${id}"]`)?.scrollIntoView?.({ block: 'nearest' }))
   }
 
-  return { records, pins, legacyHooks, now, filters, setFilters, sections, listedIds, projects, selected, selectedId, select }
+  return { records, pins, legacyHooks, loading, now, filters, setFilters, sections, listedIds, projects, selected, selectedId, select }
 }

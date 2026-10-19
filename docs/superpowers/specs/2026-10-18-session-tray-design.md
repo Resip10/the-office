@@ -143,7 +143,7 @@ Rules:
 
 ## 7. Actions
 
-- **Copy command:** `cd "<projectPath>"; claude --resume <id>` (works in PowerShell and bash).
+- **Copy command:** `cd '<projectPath>'; claude --resume <id>` (works in PowerShell and bash). Single quotes keep `$` and backticks literal; a `'` in the path is escaped as `''` on Windows (PowerShell) and `'\''` elsewhere (bash/zsh). *(Changed 2026-10-19 from double quotes.)*
 - **Resume in terminal (Windows):** if `wt.exe` is on PATH → `wt.exe -d "<projectPath>" claude --resume <id>`; else `cmd /c start "" powershell -NoExit -Command "claude --resume <id>"` with `cwd` = projectPath. Spawn detached, no shell string concatenation of untrusted values beyond quoted path and the UUID (validated `^[0-9a-f-]{36}$`).
 - **Resume (macOS):** `osascript` → Terminal.app `do script "cd '<path>'; claude --resume <id>"`. Built, lightly tested; Windows is primary.
 - Project folder missing → Resume disabled with tooltip "Project folder no longer exists"; Copy still works.
