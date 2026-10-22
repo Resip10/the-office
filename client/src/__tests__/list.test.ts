@@ -139,3 +139,11 @@ describe('stateOf', () => {
     expect(stateOf(rec('a'))).toBe('ended')
   })
 })
+
+describe('app names', () => {
+  it('search matches a renamed session by its app name', () => {
+    const named = rec('a', { title: 'My export', titleSource: 'app' })
+    const s = buildSections([named, rec('b')], [], { ...ALL, query: 'my export' }, NOW)
+    expect(ids(s.recent)).toEqual(['a'])
+  })
+})

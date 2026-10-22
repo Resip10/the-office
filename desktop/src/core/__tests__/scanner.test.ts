@@ -2,7 +2,7 @@ import { cpSync, mkdirSync, mkdtempSync, rmSync, statSync, utimesSync, writeFile
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { parseTranscript } from '../claude-transcript'
-import { scanClaude, attachLive, loadCache, saveCache, type IndexCache } from '../scanner'
+import { scanClaude, applyNames, attachLive, loadCache, saveCache, type IndexCache } from '../scanner'
 import type { LiveInfo, SessionRecord } from '../types'
 
 const FIXTURES = join(__dirname, 'fixtures', 'projects')
@@ -155,5 +155,17 @@ describe('loadCache / saveCache', () => {
     const empty: IndexCache = { version: 2, entries: {} }
     writeFileSync(path, JSON.stringify(empty))
     expect(await loadCache(path)).toEqual(empty)
+  })
+})
+
+describe('applyNames', () => {
+  it('overrides any title with the app name and marks it app', async () => {
+    const { records } = await scanClaude({ projectsDir, cache: null })
+    const target = records.find(r => r.titleSource === 'custom')!
+    const out = applyNames(records, { [target.id]: 'Renamed' })
+    const renamed = out.find(r => r.id === target.id)!
+    expect(renamed.title).toBe('Renamed')
+    expect(renamed.titleSource).toBe('app')
+    expect(out.filter(r => r.id !== target.id)).toEqual(records.filter(r => r.id !== target.id))
   })
 })

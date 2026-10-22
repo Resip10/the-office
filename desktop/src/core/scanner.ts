@@ -79,6 +79,10 @@ export function attachLive(records: SessionRecord[], live: Map<string, LiveInfo>
   return records.map(r => ({ ...r, live: live.get(r.id) ?? null }))
 }
 
+export function applyNames(records: SessionRecord[], names: Record<string, string>): SessionRecord[] {
+  return records.map(r => (names[r.id] ? { ...r, title: names[r.id], titleSource: 'app' } : r))
+}
+
 export async function loadCache(path: string): Promise<IndexCache | null> {
   try {
     const obj = JSON.parse(await readFile(path, 'utf8')) as IndexCache

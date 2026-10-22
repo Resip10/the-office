@@ -28,7 +28,8 @@ export interface LiveInfo {
   updatedAt: number
 }
 
-export interface SessionRecord extends Omit<TranscriptMeta, 'sessionId' | 'lastTimestamp'> {
+export interface SessionRecord extends Omit<TranscriptMeta, 'sessionId' | 'lastTimestamp' | 'titleSource'> {
+  titleSource: TranscriptMeta['titleSource'] | 'app'
   tool: 'claude'
   filePath: string
   projectExists: boolean

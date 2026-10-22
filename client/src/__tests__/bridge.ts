@@ -13,6 +13,6 @@ export function mockApi(payload?: SessionsPayload): Window['sessionTray'] {
     onOpen: vi.fn(() => () => {}),
     resume: vi.fn(), copy: vi.fn(), togglePin: vi.fn(), reveal: vi.fn(), openUrl: vi.fn(), openWindow: vi.fn(),
     removeLegacyHooks: vi.fn(), setSettings: vi.fn(), openSettings: vi.fn(),
-    details: vi.fn(async () => null), copyText: vi.fn(),
+    details: vi.fn(async () => null), copyText: vi.fn(), rename: vi.fn(),
   }
 }

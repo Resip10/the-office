@@ -73,4 +73,19 @@ describe('DetailPanel', () => {
     expect(screen.getByRole('button', { name: 'Reveal file' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Pin' })).toBeInTheDocument()
   })
+
+  it('rename: pencil opens an input; Enter saves, Esc cancels', () => {
+    setup(DETAILS)
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+    const input = screen.getByRole('textbox', { name: 'Session name' })
+    expect(input).toHaveValue('Export feature')
+    fireEvent.change(input, { target: { value: 'New' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(window.sessionTray.rename).toHaveBeenCalledWith(A, 'New')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'Session name' }), { key: 'Escape' })
+    expect(window.sessionTray.rename).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('textbox', { name: 'Session name' })).toBeNull()
+  })
 })

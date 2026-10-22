@@ -44,6 +44,7 @@ function Meta({ label, children }: { label: string; children: ReactNode }) {
 
 export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Props) {
   const [copied, setCopied] = useState(false)
+  const [editing, setEditing] = useState(false)
   const { details } = useDetails(r.id, r.lastActivityAt)
   const state = stateOf(r)
   const command = copyCommand(r, window.sessionTray.platform)
@@ -60,7 +61,31 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Pr
     <div role="region" aria-label="Session details" className="flex-1 min-w-0 overflow-y-auto px-8 pt-7 pb-8 flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="m-0 text-2xl font-semibold tracking-tight text-balance">{r.title}</h1>
+          {editing ? (
+            <input
+              autoFocus
+              aria-label="Session name"
+              defaultValue={r.title}
+              onKeyDown={e => {
+                if (e.key === 'Enter') { window.sessionTray.rename(r.id, e.currentTarget.value); setEditing(false) }
+                if (e.key === 'Escape') setEditing(false)
+              }}
+              onBlur={() => setEditing(false)}
+              className="min-w-0 flex-1 bg-sunken border border-line-strong rounded-md px-2 py-0.5 text-2xl font-semibold tracking-tight text-text outline-none"
+            />
+          ) : (
+            <>
+              <h1 className="m-0 text-2xl font-semibold tracking-tight text-balance">{r.title}</h1>
+              <button
+                aria-label="Rename"
+                title="Rename"
+                onClick={() => setEditing(true)}
+                className="flex items-center justify-center w-[26px] h-[26px] rounded-md text-muted hover:text-text hover:bg-hover"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /></svg>
+              </button>
+            </>
+          )}
           {r.live && (
             <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[11px] ${state === 'running' ? 'border-run-chip-border bg-run-chip-fill text-run' : 'border-line-strong text-text-2'}`}>
               {state} · pid {r.live.pid}{r.live.name ? ` · ${r.live.name}` : ''}

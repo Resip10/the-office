@@ -26,4 +26,5 @@ contextBridge.exposeInMainWorld('sessionTray', {
   openSettings: () => ipcRenderer.send('app:open-settings'),
   details: (id: string): Promise<SessionDetails | null> => ipcRenderer.invoke('session:details', id),
   copyText: (text: string) => ipcRenderer.send('session:copy-text', text),
+  rename: (id: string, name: string | null) => ipcRenderer.send('session:rename', id, name),
 })

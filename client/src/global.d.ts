@@ -18,6 +18,7 @@ declare global {
       openSettings(): void
       details(id: string): Promise<SessionDetails | null>
       copyText(text: string): void
+      rename(id: string, name: string | null): void
     }
   }
 }

@@ -74,3 +74,14 @@ export function togglePin(path: string, id: string): Promise<AppState> {
     pins: s.pins.includes(id) ? s.pins.filter(p => p !== id) : [...s.pins, id],
   }))
 }
+
+const NAME_MAX = 200
+
+// App-owned display name; empty or null removes it.
+export function setName(state: AppState, id: string, name: string | null): AppState {
+  const names = { ...state.names }
+  const clean = (name ?? '').trim().slice(0, NAME_MAX)
+  if (clean) names[id] = clean
+  else delete names[id]
+  return { ...state, names }
+}

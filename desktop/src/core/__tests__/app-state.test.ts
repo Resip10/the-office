@@ -1,7 +1,7 @@
 import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { loadAppState, togglePin, updateAppState } from '../app-state'
+import { loadAppState, setName, togglePin, updateAppState } from '../app-state'
 import { DEFAULT_SETTINGS, type AppState } from '../types'
 
 let dir: string
@@ -87,5 +87,21 @@ describe('togglePin', () => {
     await togglePin(path, 'a')
     await togglePin(path, 'b')
     expect(readdirSync(dir)).toEqual(['app-state.json'])
+  })
+})
+
+describe('setName', () => {
+  it('stores a trimmed name', () => {
+    expect(setName(EMPTY, 'a', '  Mine  ').names).toEqual({ a: 'Mine' })
+  })
+
+  it('whitespace or null clears the name', () => {
+    const named = setName(EMPTY, 'a', 'Mine')
+    expect(setName(named, 'a', '   ').names).toEqual({})
+    expect(setName(named, 'a', null).names).toEqual({})
+  })
+
+  it('cuts long names to 200 characters', () => {
+    expect(setName(EMPTY, 'a', 'x'.repeat(500)).names.a).toHaveLength(200)
   })
 })

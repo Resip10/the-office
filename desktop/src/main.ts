@@ -4,11 +4,11 @@ import { execFile, spawn } from 'child_process'
 import { stat } from 'fs/promises'
 import { homedir } from 'os'
 import { join } from 'path'
-import { attachLive, loadCache, saveCache, scanClaude, type IndexCache } from './core/scanner'
+import { applyNames, attachLive, loadCache, saveCache, scanClaude, type IndexCache } from './core/scanner'
 import { createPidChecker, pidIsAlive, readLiveSessions } from './core/live-status'
 import { copyCommand, resumeInvocation } from './core/commands'
 import { parseDetails } from './core/details'
-import { loadAppState, settingsFrom, togglePin, updateAppState } from './core/app-state'
+import { loadAppState, setName, settingsFrom, togglePin, updateAppState } from './core/app-state'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
@@ -64,7 +64,7 @@ const openWindows = () => [popover, mainWindow, settingsWindow].filter((w): w is
 
 function payload(): SessionsPayload {
   const { pins, names, archived, keptAt, settings } = state
-  return { records: attachLive(records, live), pins, legacyHooks, names, archived, keptAt, settings }
+  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, settings }
 }
 
 function broadcast(): void {
@@ -260,6 +260,13 @@ ipcMain.handle('session:details', async (_e, id: unknown): Promise<SessionDetail
 
 ipcMain.on('session:copy-text', (_e, text: unknown) => {
   if (typeof text === 'string') clipboard.writeText(text)
+})
+
+ipcMain.on('session:rename', async (_e, id: unknown, name: unknown) => {
+  if (typeof id !== 'string' || !findRecord(id)) return
+  if (name !== null && typeof name !== 'string') return
+  state = await updateAppState(statePath(), s => setName(s, id, name))
+  broadcast()
 })
 
 ipcMain.on('session:reveal', (_e, id: unknown) => {
