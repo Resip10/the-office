@@ -26,9 +26,17 @@ describe('formatDuration', () => {
 })
 
 describe('contextWindow', () => {
-  it('is 200k for Claude models, 1M for 1m variants, null when unknown', () => {
-    expect(contextWindow('claude-opus-5-5')).toBe(200_000)
-    expect(contextWindow('claude-opus-5-5[1m]')).toBe(1_000_000)
-    expect(contextWindow(null)).toBeNull()
+  it('is 1M for Claude 5 Opus/Sonnet/Fable and [1m] variants, 200k otherwise, null when unknown', () => {
+    expect(contextWindow('claude-opus-5-5', 100_000)).toBe(1_000_000)
+    expect(contextWindow('claude-sonnet-5-5', 100_000)).toBe(1_000_000)
+    expect(contextWindow('claude-fable-5-1', 100_000)).toBe(1_000_000)
+    expect(contextWindow('claude-sonnet-4-5[1m]', 100_000)).toBe(1_000_000)
+    expect(contextWindow('claude-haiku-5-5', 100_000)).toBe(200_000)
+    expect(contextWindow('claude-sonnet-4-5', 100_000)).toBe(200_000)
+    expect(contextWindow(null, 100_000)).toBeNull()
+  })
+
+  it('never reports a window smaller than the tokens in use', () => {
+    expect(contextWindow('claude-sonnet-4-5', 451_000)).toBe(1_000_000)
   })
 })

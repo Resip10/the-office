@@ -51,7 +51,7 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect, show
   const { details, loading } = useDetails(r.id, r.lastActivityAt)
   const state = stateOf(r)
   const command = copyCommand(r, window.sessionTray.platform)
-  const window_ = contextWindow(r.model)
+  const window_ = contextWindow(r.model, r.contextTokens ?? 0)
   const subline = [r.projectPath, r.gitBranch, r.createdAt !== null ? `started ${dateTime(r.createdAt)}` : null].filter(Boolean).join('  ·  ')
 
   function copy() {

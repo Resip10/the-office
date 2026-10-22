@@ -24,8 +24,14 @@ export function formatDuration(ms: number): string {
   return `${s}s`
 }
 
-// Context window size for the bar in the stat strip; null when the model is unknown.
-export function contextWindow(model: string | null): number | null {
+const LARGE_WINDOW = 1_000_000
+const DEFAULT_WINDOW = 200_000
+
+// Context window for the stat strip's bar. Transcripts don't record it, so it is inferred from
+// the model id; null when the model is unknown. Never smaller than the tokens already in use.
+export function contextWindow(model: string | null, tokens: number): number | null {
   if (!model) return null
-  return /1m/i.test(model) ? 1_000_000 : 200_000
+  const large = /\[1m\]/i.test(model) || /^claude-(opus|sonnet|fable)-5/i.test(model)
+  const window = large ? LARGE_WINDOW : DEFAULT_WINDOW
+  return tokens > window ? LARGE_WINDOW : window
 }
