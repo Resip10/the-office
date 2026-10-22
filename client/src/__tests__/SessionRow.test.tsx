@@ -18,7 +18,7 @@ function rec(over: Partial<SessionRecord> = {}): SessionRecord {
 
 const api = {
   onUpdate: vi.fn(() => () => {}), resume: vi.fn(), copy: vi.fn(), togglePin: vi.fn(), reveal: vi.fn(),
-  openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(), platform: 'win32' as const,
+  openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(), onOpen: vi.fn(() => () => {}), platform: 'win32' as const,
 }
 
 beforeEach(() => {
@@ -35,7 +35,7 @@ describe('SessionRow', () => {
     expect(screen.getByText('Leaderboards feature')).toBeInTheDocument()
     expect(screen.getByText('pavchman · main')).toBeInTheDocument()
     expect(screen.getByText('2h ago')).toBeInTheDocument()
-    expect(screen.getByText('42 msgs')).toBeInTheDocument()
+    expect(screen.getByText('42 msg')).toBeInTheDocument()
   })
 
   it('disables Resume when the project folder is gone', () => {
@@ -79,8 +79,26 @@ describe('SessionRow', () => {
     expect(screen.queryByRole('button', { name: 'Continued in →' })).toBeNull()
   })
 
-  it('wide rows add model, ≈ API cost and context', () => {
-    renderRow({}, { wide: true })
+  it('window rows add model, ≈ API cost and context', () => {
+    renderRow({}, { variant: 'window' })
     expect(screen.getByText('claude-opus-5-5 · ≈ $1.25 · 157k ctx')).toBeInTheDocument()
+  })
+
+  it('popover rows offer Peek, which opens the window on that session', () => {
+    renderRow({}, { variant: 'popover' })
+    fireEvent.click(screen.getByRole('button', { name: 'Peek' }))
+    expect(api.openWindow).toHaveBeenCalledWith({ id: ID })
+  })
+
+  it('window rows have no Peek', () => {
+    renderRow({}, { variant: 'window' })
+    expect(screen.queryByRole('button', { name: 'Peek' })).toBeNull()
+  })
+
+  it('a running dot pulses only when pulse is on', () => {
+    const { container, rerender } = renderRow({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })
+    expect(container.querySelector('[title="running"]')).toHaveClass('pulse')
+    rerender(<SessionRow record={rec({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })} pinned={false} now={NOW} continuedListed={false} onSelect={vi.fn()} pulse={false} />)
+    expect(container.querySelector('[title="running"]')).not.toHaveClass('pulse')
   })
 })

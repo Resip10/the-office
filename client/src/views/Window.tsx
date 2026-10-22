@@ -8,12 +8,12 @@ export function Window() {
   const s = useListState()
 
   return (
-    <div className="flex flex-col h-full bg-canvas text-text-primary font-sans">
+    <div className="flex flex-col h-full bg-canvas text-text font-sans">
       {s.legacyHooks && <LegacyHooksBanner />}
       <div className="flex flex-1 min-h-0">
-        <div className="flex flex-col w-[440px] shrink-0 border-r border-border">
+        <div className="flex flex-col w-[360px] shrink-0 border-r border-line bg-sunken">
           <FilterBar filters={s.filters} onChange={s.setFilters} projects={s.projects} />
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto bg-sunken">
             <SessionList
               sections={s.sections}
               pins={s.pins}
@@ -22,7 +22,7 @@ export function Window() {
               totalCount={s.loading ? null : s.records.length}
               selectedId={s.selectedId}
               onSelect={s.select}
-              wide
+              variant="window"
             />
           </div>
         </div>
@@ -35,7 +35,7 @@ export function Window() {
               onSelect={s.select}
             />
           ) : (
-            <p className="m-auto text-sm text-text-muted">Select a session to see details</p>
+            <p className="m-auto text-sm text-muted">Select a session to see details</p>
           )}
         </div>
       </div>

@@ -1,4 +1,4 @@
-import type { SessionsPayload } from '../../desktop/src/core/types'
+import type { OpenWindowOptions, SessionsPayload } from '../../desktop/src/core/types'
 
 // Bridge exposed by desktop/src/preload.ts.
 declare global {
@@ -11,7 +11,8 @@ declare global {
       togglePin(id: string): void
       reveal(id: string): void
       openUrl(url: string): void
-      openWindow(): void
+      openWindow(opts?: OpenWindowOptions): void
+      onOpen(cb: (opts: OpenWindowOptions) => void): () => void
       removeLegacyHooks(): void
     }
   }

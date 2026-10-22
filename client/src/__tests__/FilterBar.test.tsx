@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { FilterBar } from '../components/FilterBar'
 
 const FILTERS = { query: '', range: '7d' as const, project: null, runningOnly: false }
@@ -12,5 +12,15 @@ describe('FilterBar', () => {
     expect(search).not.toHaveFocus()
     window.dispatchEvent(new Event('focus'))
     expect(search).toHaveFocus()
+  })
+
+  it('time range is a segmented group with the active segment pressed', () => {
+    const onChange = vi.fn()
+    render(<FilterBar filters={FILTERS} onChange={onChange} projects={[]} />)
+    const group = screen.getByRole('group', { name: 'Time range' })
+    expect(within(group).getByRole('button', { name: '7d' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(group).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(within(group).getByRole('button', { name: '30d' }))
+    expect(onChange).toHaveBeenCalledWith({ ...FILTERS, range: '30d' })
   })
 })

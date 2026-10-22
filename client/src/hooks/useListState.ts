@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { buildSections, type Filters } from '../lib/list'
 import type { SessionsPayload } from '../../../desktop/src/core/types'
 import { useNow, useSessions } from './useSessions'
@@ -29,6 +29,11 @@ export function useListState() {
     setSelectedId(id)
     requestAnimationFrame(() => document.querySelector(`[data-session-id="${id}"]`)?.scrollIntoView?.({ block: 'nearest' }))
   }
+
+  // Main asks the window to show a session (Peek from the popover).
+  const selectRef = useRef(select)
+  selectRef.current = select
+  useEffect(() => window.sessionTray?.onOpen?.(opts => { if (opts.id) selectRef.current(opts.id) }), [])
 
   return { records, pins, legacyHooks, loading, now, filters, setFilters, sections, listedIds, projects, selected, selectedId, select }
 }

@@ -41,3 +41,9 @@ export interface SessionsPayload {
   pins: string[]
   legacyHooks: boolean
 }
+
+// What the window should show when it is opened from the popover.
+export interface OpenWindowOptions {
+  id?: string
+  view?: 'cleanup'
+}

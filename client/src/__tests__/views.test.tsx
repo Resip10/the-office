@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import type { SessionRecord, SessionsPayload } from '../../../desktop/src/core/types'
 import { Popover } from '../views/Popover'
 import { Window } from '../views/Window'
@@ -22,7 +22,7 @@ function mockBridge(payload: SessionsPayload) {
   window.sessionTray = {
     onUpdate: vi.fn(cb => { cb(payload); return () => {} }),
     resume: vi.fn(), copy: vi.fn(), togglePin: vi.fn(), reveal: vi.fn(),
-    openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(), platform: 'win32' as const,
+    openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(), onOpen: vi.fn(() => () => {}), platform: 'win32' as const,
   }
 }
 
@@ -69,7 +69,33 @@ describe('Popover', () => {
   })
 })
 
+describe('Popover footer and headers', () => {
+  it('section headers show their count', () => {
+    mockBridge({ records: [rec(A, { live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })], pins: [], legacyHooks: false })
+    render(<Popover />)
+    const header = screen.getByText('Running', { selector: 'h2' })
+    expect(within(header).getByText('1')).toBeInTheDocument()
+  })
+
+  it('footer shows totals and opens the window', () => {
+    mockBridge({ records: [rec(A), rec(B)], pins: [], legacyHooks: false })
+    render(<Popover />)
+    expect(screen.getByText('2 sessions · 1 project')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Open window' }))
+    expect(window.sessionTray.openWindow).toHaveBeenCalledWith()
+  })
+})
+
 describe('Window', () => {
+  it('selects the session main asks it to open', () => {
+    let opened: ((o: { id?: string }) => void) | undefined
+    mockBridge({ records: [rec(A, { title: 'Peeked' })], pins: [], legacyHooks: false })
+    window.sessionTray.onOpen = vi.fn(cb => { opened = cb; return () => {} })
+    render(<Window />)
+    act(() => opened?.({ id: A }))
+    expect(screen.getByRole('heading', { name: 'Peeked' })).toBeInTheDocument()
+  })
+
   it('selecting a row shows its details and resume command', () => {
     mockBridge({ records: [rec(A, { title: 'Pick me', prUrls: ['https://github.com/acme/app/pull/7'] })], pins: [], legacyHooks: false })
     render(<Window />)

@@ -10,13 +10,14 @@ import { loadAppState, togglePin } from './core/app-state'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
-import type { LiveInfo, SessionRecord, SessionsPayload } from './core/types'
+import type { LiveInfo, OpenWindowOptions, SessionRecord, SessionsPayload } from './core/types'
 
 const CLAUDE_DIR = join(homedir(), '.claude')
 const PROJECTS_DIR = join(CLAUDE_DIR, 'projects')
 const SESSIONS_DIR = join(CLAUDE_DIR, 'sessions')
 const SETTINGS_PATH = join(CLAUDE_DIR, 'settings.json')
 
+const SESSION_ID = /^[0-9a-f-]{36}$/
 const LIVE_POLL_MS = 2_000
 const SCAN_TICK_MS = 10_000
 const POPOVER_SIZE = { width: 380, height: 560 }
@@ -135,6 +136,8 @@ function togglePopover(): void {
   if (!popover || popover.isDestroyed()) {
     popover = createWindow('popover', {
       ...POPOVER_SIZE, frame: false, resizable: false, skipTaskbar: true, alwaysOnTop: true, fullscreenable: false,
+      // Transparent so the popover's rounded corners show.
+      transparent: true, backgroundColor: '#00000000',
     })
     popover.on('blur', () => { popover?.hide(); popoverHiddenAt = Date.now() })
   }
@@ -151,13 +154,18 @@ function togglePopover(): void {
   void rescan()
 }
 
-function openMainWindow(): void {
+function openMainWindow(opts: OpenWindowOptions = {}): void {
+  const valid: OpenWindowOptions = {}
+  if (typeof opts?.id === 'string' && SESSION_ID.test(opts.id)) valid.id = opts.id
+  if (opts?.view === 'cleanup') valid.view = 'cleanup'
+  const send = () => { if (valid.id || valid.view) mainWindow?.webContents.send('window:open', valid) }
   if (!mainWindow || mainWindow.isDestroyed()) {
-    mainWindow = createWindow('window', { width: 1100, height: 720, minWidth: 720, minHeight: 480 })
-    mainWindow.once('ready-to-show', () => mainWindow?.show())
+    mainWindow = createWindow('window', { width: 1180, height: 760, minWidth: 760, minHeight: 500, backgroundColor: '#08080A' })
+    mainWindow.once('ready-to-show', () => { mainWindow?.show(); send() })
   } else {
     mainWindow.show()
     mainWindow.focus()
+    send()
   }
   popover?.hide()
   void rescan()
@@ -176,7 +184,7 @@ function buildMenu(): Menu {
   const items: Electron.MenuItemConstructorOptions[] = [
     { label: `Session Tray v${appVersion()}`, enabled: false },
     { type: 'separator' },
-    { label: 'Open window', click: openMainWindow },
+    { label: 'Open window', click: () => openMainWindow() },
   ]
   if (legacyHooks) items.push({ label: 'Remove old The Office hooks', click: removeLegacyHooks })
   items.push(
@@ -224,7 +232,7 @@ ipcMain.on('app:open-url', (_e, url: unknown) => {
   if (typeof url === 'string' && /^https:\/\//.test(url)) void shell.openExternal(url)
 })
 
-ipcMain.on('app:open-window', openMainWindow)
+ipcMain.on('app:open-window', (_e, opts: unknown) => openMainWindow(opts && typeof opts === 'object' ? opts as OpenWindowOptions : {}))
 ipcMain.on('app:remove-legacy-hooks', removeLegacyHooks)
 
 async function main(): Promise<void> {
@@ -251,7 +259,7 @@ async function main(): Promise<void> {
   if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify().catch(() => {})
 }
 
-app.on('second-instance', openMainWindow)
+app.on('second-instance', () => openMainWindow())
 
 app.on('window-all-closed', () => {
   // Tray app: keep running with no windows.

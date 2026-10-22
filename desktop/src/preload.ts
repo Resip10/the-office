@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { SessionsPayload } from './core/types'
+import type { OpenWindowOptions, SessionsPayload } from './core/types'
 
 contextBridge.exposeInMainWorld('sessionTray', {
   platform: process.platform,
@@ -15,6 +15,11 @@ contextBridge.exposeInMainWorld('sessionTray', {
   togglePin: (id: string) => ipcRenderer.send('session:pin', id),
   reveal: (id: string) => ipcRenderer.send('session:reveal', id),
   openUrl: (url: string) => ipcRenderer.send('app:open-url', url),
-  openWindow: () => ipcRenderer.send('app:open-window'),
+  openWindow: (opts?: OpenWindowOptions) => ipcRenderer.send('app:open-window', opts),
+  onOpen(cb: (opts: OpenWindowOptions) => void): () => void {
+    const handler = (_e: IpcRendererEvent, opts: OpenWindowOptions) => cb(opts)
+    ipcRenderer.on('window:open', handler)
+    return () => { ipcRenderer.removeListener('window:open', handler) }
+  },
   removeLegacyHooks: () => ipcRenderer.send('app:remove-legacy-hooks'),
 })

@@ -13,19 +13,7 @@ module.exports = {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
-      colors: {
-        ...tokenColors,
-        // v1 names, removed in Task 2 once no component uses them.
-        border: 'var(--line)',
-        'text-primary': 'var(--text)',
-        'text-muted': 'var(--muted)',
-        'status-idle': 'var(--idle)',
-        'status-working': 'var(--run)',
-        'status-starting': 'var(--accent-text)',
-        'status-waiting': 'var(--other)',
-        'status-done': 'var(--ended)',
-        'status-error': '#f85149',
-      },
+      colors: tokenColors,
       fontFamily: {
         sans: ['"Geist Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         mono: ['"Geist Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],

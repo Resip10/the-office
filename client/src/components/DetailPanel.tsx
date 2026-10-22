@@ -13,15 +13,15 @@ interface Props {
 }
 
 const button =
-  'px-3 py-1 rounded border border-border text-sm text-text-primary hover:border-text-muted disabled:opacity-40 disabled:cursor-not-allowed'
+  'px-3 py-1 rounded border border-line text-sm text-text hover:border-muted disabled:opacity-40 disabled:cursor-not-allowed'
 
 const dateTime = (ts: number | null) => (ts === null ? '—' : new Date(ts).toLocaleString())
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <>
-      <dt className="text-text-muted">{label}</dt>
-      <dd className="text-text-primary break-all">{children ?? '—'}</dd>
+      <dt className="text-muted">{label}</dt>
+      <dd className="text-text break-all">{children ?? '—'}</dd>
     </>
   )
 }
@@ -40,8 +40,8 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Pr
   return (
     <div className="flex flex-col gap-4 p-5 overflow-y-auto">
       <div>
-        <h1 className="text-lg text-text-primary">{r.title}</h1>
-        <p className="flex items-center gap-2 text-xs text-text-muted">
+        <h1 className="text-lg text-text">{r.title}</h1>
+        <p className="flex items-center gap-2 text-xs text-muted">
           <StateDot state={state} /> {state}
           {r.live?.name && <span>· {r.live.name}</span>}
         </p>
@@ -61,37 +61,37 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Pr
       </div>
 
       <div className="flex items-center gap-2">
-        <code className="flex-1 px-2 py-1 rounded bg-surface border border-border text-xs text-text-primary font-mono break-all">{command}</code>
+        <code className="flex-1 px-2 py-1 rounded bg-surface border border-line text-xs text-text font-mono break-all">{command}</code>
         <button className={button} onClick={copy} aria-label="Copy">{copied ? 'Copied' : 'Copy'}</button>
       </div>
 
       {continuedListed && r.continuedInId && (
-        <button className="self-start text-sm text-status-starting hover:underline" onClick={() => onSelect(r.continuedInId as string)}>
+        <button className="self-start text-sm text-accent-text hover:underline" onClick={() => onSelect(r.continuedInId as string)}>
           Continued in →
         </button>
       )}
 
       {r.awaySummary && (
         <section>
-          <h2 className="mb-1 text-xs uppercase tracking-wider text-text-muted">Recap</h2>
-          <p className="text-sm text-text-primary whitespace-pre-wrap">{r.awaySummary}</p>
+          <h2 className="mb-1 text-xs uppercase tracking-wider text-muted">Recap</h2>
+          <p className="text-sm text-text whitespace-pre-wrap">{r.awaySummary}</p>
         </section>
       )}
 
       {r.lastPrompt && (
         <section>
-          <h2 className="mb-1 text-xs uppercase tracking-wider text-text-muted">Last prompt</h2>
-          <p className="text-sm text-text-primary whitespace-pre-wrap">{r.lastPrompt}</p>
+          <h2 className="mb-1 text-xs uppercase tracking-wider text-muted">Last prompt</h2>
+          <p className="text-sm text-text whitespace-pre-wrap">{r.lastPrompt}</p>
         </section>
       )}
 
       {r.prUrls.length > 0 && (
         <section>
-          <h2 className="mb-1 text-xs uppercase tracking-wider text-text-muted">Pull requests</h2>
+          <h2 className="mb-1 text-xs uppercase tracking-wider text-muted">Pull requests</h2>
           <ul className="text-sm">
             {r.prUrls.map(url => (
               <li key={url}>
-                <button className="text-status-starting hover:underline break-all text-left" onClick={() => window.sessionTray.openUrl(url)}>{url}</button>
+                <button className="text-accent-text hover:underline break-all text-left" onClick={() => window.sessionTray.openUrl(url)}>{url}</button>
               </li>
             ))}
           </ul>
