@@ -55,7 +55,7 @@ function processStartTime(pid: number): Promise<string | null> {
 }
 const isSessionAlive = createPidChecker({ pidExists: pidIsAlive, startTimeOf: processStartTime })
 
-const cachePath = () => join(app.getPath('userData'), 'index-v1.json')
+const cachePath = () => join(app.getPath('userData'), 'index-v2.json')
 const statePath = () => join(app.getPath('userData'), 'app-state.json')
 const findRecord = (id: unknown) => records.find(r => r.id === id)
 const openWindows = () => [popover, mainWindow, settingsWindow].filter((w): w is BrowserWindow => !!w && !w.isDestroyed())

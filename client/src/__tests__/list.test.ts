@@ -11,7 +11,7 @@ function rec(id: string, over: Partial<SessionRecord> = {}): SessionRecord {
     tool: 'claude', id, filePath: `/p/${id}.jsonl`, title: `Session ${id}`, titleSource: 'ai',
     projectPath: 'C:\\projects\\app', projectExists: true, gitBranch: 'main', entrypoint: 'cli', version: '2.1.302',
     createdAt: NOW - DAY, lastActivityAt: NOW - HOUR, messageCount: 10, fileSize: 1000, contextTokens: null,
-    model: null, costUSD: null, prUrls: [], lastPrompt: null, awaySummary: null, continuedInId: null,
+    model: null, costUSD: null, prUrls: [], lastPrompt: null, awaySummary: null, continuedInId: null, editCount: 0,
     subagentCount: 0, live: null, ...over,
   }
 }

@@ -17,6 +17,8 @@ export interface TranscriptMeta {
   lastPrompt: string | null
   awaySummary: string | null
   continuedInId: string | null
+  // Edit/Write/MultiEdit/NotebookEdit tool uses in the main thread.
+  editCount: number
 }
 
 export interface LiveInfo {

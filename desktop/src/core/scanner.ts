@@ -8,7 +8,7 @@ import type { LiveInfo, SessionRecord, TranscriptMeta } from './types'
 const folderExists = (path: string) => access(path).then(() => true, () => false)
 
 export interface IndexCache {
-  version: 1
+  version: 2
   entries: Record<string, { mtimeMs: number; size: number; meta: TranscriptMeta }>
 }
 
@@ -26,7 +26,7 @@ export async function scanClaude(opts: {
     return projectChecks.get(path) as Promise<boolean>
   }
   const prev = opts.cache?.entries ?? {}
-  const cache: IndexCache = { version: 1, entries: {} }
+  const cache: IndexCache = { version: 2, entries: {} }
   let changed = opts.cache === null
 
   if (!existsSync(projectsDir)) return { records: [], cache, changed: changed || Object.keys(prev).length > 0 }
@@ -82,7 +82,7 @@ export function attachLive(records: SessionRecord[], live: Map<string, LiveInfo>
 export async function loadCache(path: string): Promise<IndexCache | null> {
   try {
     const obj = JSON.parse(await readFile(path, 'utf8')) as IndexCache
-    if (obj?.version !== 1 || typeof obj.entries !== 'object' || obj.entries === null) return null
+    if (obj?.version !== 2 || typeof obj.entries !== 'object' || obj.entries === null) return null
     return obj
   } catch {
     return null

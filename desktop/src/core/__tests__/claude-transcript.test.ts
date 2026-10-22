@@ -103,3 +103,22 @@ describe('parseTranscript', () => {
     expect(meta.messageCount).toBe(0)
   })
 })
+
+describe('editCount', () => {
+  const P1 = join(__dirname, 'fixtures', 'p1')
+
+  it('counts Edit/Write/MultiEdit/NotebookEdit tool uses, skipping sidechains', async () => {
+    expect((await parseTranscript(join(P1, 'edits.jsonl'))).editCount).toBe(3)
+  })
+
+  it('a trivial session has no edits', async () => {
+    const meta = await parseTranscript(join(P1, 'trivial.jsonl'))
+    expect(meta.editCount).toBe(0)
+    expect(meta.messageCount).toBe(2)
+  })
+
+  it('malformed tool_use blocks do not throw', async () => {
+    const meta = await parseTranscript(join(P1, 'malformed-tools.jsonl'))
+    expect(meta.editCount).toBe(3)
+  })
+})

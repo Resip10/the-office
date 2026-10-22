@@ -13,7 +13,7 @@ function rec(over: Partial<SessionRecord> = {}): SessionRecord {
     projectPath: 'C:\\projects\\pavchman', projectExists: true, gitBranch: 'main', entrypoint: 'cli', version: '2.1.302',
     createdAt: NOW - 86_400_000, lastActivityAt: NOW - 2 * 3_600_000, messageCount: 42, fileSize: 1000,
     contextTokens: 157_000, model: 'claude-opus-5-5', costUSD: 1.25, prUrls: [], lastPrompt: null, awaySummary: null,
-    continuedInId: null, subagentCount: 0, live: null, ...over,
+    continuedInId: null, editCount: 0, subagentCount: 0, live: null, ...over,
   }
 }
 
