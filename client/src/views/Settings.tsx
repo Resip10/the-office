@@ -10,7 +10,7 @@ const SECTIONS: Array<[Section, string, boolean]> = [
   ['general', 'General', true],
   ['appearance', 'Appearance', true],
   ['terminal', 'Terminal', true],
-  ['cleanup', 'Cleanup', false],
+  ['cleanup', 'Cleanup', true],
 ]
 
 // Themes offered in the picker; Task 12 adds the rest.
@@ -31,6 +31,23 @@ function Switch({ label, checked, onChange }: { label: string; checked: boolean;
     >
       <span className={`w-4 h-4 rounded-full ${checked ? 'bg-on-accent' : 'bg-muted'}`} />
     </button>
+  )
+}
+
+function ThresholdInput({ label, value, onChange }: { label: string; value: number | null; onChange: (v: number | null) => void }) {
+  return (
+    <input
+      type="number"
+      min={1}
+      aria-label={label}
+      value={value ?? ''}
+      placeholder="off"
+      onChange={e => {
+        const n = Number.parseInt(e.target.value, 10)
+        onChange(Number.isInteger(n) && n > 0 ? n : null)
+      }}
+      className="w-20 h-[30px] px-2.5 rounded-[7px] border border-line-strong bg-control font-mono text-[12.5px] text-text text-right"
+    />
   )
 }
 
@@ -167,6 +184,37 @@ export function Settings() {
                 >
                   {terminals.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                 </select>
+              </Row>
+            </Group>
+          </>
+        )}
+        {section === 'cleanup' && (
+          <>
+            <div className="flex flex-col gap-1.5">
+              <h1 className="text-2xl font-semibold tracking-tight">Cleanup</h1>
+              <p className="text-[13px] text-muted">Rules for flagging stale sessions. Pinned and running sessions are never flagged. Archive only hides sessions; files are never moved or deleted.</p>
+            </div>
+            <Group>
+              <Row title="No activity for" hint="Days without activity. Leave empty to turn the rule off.">
+                <ThresholdInput
+                  label="Idle days"
+                  value={settings.stale.idleDays}
+                  onChange={v => set({ stale: { ...settings.stale, idleDays: v } })}
+                />
+              </Row>
+              <Row title="Trivial sessions" hint="Fewer than this many messages and no file edits. Leave empty to turn off.">
+                <ThresholdInput
+                  label="Trivial messages"
+                  value={settings.stale.trivialMessages}
+                  onChange={v => set({ stale: { ...settings.stale, trivialMessages: v } })}
+                />
+              </Row>
+              <Row title="Project folder is gone">
+                <Switch
+                  label="Project folder is gone"
+                  checked={settings.stale.missingFolder}
+                  onChange={v => set({ stale: { ...settings.stale, missingFolder: v } })}
+                />
               </Row>
             </Group>
           </>

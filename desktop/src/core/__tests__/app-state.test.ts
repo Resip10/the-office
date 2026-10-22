@@ -1,7 +1,7 @@
 import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { loadAppState, setName, togglePin, updateAppState } from '../app-state'
+import { archive, keep, loadAppState, restore, setName, togglePin, updateAppState } from '../app-state'
 import { DEFAULT_SETTINGS, type AppState } from '../types'
 
 let dir: string
@@ -103,5 +103,20 @@ describe('setName', () => {
 
   it('cuts long names to 200 characters', () => {
     expect(setName(EMPTY, 'a', 'x'.repeat(500)).names.a).toHaveLength(200)
+  })
+})
+
+describe('archive / restore / keep', () => {
+  it('archive adds ids once', () => {
+    const s = archive(archive(EMPTY, ['a', 'b']), ['b', 'c'])
+    expect(s.archived).toEqual(['a', 'b', 'c'])
+  })
+
+  it('restore removes ids', () => {
+    expect(restore(archive(EMPTY, ['a', 'b']), ['a']).archived).toEqual(['b'])
+  })
+
+  it('keep stamps each id with now', () => {
+    expect(keep(EMPTY, ['a', 'b'], 123).keptAt).toEqual({ a: 123, b: 123 })
   })
 })

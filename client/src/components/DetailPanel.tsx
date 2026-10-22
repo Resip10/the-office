@@ -109,6 +109,14 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Pr
         <button className={button} onClick={() => setContinuing(true)}>Continue in…</button>
         <button className={button} onClick={() => window.sessionTray.reveal(r.id)}>Reveal file</button>
         <button className={button} onClick={() => window.sessionTray.togglePin(r.id)}>{pinned ? 'Unpin' : 'Pin'}</button>
+        <button
+          className={`${button} ml-auto`}
+          disabled={r.live !== null}
+          title={r.live ? 'Running sessions cannot be archived' : 'Hide from lists. Restore it from Cleanup → Archive.'}
+          onClick={() => window.sessionTray.archive([r.id])}
+        >
+          Archive
+        </button>
       </div>
 
       <div className="flex items-center gap-2.5 h-[38px] pl-3 pr-1.5 rounded-lg border border-line bg-sunken">

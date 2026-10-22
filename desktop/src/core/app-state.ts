@@ -85,3 +85,16 @@ export function setName(state: AppState, id: string, name: string | null): AppSt
   else delete names[id]
   return { ...state, names }
 }
+
+export function archive(state: AppState, ids: string[]): AppState {
+  return { ...state, archived: [...state.archived, ...ids.filter((id, i) => !state.archived.includes(id) && ids.indexOf(id) === i)] }
+}
+
+export function restore(state: AppState, ids: string[]): AppState {
+  return { ...state, archived: state.archived.filter(id => !ids.includes(id)) }
+}
+
+// Marks sessions as reviewed in Cleanup; see stale.ts for how long that holds.
+export function keep(state: AppState, ids: string[], now: number): AppState {
+  return { ...state, keptAt: { ...state.keptAt, ...Object.fromEntries(ids.map(id => [id, now])) } }
+}

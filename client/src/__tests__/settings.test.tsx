@@ -10,13 +10,21 @@ function mockBridge(over: Partial<SessionsPayload> = {}) {
 describe('Settings', () => {
   beforeEach(() => mockBridge())
 
-  it('has a sidebar with the P1 sections; Cleanup is disabled for now', () => {
+  it('has a sidebar with the P1 sections', () => {
     render(<Settings />)
     const nav = screen.getByRole('navigation', { name: 'Settings sections' })
-    for (const name of ['General', 'Appearance', 'Terminal']) {
+    for (const name of ['General', 'Appearance', 'Terminal', 'Cleanup']) {
       expect(within(nav).getByRole('button', { name })).toBeEnabled()
     }
-    expect(within(nav).getByRole('button', { name: 'Cleanup' })).toBeDisabled()
+  })
+
+  it('Cleanup edits the idle threshold and turns rules off', () => {
+    render(<Settings />)
+    fireEvent.click(screen.getByRole('button', { name: 'Cleanup' }))
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Idle days' }), { target: { value: '45' } })
+    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ stale: { idleDays: 45, trivialMessages: 3, missingFolder: true } })
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Idle days' }), { target: { value: '' } })
+    expect(window.sessionTray.setSettings).toHaveBeenLastCalledWith({ stale: { idleDays: null, trivialMessages: 3, missingFolder: true } })
   })
 
   it('pulse switch turns the pulse off', () => {

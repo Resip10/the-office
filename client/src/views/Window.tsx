@@ -4,6 +4,7 @@ import { DetailPanel } from '../components/DetailPanel'
 import { FilterBar } from '../components/FilterBar'
 import { LegacyHooksBanner } from '../components/LegacyHooksBanner'
 import { SessionList } from '../components/SessionList'
+import { Cleanup } from './Cleanup'
 
 const WEEK_MS = 7 * 86_400_000
 
@@ -25,6 +26,13 @@ export function Window() {
     <div className="flex flex-col h-full bg-canvas text-text font-sans">
       <div className="flex items-center gap-3.5 h-[46px] shrink-0 px-3.5 border-b border-line bg-surface">
         <span className="text-[13px] font-semibold">Session Tray</span>
+        <button
+          aria-pressed={s.mode === 'cleanup'}
+          onClick={() => s.setMode(s.mode === 'cleanup' ? 'sessions' : 'cleanup')}
+          className={`h-7 px-2.5 rounded-md text-xs font-medium ${s.mode === 'cleanup' ? 'bg-selected text-text ring-1 ring-inset ring-line-strong' : 'text-muted hover:text-text hover:bg-hover'}`}
+        >
+          Clean up{s.stale.length > 0 ? ` · ${s.stale.length}` : ''}
+        </button>
         {weekCost > 0 && <span className="ml-auto font-mono text-[11px] text-muted">≈ ${weekCost.toFixed(2)} this week</span>}
         <button
           aria-label="Settings"
@@ -58,7 +66,9 @@ export function Window() {
           </div>
         </div>
         <div className="flex-1 min-w-0 flex">
-          {s.selected ? (
+          {s.mode === 'cleanup' ? (
+            <Cleanup />
+          ) : s.selected ? (
             <DetailPanel
               record={s.selected}
               pinned={s.pins.includes(s.selected.id)}

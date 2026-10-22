@@ -88,4 +88,16 @@ describe('DetailPanel', () => {
     expect(window.sessionTray.rename).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('textbox', { name: 'Session name' })).toBeNull()
   })
+
+  it('Archive archives one session and is disabled while it runs', () => {
+    setup(DETAILS)
+    fireEvent.click(screen.getByRole('button', { name: 'Archive' }))
+    expect(window.sessionTray.archive).toHaveBeenCalledWith([A])
+  })
+
+  it('Archive is disabled for a running session', () => {
+    window.sessionTray = mockApi()
+    render(<DetailPanel record={rec({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled()
+  })
 })

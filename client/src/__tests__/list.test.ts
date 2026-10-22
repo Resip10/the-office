@@ -1,5 +1,6 @@
+import { DEFAULT_SETTINGS } from '../../../desktop/src/core/types'
 import type { SessionRecord } from '../../../desktop/src/core/types'
-import { buildSections, projectName, relativeTime, stateOf, type Filters } from '../lib/list'
+import { buildSections, projectName, relativeTime, stateOf, type Filters, staleList } from '../lib/list'
 
 const NOW = new Date(2026, 9, 19, 15, 0, 0).getTime() // local time, Oct 19 2026 15:00
 const MIN = 60_000
@@ -145,5 +146,31 @@ describe('app names', () => {
     const named = rec('a', { title: 'My export', titleSource: 'app' })
     const s = buildSections([named, rec('b')], [], { ...ALL, query: 'my export' }, NOW)
     expect(ids(s.recent)).toEqual(['a'])
+  })
+})
+
+describe('archive', () => {
+  it('archived sessions leave pinned and recent', () => {
+    const s = buildSections([rec('a'), rec('b')], ['a'], ALL, NOW, new Set(['a', 'b']))
+    expect(s.pinned).toEqual([])
+    expect(s.recent).toEqual([])
+  })
+
+  it('an archived session that is live again shows in Running', () => {
+    const s = buildSections([rec('a', { live: busy })], [], ALL, NOW, new Set(['a']))
+    expect(ids(s.running)).toEqual(['a'])
+  })
+})
+
+describe('staleList', () => {
+  const state = { pins: [] as string[], archived: [] as string[], keptAt: {}, settings: DEFAULT_SETTINGS }
+
+  it('lists stale sessions with their reasons, skipping pinned ones', () => {
+    const old = rec('old', { lastActivityAt: NOW - 40 * DAY })
+    const pinned = rec('pin', { lastActivityAt: NOW - 40 * DAY })
+    const fresh = rec('fresh')
+    const list = staleList([old, pinned, fresh], { ...state, pins: ['pin'] }, NOW)
+    expect(list.map(x => x.record.id)).toEqual(['old'])
+    expect(list[0].reasons).toEqual([{ kind: 'idle', days: 40 }])
   })
 })

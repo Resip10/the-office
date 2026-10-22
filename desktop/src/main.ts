@@ -10,7 +10,7 @@ import { createPidChecker, pidIsAlive, readLiveSessions } from './core/live-stat
 import { copyCommand, resumeInvocation } from './core/commands'
 import { parseDetails } from './core/details'
 import { claudeLaunchFrom, continueInvocation, pruneHandoffs, writeHandoff, type ClaudeLaunch } from './core/continue'
-import { loadAppState, setName, settingsFrom, togglePin, updateAppState } from './core/app-state'
+import { archive, keep, loadAppState, restore, setName, settingsFrom, togglePin, updateAppState } from './core/app-state'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
@@ -292,6 +292,31 @@ ipcMain.handle('dialog:pick-folder', async (e): Promise<string | null> => {
   const opts: Electron.OpenDialogOptions = { properties: ['openDirectory'] }
   const result = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
   return result.canceled ? null : result.filePaths[0] ?? null
+})
+
+// Every id must be a known session; archive also skips live ones.
+const knownIds = (ids: unknown): string[] =>
+  Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string' && SESSION_ID.test(id) && !!findRecord(id)) : []
+
+ipcMain.on('session:archive', async (_e, ids: unknown) => {
+  const valid = knownIds(ids).filter(id => !live.has(id))
+  if (valid.length === 0) return
+  state = await updateAppState(statePath(), s => archive(s, valid))
+  broadcast()
+})
+
+ipcMain.on('session:restore', async (_e, ids: unknown) => {
+  const valid = knownIds(ids)
+  if (valid.length === 0) return
+  state = await updateAppState(statePath(), s => restore(s, valid))
+  broadcast()
+})
+
+ipcMain.on('session:keep', async (_e, ids: unknown) => {
+  const valid = knownIds(ids)
+  if (valid.length === 0) return
+  state = await updateAppState(statePath(), s => keep(s, valid, Date.now()))
+  broadcast()
 })
 
 ipcMain.on('session:reveal', (_e, id: unknown) => {

@@ -83,6 +83,21 @@ describe('Popover footer and headers', () => {
   })
 })
 
+describe('Popover stale count', () => {
+  it('shows N stale and opens the Cleanup view', () => {
+    mockBridge({ records: [rec(A, { lastActivityAt: NOW - 40 * 86_400_000 }), rec(B, { lastActivityAt: NOW - 50 * 86_400_000 })] })
+    render(<Popover />)
+    fireEvent.click(screen.getByRole('button', { name: '2 stale' }))
+    expect(window.sessionTray.openWindow).toHaveBeenCalledWith({ view: 'cleanup' })
+  })
+
+  it('hides the stale count when nothing is stale', () => {
+    mockBridge({ records: [rec(A)] })
+    render(<Popover />)
+    expect(screen.queryByRole('button', { name: /stale/ })).toBeNull()
+  })
+})
+
 describe('Window', () => {
   it('selects the session main asks it to open', () => {
     let opened: ((o: { id?: string }) => void) | undefined

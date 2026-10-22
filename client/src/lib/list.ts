@@ -1,4 +1,5 @@
-import type { SessionRecord } from '../../../desktop/src/core/types'
+import type { AppState, SessionRecord } from '../../../desktop/src/core/types'
+import { staleReasons, type StaleReason } from '../../../desktop/src/core/stale'
 
 export type TimeRange = 'today' | '7d' | '30d' | 'all'
 
@@ -54,7 +55,7 @@ function matchesQuery(r: SessionRecord, query: string): boolean {
     .some(field => field?.toLowerCase().includes(q))
 }
 
-export function buildSections(records: SessionRecord[], pins: string[], f: Filters, now: number): Sections {
+export function buildSections(records: SessionRecord[], pins: string[], f: Filters, now: number, archived: Set<string> = new Set()): Sections {
   const pinned = new Set(pins)
   const since = rangeStart(f.range, now)
   const sections: Sections = { running: [], pinned: [], recent: [] }
@@ -65,9 +66,29 @@ export function buildSections(records: SessionRecord[], pins: string[], f: Filte
 
   for (const r of visible) {
     if (r.live) sections.running.push(r)
+    else if (archived.has(r.id)) continue
     else if (f.runningOnly) continue
     else if (pinned.has(r.id)) sections.pinned.push(r)
     else if (r.lastActivityAt >= since) sections.recent.push(r)
   }
   return sections
+}
+
+export interface StaleItem {
+  record: SessionRecord
+  reasons: StaleReason[]
+}
+
+export function staleList(records: SessionRecord[], state: Pick<AppState, 'pins' | 'archived' | 'keptAt' | 'settings'>, now: number): StaleItem[] {
+  const pins = new Set(state.pins)
+  const archived = new Set(state.archived)
+  return records
+    .map(record => ({
+      record,
+      reasons: staleReasons(record, {
+        now, rules: state.settings.stale, pinned: pins.has(record.id), archived: archived.has(record.id), keptAt: state.keptAt[record.id],
+      }),
+    }))
+    .filter(item => item.reasons.length > 0)
+    .sort((a, b) => a.record.lastActivityAt - b.record.lastActivityAt)
 }

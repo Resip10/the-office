@@ -15,5 +15,6 @@ export function mockApi(payload?: SessionsPayload): Window['sessionTray'] {
     removeLegacyHooks: vi.fn(), setSettings: vi.fn(), openSettings: vi.fn(),
     details: vi.fn(async () => null), copyText: vi.fn(), rename: vi.fn(),
     continueIn: vi.fn(), pickFolder: vi.fn(async () => null),
+    archive: vi.fn(), restore: vi.fn(), keep: vi.fn(),
   }
 }

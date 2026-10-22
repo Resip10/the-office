@@ -21,6 +21,9 @@ declare global {
       rename(id: string, name: string | null): void
       continueIn(id: string, opts: { folder: string; prompt: string; target: 'claude' | 'clipboard' }): void
       pickFolder(): Promise<string | null>
+      archive(ids: string[]): void
+      restore(ids: string[]): void
+      keep(ids: string[]): void
     }
   }
 }

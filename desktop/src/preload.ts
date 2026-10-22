@@ -30,4 +30,7 @@ contextBridge.exposeInMainWorld('sessionTray', {
   continueIn: (id: string, opts: { folder: string; prompt: string; target: 'claude' | 'clipboard' }) =>
     ipcRenderer.send('session:continue', id, opts),
   pickFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:pick-folder'),
+  archive: (ids: string[]) => ipcRenderer.send('session:archive', ids),
+  restore: (ids: string[]) => ipcRenderer.send('session:restore', ids),
+  keep: (ids: string[]) => ipcRenderer.send('session:keep', ids),
 })
