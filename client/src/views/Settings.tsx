@@ -13,8 +13,7 @@ const SECTIONS: Array<[Section, string, boolean]> = [
   ['cleanup', 'Cleanup', true],
 ]
 
-// Themes offered in the picker; Task 12 adds the rest.
-const PICKABLE: ThemeId[] = ['carbon']
+const PICKABLE: ThemeId[] = ['carbon', 'graphite', 'midnight', 'ink', 'paper']
 
 const SAMPLE_ID = '4f1c9a2e-7b31-4d0c-9e55-2a8f61c0d7b3'
 
@@ -147,6 +146,9 @@ export function Settings() {
               </div>
             </section>
             <Group>
+              <Row title="Follow system appearance" hint="Use Paper when the system is in light mode, your theme above when dark.">
+                <Switch label="Follow system appearance" checked={settings.followSystem} onChange={v => set({ followSystem: v })} />
+              </Row>
               <Row title="Row density" hint="Compact fits more sessions in the popover.">
                 <div role="group" aria-label="Row density" className="flex gap-0.5 p-0.5 rounded-[7px] bg-sunken border border-line">
                   {(['comfortable', 'compact'] as const).map(d => (

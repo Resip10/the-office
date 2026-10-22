@@ -54,4 +54,22 @@ describe('Settings', () => {
     expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ terminal: 'powershell' })
     expect(screen.getByText(/claude --resume/)).toBeInTheDocument()
   })
+
+  it('offers five themes with Carbon as the default', () => {
+    render(<Settings />)
+    fireEvent.click(screen.getByRole('button', { name: 'Appearance' }))
+    const group = screen.getByRole('radiogroup', { name: 'Theme' })
+    expect(within(group).getAllByRole('radio')).toHaveLength(5)
+    expect(within(group).getByRole('radio', { name: 'Carbon' })).toHaveAttribute('aria-checked', 'true')
+    expect(within(group).getByText('default')).toBeInTheDocument()
+    fireEvent.click(within(group).getByRole('radio', { name: 'Midnight' }))
+    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ theme: 'midnight' })
+  })
+
+  it('follow system appearance switch', () => {
+    render(<Settings />)
+    fireEvent.click(screen.getByRole('button', { name: 'Appearance' }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Follow system appearance' }))
+    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ followSystem: true })
+  })
 })
