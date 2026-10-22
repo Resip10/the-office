@@ -22,6 +22,8 @@ export function Popover() {
           selectedId={s.selectedId}
           onSelect={s.select}
           variant="popover"
+          pulse={s.settings.pulse}
+          compact={s.settings.density === 'compact'}
         />
       </div>
       <div className="flex items-center gap-2.5 px-3.5 py-2 border-t border-line bg-surface font-mono text-[11px] text-muted">

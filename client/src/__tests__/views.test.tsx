@@ -1,6 +1,7 @@
 import { vi } from 'vitest'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import type { SessionRecord, SessionsPayload } from '../../../desktop/src/core/types'
+import { mockApi, makePayload } from './bridge'
 import { Popover } from '../views/Popover'
 import { Window } from '../views/Window'
 
@@ -18,12 +19,8 @@ function rec(id: string, over: Partial<SessionRecord> = {}): SessionRecord {
   }
 }
 
-function mockBridge(payload: SessionsPayload) {
-  window.sessionTray = {
-    onUpdate: vi.fn(cb => { cb(payload); return () => {} }),
-    resume: vi.fn(), copy: vi.fn(), togglePin: vi.fn(), reveal: vi.fn(),
-    openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(), onOpen: vi.fn(() => () => {}), platform: 'win32' as const,
-  }
+function mockBridge(payload: Partial<SessionsPayload>) {
+  window.sessionTray = mockApi(makePayload(payload))
 }
 
 describe('Popover', () => {

@@ -1,4 +1,6 @@
-export type ThemeId = 'carbon' | 'graphite' | 'midnight' | 'ink' | 'paper'
+import type { ThemeId } from '../../../desktop/src/core/types'
+
+export type { ThemeId }
 
 export const TOKEN_NAMES = [
   'canvas', 'sunken', 'surface', 'raised', 'control', 'selected', 'hover',

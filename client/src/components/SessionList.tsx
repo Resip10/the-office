@@ -12,11 +12,12 @@ interface Props {
   onSelect: (id: string) => void
   variant?: 'popover' | 'window'
   pulse?: boolean
+  compact?: boolean
 }
 
 const TITLES: Array<[keyof Sections, string]> = [['running', 'Running'], ['pinned', 'Pinned'], ['recent', 'Recent']]
 
-export function SessionList({ sections, pins, listedIds, now, totalCount, selectedId, onSelect, variant, pulse }: Props) {
+export function SessionList({ sections, pins, listedIds, now, totalCount, selectedId, onSelect, variant, pulse, compact }: Props) {
   if (totalCount === null) {
     return <p className="p-4 text-sm text-muted">Scanning…</p>
   }
@@ -38,6 +39,7 @@ export function SessionList({ sections, pins, listedIds, now, totalCount, select
       onSelect={onSelect}
       variant={variant}
       pulse={pulse}
+      compact={compact}
     />
   )
 

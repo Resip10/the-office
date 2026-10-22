@@ -16,7 +16,8 @@ function record<T>(v: unknown, valid: (x: unknown) => x is T): Record<string, T>
   return Object.fromEntries(Object.entries(v).filter(([, x]) => valid(x))) as Record<string, T>
 }
 
-function settingsFrom(v: unknown): Settings {
+// Unknown or invalid fields fall back to the defaults, field by field.
+export function settingsFrom(v: unknown): Settings {
   const s = isRec(v) ? v : {}
   const d = DEFAULT_SETTINGS
   const stale = isRec(s.stale) ? s.stale : {}

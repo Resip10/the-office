@@ -40,6 +40,10 @@ export interface SessionsPayload {
   records: SessionRecord[]
   pins: string[]
   legacyHooks: boolean
+  names: Record<string, string>
+  archived: string[]
+  keptAt: Record<string, number>
+  settings: Settings
 }
 
 // What the window should show when it is opened from the popover.

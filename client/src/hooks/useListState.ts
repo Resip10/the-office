@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { buildSections, type Filters } from '../lib/list'
-import type { SessionsPayload } from '../../../desktop/src/core/types'
+import { DEFAULT_SETTINGS, type SessionsPayload } from '../../../desktop/src/core/types'
 import { useNow, useSessions } from './useSessions'
 
-const EMPTY: SessionsPayload = { records: [], pins: [], legacyHooks: false }
+const EMPTY: SessionsPayload = { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, settings: DEFAULT_SETTINGS }
 const DEFAULT_FILTERS: Filters = { query: '', range: '7d', project: null, runningOnly: false }
 
 // Everything both views share: data, filters, sections and the selected session.
 export function useListState() {
   const payload = useSessions()
   const { records, pins, legacyHooks } = payload ?? EMPTY
+  const settings = payload?.settings ?? DEFAULT_SETTINGS
   const loading = payload === null
   const now = useNow()
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
@@ -35,5 +36,5 @@ export function useListState() {
   selectRef.current = select
   useEffect(() => window.sessionTray?.onOpen?.(opts => { if (opts.id) selectRef.current(opts.id) }), [])
 
-  return { records, pins, legacyHooks, loading, now, filters, setFilters, sections, listedIds, projects, selected, selectedId, select }
+  return { records, pins, legacyHooks, settings, loading, now, filters, setFilters, sections, listedIds, projects, selected, selectedId, select }
 }

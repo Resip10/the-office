@@ -13,6 +13,7 @@ interface Props {
   selected?: boolean
   variant?: 'popover' | 'window'
   pulse?: boolean
+  compact?: boolean
 }
 
 const actionClass =
@@ -28,7 +29,7 @@ function PinIcon() {
   )
 }
 
-export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, selected = false, variant = 'popover', pulse = true }: Props) {
+export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, selected = false, variant = 'popover', pulse = true, compact = false }: Props) {
   const [copied, setCopied] = useState(false)
   const state = stateOf(r)
   const running = state === 'running'
@@ -52,7 +53,7 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
     <div
       data-session-id={r.id}
       onClick={() => onSelect(r.id)}
-      className={`group flex gap-2.5 mx-1.5 px-3 py-2 rounded-lg cursor-default ${selected ? 'bg-selected ring-1 ring-inset ring-line-strong' : 'hover:bg-hover'} ${continued ? 'opacity-60' : ''}`}
+      className={`group flex gap-2.5 mx-1.5 px-3 ${compact ? 'py-1.5' : 'py-2'} rounded-lg cursor-default ${selected ? 'bg-selected ring-1 ring-inset ring-line-strong' : 'hover:bg-hover'} ${continued ? 'opacity-60' : ''}`}
     >
       <span className="pt-1.5"><StateDot state={state} pulse={pulse} /></span>
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
@@ -62,7 +63,7 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
         </div>
         <div className="flex items-center gap-2 font-mono text-[11px] text-muted">
           <span className="flex-1 truncate">{location}</span>
-          <span className="shrink-0 tabular-nums">{r.messageCount} msg</span>
+          {!compact && <span className="shrink-0 tabular-nums">{r.messageCount} msg</span>}
           {continued && (
             <button
               className="shrink-0 text-accent-text hover:underline"

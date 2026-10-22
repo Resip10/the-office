@@ -2,6 +2,7 @@ import { vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { SessionRecord } from '../../../desktop/src/core/types'
 import { SessionRow } from '../components/SessionRow'
+import { mockApi } from './bridge'
 
 const NOW = new Date(2026, 9, 19, 15, 0).getTime()
 const ID = '0c29cf4c-54bc-4ff4-9393-82f33c39613d'
@@ -16,10 +17,7 @@ function rec(over: Partial<SessionRecord> = {}): SessionRecord {
   }
 }
 
-const api = {
-  onUpdate: vi.fn(() => () => {}), resume: vi.fn(), copy: vi.fn(), togglePin: vi.fn(), reveal: vi.fn(),
-  openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(), onOpen: vi.fn(() => () => {}), platform: 'win32' as const,
-}
+const api = mockApi()
 
 beforeEach(() => {
   vi.clearAllMocks()

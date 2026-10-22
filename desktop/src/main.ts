@@ -6,11 +6,11 @@ import { join } from 'path'
 import { attachLive, loadCache, saveCache, scanClaude, type IndexCache } from './core/scanner'
 import { createPidChecker, pidIsAlive, readLiveSessions } from './core/live-status'
 import { copyCommand, resumeInvocation } from './core/commands'
-import { loadAppState, togglePin } from './core/app-state'
+import { loadAppState, settingsFrom, togglePin, updateAppState } from './core/app-state'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
-import type { LiveInfo, OpenWindowOptions, SessionRecord, SessionsPayload } from './core/types'
+import { DEFAULT_SETTINGS, type AppState, type LiveInfo, type OpenWindowOptions, type SessionRecord, type SessionsPayload } from './core/types'
 
 const CLAUDE_DIR = join(homedir(), '.claude')
 const PROJECTS_DIR = join(CLAUDE_DIR, 'projects')
@@ -22,7 +22,7 @@ const LIVE_POLL_MS = 2_000
 const SCAN_TICK_MS = 10_000
 const POPOVER_SIZE = { width: 380, height: 560 }
 
-type View = 'popover' | 'window'
+type View = 'popover' | 'window' | 'settings'
 
 let tray: Tray | null = null
 let popover: BrowserWindow | null = null
@@ -32,7 +32,8 @@ let popoverHiddenAt = 0
 let cache: IndexCache | null = null
 let records: SessionRecord[] = []
 let live = new Map<string, LiveInfo>()
-let pins: string[] = []
+let state: AppState = { pins: [], names: {}, archived: [], keptAt: {}, settings: DEFAULT_SETTINGS }
+let settingsWindow: BrowserWindow | null = null
 let legacyHooks = false
 let lastPayload = ''
 let scanning = false
@@ -57,10 +58,11 @@ const isSessionAlive = createPidChecker({ pidExists: pidIsAlive, startTimeOf: pr
 const cachePath = () => join(app.getPath('userData'), 'index-v1.json')
 const statePath = () => join(app.getPath('userData'), 'app-state.json')
 const findRecord = (id: unknown) => records.find(r => r.id === id)
-const openWindows = () => [popover, mainWindow].filter((w): w is BrowserWindow => !!w && !w.isDestroyed())
+const openWindows = () => [popover, mainWindow, settingsWindow].filter((w): w is BrowserWindow => !!w && !w.isDestroyed())
 
 function payload(): SessionsPayload {
-  return { records: attachLive(records, live), pins, legacyHooks }
+  const { pins, names, archived, keptAt, settings } = state
+  return { records: attachLive(records, live), pins, legacyHooks, names, archived, keptAt, settings }
 }
 
 function broadcast(): void {
@@ -171,6 +173,23 @@ function openMainWindow(opts: OpenWindowOptions = {}): void {
   void rescan()
 }
 
+function openSettings(): void {
+  if (!settingsWindow || settingsWindow.isDestroyed()) {
+    settingsWindow = createWindow('settings', { width: 900, height: 640, minWidth: 640, minHeight: 480, backgroundColor: '#08080A' })
+    settingsWindow.once('ready-to-show', () => settingsWindow?.show())
+  } else {
+    settingsWindow.show()
+    settingsWindow.focus()
+  }
+  popover?.hide()
+}
+
+function applyLoginItem(): void {
+  if (app.getLoginItemSettings().openAtLogin !== state.settings.launchAtLogin) {
+    app.setLoginItemSettings({ openAtLogin: state.settings.launchAtLogin })
+  }
+}
+
 function removeLegacyHooks(): void {
   uninstallHooks(SETTINGS_PATH)
   legacyHooks = hasLegacyHooks(SETTINGS_PATH)
@@ -189,12 +208,7 @@ function buildMenu(): Menu {
   if (legacyHooks) items.push({ label: 'Remove old The Office hooks', click: removeLegacyHooks })
   items.push(
     { type: 'separator' },
-    {
-      label: 'Launch at login',
-      type: 'checkbox',
-      checked: app.getLoginItemSettings().openAtLogin,
-      click: item => app.setLoginItemSettings({ openAtLogin: item.checked }),
-    },
+    { label: 'Settings…', click: openSettings },
     { type: 'separator' },
     { label: 'Quit', click: () => app.quit() },
   )
@@ -207,7 +221,7 @@ ipcMain.handle('sessions:get', () => (scannedOnce ? payload() : null))
 ipcMain.on('session:resume', (_e, id: unknown) => {
   const r = findRecord(id)
   if (!r?.projectExists) return
-  const inv = resumeInvocation(r, process.platform, hasWt)
+  const inv = resumeInvocation(r, process.platform, state.settings.terminal, hasWt)
   if (!inv) return
   spawn(inv.file, inv.args, { cwd: inv.cwd, detached: true, stdio: 'ignore' }).on('error', () => {}).unref()
 })
@@ -219,7 +233,7 @@ ipcMain.on('session:copy', (_e, id: unknown) => {
 
 ipcMain.on('session:pin', async (_e, id: unknown) => {
   if (typeof id !== 'string' || !findRecord(id)) return
-  pins = (await togglePin(statePath(), id)).pins
+  state = await togglePin(statePath(), id)
   broadcast()
 })
 
@@ -234,6 +248,14 @@ ipcMain.on('app:open-url', (_e, url: unknown) => {
 
 ipcMain.on('app:open-window', (_e, opts: unknown) => openMainWindow(opts && typeof opts === 'object' ? opts as OpenWindowOptions : {}))
 ipcMain.on('app:remove-legacy-hooks', removeLegacyHooks)
+ipcMain.on('app:open-settings', openSettings)
+
+ipcMain.on('settings:set', async (_e, patch: unknown) => {
+  if (!patch || typeof patch !== 'object') return
+  state = await updateAppState(statePath(), s => ({ ...s, settings: settingsFrom({ ...s.settings, ...patch }) }))
+  applyLoginItem()
+  broadcast()
+})
 
 async function main(): Promise<void> {
   // Gives dev runs the same userData folder as the packaged app instead of %APPDATA%\Electron.
@@ -248,7 +270,8 @@ async function main(): Promise<void> {
   tray.on('click', togglePopover)
   tray.on('right-click', () => tray?.popUpContextMenu(buildMenu()))
 
-  pins = (await loadAppState(statePath())).pins
+  state = await loadAppState(statePath())
+  applyLoginItem()
   cache = await loadCache(cachePath())
   await pollLive()
   await rescan()
