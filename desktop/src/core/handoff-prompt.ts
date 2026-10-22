@@ -16,3 +16,9 @@ export function handoffPrompt(session: { title: string; id: string }, d: Session
   lines.push('', 'Pick up from there.')
   return lines.join('\n').replace(/\n{3,}/g, '\n\n')
 }
+
+// Readable stand-in for the Continue command, shown in the sheet's footer.
+export function continuePreview(folder: string, prompt: string): string {
+  const first = prompt.split('\n')[0]
+  return `cd "${folder}"; claude "${first.length > 40 ? `${first.slice(0, 40)}…` : first}"`
+}

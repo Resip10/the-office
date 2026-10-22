@@ -7,6 +7,7 @@ import { contextWindow, formatBytes, formatDuration, formatTokens } from '../lib
 import { useDetails } from '../hooks/useDetails'
 import { HandoffCard } from './HandoffCard'
 import { PeekCard } from './PeekCard'
+import { ContinueSheet } from './ContinueSheet'
 
 interface Props {
   record: SessionRecord
@@ -45,6 +46,7 @@ function Meta({ label, children }: { label: string; children: ReactNode }) {
 export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Props) {
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [continuing, setContinuing] = useState(false)
   const { details } = useDetails(r.id, r.lastActivityAt)
   const state = stateOf(r)
   const command = copyCommand(r, window.sessionTray.platform)
@@ -104,6 +106,7 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Pr
         >
           {state === 'running' ? 'Open another' : 'Resume'}
         </button>
+        <button className={button} onClick={() => setContinuing(true)}>Continue in…</button>
         <button className={button} onClick={() => window.sessionTray.reveal(r.id)}>Reveal file</button>
         <button className={button} onClick={() => window.sessionTray.togglePin(r.id)}>{pinned ? 'Unpin' : 'Pin'}</button>
       </div>
@@ -166,6 +169,8 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Pr
         <Meta label="Title from">{r.titleSource}</Meta>
         <Meta label="Session id">{r.id}</Meta>
       </dl>
+
+      {continuing && <ContinueSheet record={r} details={details} onClose={() => setContinuing(false)} />}
     </div>
   )
 }

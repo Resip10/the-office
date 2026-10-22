@@ -1,6 +1,7 @@
-import { app, BrowserWindow, clipboard, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { execFile, spawn } from 'child_process'
+import { existsSync } from 'fs'
 import { stat } from 'fs/promises'
 import { homedir } from 'os'
 import { join } from 'path'
@@ -8,6 +9,7 @@ import { applyNames, attachLive, loadCache, saveCache, scanClaude, type IndexCac
 import { createPidChecker, pidIsAlive, readLiveSessions } from './core/live-status'
 import { copyCommand, resumeInvocation } from './core/commands'
 import { parseDetails } from './core/details'
+import { claudeLaunchFrom, continueInvocation, pruneHandoffs, writeHandoff, type ClaudeLaunch } from './core/continue'
 import { loadAppState, setName, settingsFrom, togglePin, updateAppState } from './core/app-state'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
@@ -44,6 +46,7 @@ let scannedOnce = false
 let lastScanAt = 0
 const rescannedForLive = new Set<string>()
 let hasWt = false
+let claudeLaunch: ClaudeLaunch = { kind: 'unknown' }
 
 // Process start time as a FILETIME string, matching procStart in ~/.claude/sessions/<pid>.json (Windows only).
 function processStartTime(pid: number): Promise<string | null> {
@@ -59,6 +62,7 @@ const isSessionAlive = createPidChecker({ pidExists: pidIsAlive, startTimeOf: pr
 
 const cachePath = () => join(app.getPath('userData'), 'index-v2.json')
 const statePath = () => join(app.getPath('userData'), 'app-state.json')
+const handoffsDir = () => join(app.getPath('userData'), 'handoffs')
 const findRecord = (id: unknown) => records.find(r => r.id === id)
 const openWindows = () => [popover, mainWindow, settingsWindow].filter((w): w is BrowserWindow => !!w && !w.isDestroyed())
 
@@ -269,6 +273,27 @@ ipcMain.on('session:rename', async (_e, id: unknown, name: unknown) => {
   broadcast()
 })
 
+ipcMain.on('session:continue', async (_e, id: unknown, opts: unknown) => {
+  const r = typeof id === 'string' && SESSION_ID.test(id) ? findRecord(id) : undefined
+  const o = (opts ?? {}) as { folder?: unknown; prompt?: unknown; target?: unknown }
+  if (!r || typeof o.prompt !== 'string' || o.prompt.trim() === '') return
+  if (o.target === 'clipboard') { clipboard.writeText(o.prompt); return }
+  if (typeof o.folder !== 'string' || !(await stat(o.folder).then(st => st.isDirectory(), () => false))) return
+  const promptFile = await writeHandoff(handoffsDir(), r.id, o.prompt, Date.now())
+  const inv = continueInvocation({
+    folder: o.folder, promptFile, platform: process.platform, terminal: state.settings.terminal, hasWt, claude: claudeLaunch,
+  })
+  if (!inv) return
+  spawn(inv.file, inv.args, { cwd: inv.cwd, detached: true, stdio: 'ignore' }).on('error', () => {}).unref()
+})
+
+ipcMain.handle('dialog:pick-folder', async (e): Promise<string | null> => {
+  const win = BrowserWindow.fromWebContents(e.sender)
+  const opts: Electron.OpenDialogOptions = { properties: ['openDirectory'] }
+  const result = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+  return result.canceled ? null : result.filePaths[0] ?? null
+})
+
 ipcMain.on('session:reveal', (_e, id: unknown) => {
   const r = findRecord(id)
   if (r) shell.showItemInFolder(r.filePath)
@@ -295,7 +320,13 @@ async function main(): Promise<void> {
   if (!app.requestSingleInstanceLock()) { app.quit(); return }
   await app.whenReady()
 
-  if (process.platform === 'win32') execFile('where.exe', ['wt.exe'], err => { hasWt = !err })
+  if (process.platform === 'win32') {
+    execFile('where.exe', ['wt.exe'], err => { hasWt = !err })
+    execFile('where.exe', ['claude'], (err, out) => {
+      claudeLaunch = claudeLaunchFrom(err ? null : out.split(/\r?\n/)[0].trim() || null, existsSync)
+    })
+  }
+  void pruneHandoffs(handoffsDir(), Date.now())
 
   tray = new Tray(nativeImage.createFromPath(join(__dirname, '..', 'assets', 'tray.png')))
   tray.setToolTip('Session Tray')

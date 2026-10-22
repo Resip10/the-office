@@ -27,4 +27,7 @@ contextBridge.exposeInMainWorld('sessionTray', {
   details: (id: string): Promise<SessionDetails | null> => ipcRenderer.invoke('session:details', id),
   copyText: (text: string) => ipcRenderer.send('session:copy-text', text),
   rename: (id: string, name: string | null) => ipcRenderer.send('session:rename', id, name),
+  continueIn: (id: string, opts: { folder: string; prompt: string; target: 'claude' | 'clipboard' }) =>
+    ipcRenderer.send('session:continue', id, opts),
+  pickFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:pick-folder'),
 })

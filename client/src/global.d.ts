@@ -19,6 +19,8 @@ declare global {
       details(id: string): Promise<SessionDetails | null>
       copyText(text: string): void
       rename(id: string, name: string | null): void
+      continueIn(id: string, opts: { folder: string; prompt: string; target: 'claude' | 'clipboard' }): void
+      pickFolder(): Promise<string | null>
     }
   }
 }
