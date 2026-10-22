@@ -13,6 +13,7 @@ interface Props {
 const NO_DETAILS: SessionDetails = {
   handoff: { source: 'extract', summary: null, goal: null, lastAsk: null, files: [], branch: null, lastAnswer: null },
   peek: [],
+  conversation: [],
   messageTotal: 0,
 }
 

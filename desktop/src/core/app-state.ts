@@ -26,6 +26,7 @@ export function settingsFrom(v: unknown): Settings {
     followSystem: bool(s.followSystem, d.followSystem),
     density: oneOf(s.density, ['comfortable', 'compact'], d.density),
     pulse: bool(s.pulse, d.pulse),
+    peekTools: bool(s.peekTools, d.peekTools),
     terminal: oneOf(s.terminal, ['auto', 'wt', 'powershell', 'terminal'], d.terminal),
     launchAtLogin: bool(s.launchAtLogin, d.launchAtLogin),
     stale: {

@@ -58,9 +58,18 @@ describe('SessionRow', () => {
     expect(api.togglePin).toHaveBeenCalledWith(ID)
   })
 
-  it("pinned rows offer 'Unpin'", () => {
+  it("pinned rows offer 'Unpin' with a pressed, filled pin", () => {
     renderRow({}, { pinned: true })
-    expect(screen.getByRole('button', { name: 'Unpin' })).toBeInTheDocument()
+    const unpin = screen.getByRole('button', { name: 'Unpin' })
+    expect(unpin).toHaveAttribute('aria-pressed', 'true')
+    expect(unpin.querySelector('svg')).toHaveAttribute('fill', 'currentColor')
+  })
+
+  it('unpinned rows show an outline pin, not pressed', () => {
+    renderRow()
+    const pin = screen.getByRole('button', { name: 'Pin' })
+    expect(pin).toHaveAttribute('aria-pressed', 'false')
+    expect(pin.querySelector('svg')).toHaveAttribute('fill', 'none')
   })
 
   it("shows 'Continued in →' and dims the row when the successor is listed", () => {

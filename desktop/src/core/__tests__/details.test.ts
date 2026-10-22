@@ -9,6 +9,7 @@ const details = (name: string) => parseDetails(join(P1, `${name}.jsonl`), APP)
 const EMPTY: SessionDetails = {
   handoff: { source: 'extract', summary: null, goal: null, lastAsk: null, files: [], branch: null, lastAnswer: null },
   peek: [],
+  conversation: [],
   messageTotal: 0,
 }
 
@@ -33,6 +34,12 @@ describe('parseDetails', () => {
     expect(d?.messageTotal).toBe(11)
   })
 
+  it('keeps a separate conversation-only peek of the last 6 user/assistant messages', async () => {
+    const d = await details('edits')
+    expect(d?.conversation.map(p => p.role)).toEqual(['user', 'assistant', 'user', 'assistant'])
+    expect(d?.conversation[2]).toMatchObject({ role: 'user', text: 'Now add CSV too' })
+  })
+
   it('prefers the compaction summary and keeps it out of the peek', async () => {
     const d = await details('compacted')
     expect(d?.handoff.source).toBe('compact')
@@ -40,7 +47,7 @@ describe('parseDetails', () => {
     expect(d?.peek.some(p => p.text.includes('Summary: we built X'))).toBe(false)
   })
 
-  it('falls back to the recap', async () => {
+  it("falls back to the recap, without Claude Code's settings hint", async () => {
     const d = await details('recap')
     expect(d?.handoff.source).toBe('recap')
     expect(d?.handoff.summary).toBe('Recap: docs written')

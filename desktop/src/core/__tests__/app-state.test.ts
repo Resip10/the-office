@@ -55,6 +55,7 @@ describe('loadAppState', () => {
     expect(s.settings.theme).toBe('carbon')
     expect(s.settings.density).toBe('compact')
     expect(s.settings.pulse).toBe(true)
+    expect(s.settings.peekTools).toBe(false)
     expect(s.settings.stale).toEqual({ idleDays: 30, trivialMessages: null, missingFolder: false })
   })
 })

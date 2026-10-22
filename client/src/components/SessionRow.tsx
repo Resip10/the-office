@@ -21,9 +21,9 @@ const actionClass =
 const primaryClass =
   'inline-flex items-center h-6 px-2 rounded-md bg-accent text-on-accent text-[11.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
 
-function PinIcon() {
+function PinIcon({ filled }: { filled: boolean }) {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z" />
     </svg>
   )
@@ -91,11 +91,12 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
             <button className={actionClass} onClick={() => window.sessionTray.openWindow({ id: r.id })}>Peek</button>
           )}
           <button
-            className={`${actionClass} ml-auto px-1.5`}
+            className={`${actionClass} ml-auto px-1.5 ${pinned ? '!text-text !border-muted' : ''}`}
             aria-label={pinned ? 'Unpin' : 'Pin'}
+            aria-pressed={pinned}
             onClick={() => window.sessionTray.togglePin(r.id)}
           >
-            <PinIcon />
+            <PinIcon filled={pinned} />
           </button>
         </div>
       </div>

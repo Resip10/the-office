@@ -25,6 +25,10 @@ const DETAILS: SessionDetails = {
     { role: 'tool', text: 'Edit src\\a.ts', ts: null },
     { role: 'assistant', text: 'Done.', ts: null },
   ],
+  conversation: [
+    { role: 'user', text: 'Add CSV', ts: null },
+    { role: 'assistant', text: 'Done.', ts: null },
+  ],
   messageTotal: 12,
 }
 
@@ -48,8 +52,20 @@ describe('DetailPanel', () => {
     expect(within(handoff).getByText('extracted')).toBeInTheDocument()
     expect(within(handoff).getByText('Build the export feature')).toBeInTheDocument()
     const peek = screen.getByRole('region', { name: 'Messages' })
-    expect(within(peek).getByText('last 3 of 12')).toBeInTheDocument()
-    expect(within(peek).getByText('Edit src\\a.ts')).toBeInTheDocument()
+    expect(within(peek).getByText('last 2 of 12')).toBeInTheDocument()
+    expect(within(peek).queryByText('Edit src\\a.ts')).toBeNull()
+  })
+
+  it('Show tools adds tool calls to the peek and is remembered in settings', async () => {
+    window.sessionTray = mockApi()
+    window.sessionTray.details = vi.fn(async () => DETAILS)
+    const { rerender } = render(<DetailPanel record={rec()} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+    const peek = await screen.findByRole('region', { name: 'Messages' })
+    fireEvent.click(within(peek).getByRole('switch', { name: 'Show tools' }))
+    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ peekTools: true })
+    rerender(<DetailPanel record={rec()} pinned={false} continuedListed={false} onSelect={vi.fn()} showTools />)
+    expect(within(screen.getByRole('region', { name: 'Messages' })).getByText('Edit src\\a.ts')).toBeInTheDocument()
+    expect(screen.getByText('last 3 of 12')).toBeInTheDocument()
   })
 
   it('Copy as prompt copies the handoff prompt', async () => {

@@ -63,6 +63,8 @@ export interface Settings {
   followSystem: boolean
   density: 'comfortable' | 'compact'
   pulse: boolean
+  // Message peek also lists tool calls.
+  peekTools: boolean
   terminal: TerminalChoice
   launchAtLogin: boolean
   // A threshold of null turns that rule off.
@@ -74,6 +76,7 @@ export const DEFAULT_SETTINGS: Settings = {
   followSystem: false,
   density: 'comfortable',
   pulse: true,
+  peekTools: false,
   terminal: 'auto',
   launchAtLogin: false,
   stale: { idleDays: 30, trivialMessages: 3, missingFolder: true },
@@ -108,5 +111,7 @@ export interface PeekItem {
 export interface SessionDetails {
   handoff: Handoff
   peek: PeekItem[]
+  // Last messages between the user and Claude only, without tool calls.
+  conversation: PeekItem[]
   messageTotal: number
 }

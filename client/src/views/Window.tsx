@@ -74,6 +74,7 @@ export function Window() {
               pinned={s.pins.includes(s.selected.id)}
               continuedListed={s.selected.continuedInId !== null && s.listedIds.has(s.selected.continuedInId)}
               onSelect={s.select}
+              showTools={s.settings.peekTools}
             />
           ) : (
             <p className="m-auto text-sm text-muted">Select a session to see details</p>

@@ -14,6 +14,7 @@ interface Props {
   pinned: boolean
   continuedListed: boolean
   onSelect: (id: string) => void
+  showTools?: boolean
 }
 
 const button =
@@ -43,7 +44,7 @@ function Meta({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Props) {
+export function DetailPanel({ record: r, pinned, continuedListed, onSelect, showTools = false }: Props) {
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
   const [continuing, setContinuing] = useState(false)
@@ -60,7 +61,7 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Pr
   }
 
   return (
-    <div role="region" aria-label="Session details" className="flex-1 min-w-0 overflow-y-auto px-8 pt-7 pb-8 flex flex-col gap-5">
+    <div role="region" aria-label="Session details" className="flex-1 min-w-0 overflow-y-auto px-8 pt-7 pb-8 flex flex-col gap-5 [&>*]:shrink-0">
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2.5">
           {editing ? (
@@ -152,7 +153,12 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Pr
         <div className="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4 items-start">
           <HandoffCard handoff={details.handoff} onCopy={() => window.sessionTray.copyText(handoffPrompt(r, details))} />
           {details.peek.length > 0 && (
-            <PeekCard peek={details.peek} total={details.messageTotal} onOpenTranscript={() => window.sessionTray.reveal(r.id)} />
+            <PeekCard
+              items={showTools ? details.peek : details.conversation}
+              total={details.messageTotal}
+              showTools={showTools}
+              onOpenTranscript={() => window.sessionTray.reveal(r.id)}
+            />
           )}
         </div>
       )}

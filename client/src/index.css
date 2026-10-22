@@ -17,6 +17,11 @@ body {
   color: var(--text);
 }
 
+html[data-view='popover'],
+html[data-view='popover'] body {
+  background: transparent;
+}
+
 @keyframes pulse-ring {
   0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--run) 45%, transparent); }
   50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--run) 0%, transparent); }

@@ -25,6 +25,12 @@ function typedText(content: unknown): string | null {
   return null
 }
 
+// Claude Code ends its recaps with a settings hint that means nothing outside the CLI.
+function recapText(content: unknown): string | null {
+  const text = str(content)
+  return text ? str(text.replace(/\s*\(disable recaps in \/config\)\s*$/i, '').trim()) : null
+}
+
 export function toolTarget(_name: string, input: unknown): string {
   if (!isRec(input)) return ''
   if (typeof input.file_path === 'string') return input.file_path
@@ -56,11 +62,14 @@ export async function parseDetails(filePath: string, projectPath: string | null)
   let lastAnswer: string | null = null
   const files: string[] = [] // most recent last while streaming
   const peek: PeekItem[] = []
+  const conversation: PeekItem[] = []
   let messageTotal = 0
 
   const push = (item: PeekItem) => {
-    peek.push(item)
-    if (peek.length > PEEK_SIZE) peek.shift()
+    for (const list of item.role === 'tool' ? [peek] : [peek, conversation]) {
+      list.push(item)
+      if (list.length > PEEK_SIZE) list.shift()
+    }
   }
 
   try {
@@ -78,7 +87,7 @@ export async function parseDetails(filePath: string, projectPath: string | null)
       const at = isNaN(ts) ? null : ts
 
       if (obj.type === 'last-prompt') lastPromptRecord = str(obj.lastPrompt) ?? lastPromptRecord
-      if (obj.type === 'system' && obj.subtype === 'away_summary') recap = str(obj.content) ?? recap
+      if (obj.type === 'system' && obj.subtype === 'away_summary') recap = recapText(obj.content) ?? recap
       if (obj.type !== 'user' && obj.type !== 'assistant') continue
       if (obj.isMeta === true || obj.isSidechain === true) continue
       messageTotal++
@@ -131,6 +140,7 @@ export async function parseDetails(filePath: string, projectPath: string | null)
       lastAnswer: lastAnswer ? lastAnswer.slice(0, ANSWER_MAX) : null,
     },
     peek,
+    conversation,
     messageTotal,
   }
 }

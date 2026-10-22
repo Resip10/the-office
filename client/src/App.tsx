@@ -7,6 +7,8 @@ import { Window } from './views/Window'
 
 const param = new URLSearchParams(window.location.search).get('view')
 const view = param === 'window' || param === 'settings' ? param : 'popover'
+// The popover window is transparent; index.css keeps its page background clear so the rounded corners show.
+document.documentElement.dataset.view = view
 
 const DARK_QUERY = '(prefers-color-scheme: dark)'
 
