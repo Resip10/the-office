@@ -86,3 +86,26 @@ export interface AppState {
   keptAt: Record<string, number>
   settings: Settings
 }
+
+export interface Handoff {
+  source: 'compact' | 'recap' | 'extract'
+  summary: string | null
+  goal: string | null
+  lastAsk: string | null
+  files: string[]
+  branch: string | null
+  lastAnswer: string | null
+}
+
+export interface PeekItem {
+  role: 'user' | 'assistant' | 'tool'
+  text: string
+  ts: number | null
+}
+
+// Loaded on demand for one session (detail view, Continue in…).
+export interface SessionDetails {
+  handoff: Handoff
+  peek: PeekItem[]
+  messageTotal: number
+}

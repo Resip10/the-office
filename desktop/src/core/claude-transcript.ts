@@ -5,7 +5,7 @@ import type { TranscriptMeta } from './types'
 
 const TITLE_MAX = 120
 export const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
-const NON_PROMPT_PREFIXES = ['<command-', '<local-command-', '<system-reminder>']
+export const NON_PROMPT_PREFIXES = ['<command-', '<local-command-', '<system-reminder>']
 
 type Rec = Record<string, unknown>
 
