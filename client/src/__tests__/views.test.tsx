@@ -91,6 +91,12 @@ describe('Popover stale count', () => {
     expect(window.sessionTray.openWindow).toHaveBeenCalledWith({ view: 'cleanup' })
   })
 
+  it('archived sessions are left out of the footer count', () => {
+    mockBridge({ records: [rec(A), rec(B)], archived: [B] })
+    render(<Popover />)
+    expect(screen.getByText('1 session · 1 project')).toBeInTheDocument()
+  })
+
   it('hides the stale count when nothing is stale', () => {
     mockBridge({ records: [rec(A)] })
     render(<Popover />)

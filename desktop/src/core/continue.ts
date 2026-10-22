@@ -14,12 +14,15 @@ const HANDOFF_MAX_AGE_MS = 7 * 86_400_000
 
 const psQuote = (s: string) => `'${s.replace(/'/g, "''")}'`
 
-export function claudeLaunchFrom(wherePath: string | null, fileExists: (p: string) => boolean): ClaudeLaunch {
-  if (!wherePath) return { kind: 'unknown' }
-  if (/\.exe$/i.test(wherePath)) return { kind: 'exe', path: wherePath }
-  if (/\.cmd$/i.test(wherePath)) {
-    const script = join(dirname(wherePath), 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js')
-    if (fileExists(script)) return { kind: 'node-script', path: script }
+// `where claude` output: one path per line, and npm lists its extensionless sh shim first.
+export function claudeLaunchFrom(whereOutput: string | null, fileExists: (p: string) => boolean): ClaudeLaunch {
+  const paths = (whereOutput ?? '').split(/\r?\n/).map(p => p.trim()).filter(Boolean)
+  for (const path of paths) {
+    if (/\.exe$/i.test(path)) return { kind: 'exe', path }
+    if (/\.cmd$/i.test(path)) {
+      const script = join(dirname(path), 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js')
+      if (fileExists(script)) return { kind: 'node-script', path: script }
+    }
   }
   return { kind: 'unknown' }
 }
@@ -36,7 +39,7 @@ export function windowsScript(promptFile: string, claude: ClaudeLaunch): string 
       : '& claude $p'
   return [
     `$p = [IO.File]::ReadAllText(${psQuote(promptFile)})`,
-    `$p = $p -replace '(\\\\*)"', '$1$1\\"' -replace '(\\\\+)$', '$1$1'`,
+    `$p = $p -replace '(\\\\*)"', '$1$1\\"' -replace '(\\\\+)\\z', '$1$1'`,
     call,
   ].join('\n')
 }

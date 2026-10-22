@@ -95,6 +95,17 @@ describe('DetailPanel', () => {
     expect(window.sessionTray.archive).toHaveBeenCalledWith([A])
   })
 
+  it("switching sessions never shows the previous session's handoff", async () => {
+    const B = '22222222-2222-4222-8222-222222222222'
+    window.sessionTray = mockApi()
+    window.sessionTray.details = vi.fn(async (id: string) => (id === A ? DETAILS : new Promise<null>(() => {})))
+    const { rerender } = render(<DetailPanel record={rec()} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+    await screen.findByRole('region', { name: 'Handoff' })
+    rerender(<DetailPanel record={rec({ id: B, title: 'Other' })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+    expect(screen.queryByRole('region', { name: 'Handoff' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Continue in…' })).toBeDisabled()
+  })
+
   it('Archive is disabled for a running session', () => {
     window.sessionTray = mockApi()
     render(<DetailPanel record={rec({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)

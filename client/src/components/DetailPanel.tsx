@@ -47,7 +47,7 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Pr
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
   const [continuing, setContinuing] = useState(false)
-  const { details } = useDetails(r.id, r.lastActivityAt)
+  const { details, loading } = useDetails(r.id, r.lastActivityAt)
   const state = stateOf(r)
   const command = copyCommand(r, window.sessionTray.platform)
   const window_ = contextWindow(r.model)
@@ -106,7 +106,7 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect }: Pr
         >
           {state === 'running' ? 'Open another' : 'Resume'}
         </button>
-        <button className={button} onClick={() => setContinuing(true)}>Continue in…</button>
+        <button className={button} disabled={loading} onClick={() => setContinuing(true)}>Continue in…</button>
         <button className={button} onClick={() => window.sessionTray.reveal(r.id)}>Reveal file</button>
         <button className={button} onClick={() => window.sessionTray.togglePin(r.id)}>{pinned ? 'Unpin' : 'Pin'}</button>
         <button

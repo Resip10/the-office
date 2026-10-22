@@ -348,7 +348,7 @@ async function main(): Promise<void> {
   if (process.platform === 'win32') {
     execFile('where.exe', ['wt.exe'], err => { hasWt = !err })
     execFile('where.exe', ['claude'], (err, out) => {
-      claudeLaunch = claudeLaunchFrom(err ? null : out.split(/\r?\n/)[0].trim() || null, existsSync)
+      claudeLaunch = claudeLaunchFrom(err ? null : out, existsSync)
     })
   }
   void pruneHandoffs(handoffsDir(), Date.now())

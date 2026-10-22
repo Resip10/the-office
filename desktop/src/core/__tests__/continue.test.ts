@@ -61,6 +61,14 @@ describe('claudeLaunchFrom', () => {
     expect(claudeLaunchFrom('C:\\npm\\claude.cmd', () => false)).toEqual({ kind: 'unknown' })
   })
 
+  it('scans every line of where output (npm lists the extensionless shim first)', () => {
+    const cli = join('C:\\npm', 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js')
+    const where = 'C:\\npm\\claude\r\nC:\\npm\\claude.cmd\r\n'
+    expect(claudeLaunchFrom(where, p => p === cli)).toEqual({ kind: 'node-script', path: cli })
+    expect(claudeLaunchFrom('C:\\npm\\claude\r\nC:\\Users\\me\\.local\\bin\\claude.exe\r\n', () => false))
+      .toEqual({ kind: 'exe', path: 'C:\\Users\\me\\.local\\bin\\claude.exe' })
+  })
+
   it('nothing found → unknown', () => {
     expect(claudeLaunchFrom(null, () => true)).toEqual({ kind: 'unknown' })
   })
@@ -92,6 +100,18 @@ describe('Windows PowerShell 5.1 round trip', () => {
     const script = windowsScript(promptFile, { kind: 'node-script', path: echo })
     execFileSync('powershell.exe', ['-NoProfile', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')])
     expect(JSON.parse(readFileSync(out, 'utf8'))).toEqual([PROMPT])
+  }, 30_000)
+
+  onWindows('keeps a backslash before a final newline', () => {
+    const tricky = 'ends with a path C:\\dir\\\n'
+    const promptFile = join(dir, 'p.md')
+    const out = join(dir, 'argv.json')
+    const echo = join(dir, 'echo.js')
+    writeFileSync(promptFile, tricky, 'utf8')
+    writeFileSync(echo, `require('fs').writeFileSync(${JSON.stringify(out)}, JSON.stringify(process.argv.slice(2)))`)
+    const script = windowsScript(promptFile, { kind: 'node-script', path: echo })
+    execFileSync('powershell.exe', ['-NoProfile', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')])
+    expect(JSON.parse(readFileSync(out, 'utf8'))).toEqual([tricky])
   }, 30_000)
 })
 
