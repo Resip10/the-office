@@ -11,3 +11,21 @@ html, body, #root {
   margin: 0;
   padding: 0;
 }
+
+body {
+  background: var(--canvas);
+  color: var(--text);
+}
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--run) 45%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--run) 0%, transparent); }
+}
+
+.pulse {
+  animation: pulse-ring 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse { animation: none; }
+}

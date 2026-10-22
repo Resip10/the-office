@@ -1,23 +1,34 @@
 /** @type {import('tailwindcss').Config} */
+const TOKENS = [
+  'canvas', 'sunken', 'surface', 'raised', 'control', 'selected', 'hover',
+  'line', 'line-strong', 'text', 'text-2', 'muted', 'faint',
+  'accent', 'on-accent', 'accent-text',
+  'run', 'idle', 'other', 'ended', 'run-chip-border', 'run-chip-fill',
+]
+
+// Colors are CSS variables set by src/lib/themes.ts, so themes switch at runtime.
+const tokenColors = Object.fromEntries(TOKENS.map(t => [t, `var(--${t})`]))
+
 module.exports = {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        canvas: '#0d1117',
-        surface: '#161b22',
-        border: '#30363d',
-        'text-primary': '#f0f6fc',
-        'text-muted': '#8b949e',
-        'status-idle': '#3fb950',
-        'status-working': '#d29922',
-        'status-starting': '#58a6ff',
-        'status-waiting': '#bc8cff',
-        'status-done': '#6e7681',
+        ...tokenColors,
+        // v1 names, removed in Task 2 once no component uses them.
+        border: 'var(--line)',
+        'text-primary': 'var(--text)',
+        'text-muted': 'var(--muted)',
+        'status-idle': 'var(--idle)',
+        'status-working': 'var(--run)',
+        'status-starting': 'var(--accent-text)',
+        'status-waiting': 'var(--other)',
+        'status-done': 'var(--ended)',
         'status-error': '#f85149',
       },
       fontFamily: {
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],
+        sans: ['"Geist Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        mono: ['"Geist Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],
       },
     },
   },
