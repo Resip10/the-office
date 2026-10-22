@@ -1,4 +1,4 @@
-import type { OpenWindowOptions, SessionsPayload, Settings } from '../../desktop/src/core/types'
+import type { OpenWindowOptions, SessionDetails, SessionsPayload, Settings } from '../../desktop/src/core/types'
 
 // Bridge exposed by desktop/src/preload.ts.
 declare global {
@@ -16,6 +16,8 @@ declare global {
       removeLegacyHooks(): void
       setSettings(patch: Partial<Settings>): void
       openSettings(): void
+      details(id: string): Promise<SessionDetails | null>
+      copyText(text: string): void
     }
   }
 }

@@ -1,16 +1,18 @@
 import { app, BrowserWindow, clipboard, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { execFile, spawn } from 'child_process'
+import { stat } from 'fs/promises'
 import { homedir } from 'os'
 import { join } from 'path'
 import { attachLive, loadCache, saveCache, scanClaude, type IndexCache } from './core/scanner'
 import { createPidChecker, pidIsAlive, readLiveSessions } from './core/live-status'
 import { copyCommand, resumeInvocation } from './core/commands'
+import { parseDetails } from './core/details'
 import { loadAppState, settingsFrom, togglePin, updateAppState } from './core/app-state'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
-import { DEFAULT_SETTINGS, type AppState, type LiveInfo, type OpenWindowOptions, type SessionRecord, type SessionsPayload } from './core/types'
+import { DEFAULT_SETTINGS, type AppState, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload } from './core/types'
 
 const CLAUDE_DIR = join(homedir(), '.claude')
 const PROJECTS_DIR = join(CLAUDE_DIR, 'projects')
@@ -235,6 +237,29 @@ ipcMain.on('session:pin', async (_e, id: unknown) => {
   if (typeof id !== 'string' || !findRecord(id)) return
   state = await togglePin(statePath(), id)
   broadcast()
+})
+
+// Parsed on demand per session; keyed by file mtime and size so edits invalidate it.
+const DETAILS_CACHE_MAX = 50
+const detailsCache = new Map<string, { key: string; details: SessionDetails | null }>()
+
+ipcMain.handle('session:details', async (_e, id: unknown): Promise<SessionDetails | null> => {
+  const r = typeof id === 'string' && SESSION_ID.test(id) ? findRecord(id) : undefined
+  if (!r) return null
+  const st = await stat(r.filePath).catch(() => null)
+  if (!st) return null
+  const key = `${st.mtimeMs}:${st.size}`
+  const hit = detailsCache.get(r.id)
+  if (hit?.key === key) return hit.details
+  const details = await parseDetails(r.filePath, r.projectPath)
+  detailsCache.delete(r.id)
+  detailsCache.set(r.id, { key, details })
+  if (detailsCache.size > DETAILS_CACHE_MAX) detailsCache.delete(detailsCache.keys().next().value as string)
+  return details
+})
+
+ipcMain.on('session:copy-text', (_e, text: unknown) => {
+  if (typeof text === 'string') clipboard.writeText(text)
 })
 
 ipcMain.on('session:reveal', (_e, id: unknown) => {

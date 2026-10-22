@@ -5,8 +5,13 @@ import { FilterBar } from '../components/FilterBar'
 import { LegacyHooksBanner } from '../components/LegacyHooksBanner'
 import { SessionList } from '../components/SessionList'
 
+const WEEK_MS = 7 * 86_400_000
+
 export function Window() {
   const s = useListState()
+  const weekCost = s.records
+    .filter(r => r.costUSD !== null && r.lastActivityAt >= s.now - WEEK_MS)
+    .reduce((sum, r) => sum + (r.costUSD as number), 0)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -20,11 +25,12 @@ export function Window() {
     <div className="flex flex-col h-full bg-canvas text-text font-sans">
       <div className="flex items-center gap-3.5 h-[46px] shrink-0 px-3.5 border-b border-line bg-surface">
         <span className="text-[13px] font-semibold">Session Tray</span>
+        {weekCost > 0 && <span className="ml-auto font-mono text-[11px] text-muted">≈ ${weekCost.toFixed(2)} this week</span>}
         <button
           aria-label="Settings"
           title="Settings"
           onClick={() => window.sessionTray.openSettings()}
-          className="ml-auto flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-text hover:bg-hover"
+          className={`${weekCost > 0 ? '' : 'ml-auto '}flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-text hover:bg-hover`}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />

@@ -118,7 +118,7 @@ describe('Window', () => {
     })
     render(<Window />)
     fireEvent.click(screen.getByText('First part'))
-    const detail = screen.getByRole('heading', { name: 'First part' }).parentElement?.parentElement as HTMLElement
+    const detail = screen.getByRole('region', { name: 'Session details' })
     fireEvent.click(within(detail).getByRole('button', { name: 'Continued in →' }))
     expect(screen.getByRole('heading', { name: 'Second part' })).toBeInTheDocument()
   })

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { OpenWindowOptions, SessionsPayload, Settings } from './core/types'
+import type { OpenWindowOptions, SessionDetails, SessionsPayload, Settings } from './core/types'
 
 contextBridge.exposeInMainWorld('sessionTray', {
   platform: process.platform,
@@ -24,4 +24,6 @@ contextBridge.exposeInMainWorld('sessionTray', {
   removeLegacyHooks: () => ipcRenderer.send('app:remove-legacy-hooks'),
   setSettings: (patch: Partial<Settings>) => ipcRenderer.send('settings:set', patch),
   openSettings: () => ipcRenderer.send('app:open-settings'),
+  details: (id: string): Promise<SessionDetails | null> => ipcRenderer.invoke('session:details', id),
+  copyText: (text: string) => ipcRenderer.send('session:copy-text', text),
 })
