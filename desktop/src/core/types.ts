@@ -47,3 +47,36 @@ export interface OpenWindowOptions {
   id?: string
   view?: 'cleanup'
 }
+
+export type ThemeId = 'carbon' | 'graphite' | 'midnight' | 'ink' | 'paper'
+export type TerminalChoice = 'auto' | 'wt' | 'powershell' | 'terminal'
+
+export interface Settings {
+  theme: ThemeId
+  followSystem: boolean
+  density: 'comfortable' | 'compact'
+  pulse: boolean
+  terminal: TerminalChoice
+  launchAtLogin: boolean
+  // A threshold of null turns that rule off.
+  stale: { idleDays: number | null; trivialMessages: number | null; missingFolder: boolean }
+}
+
+export const DEFAULT_SETTINGS: Settings = {
+  theme: 'carbon',
+  followSystem: false,
+  density: 'comfortable',
+  pulse: true,
+  terminal: 'auto',
+  launchAtLogin: false,
+  stale: { idleDays: 30, trivialMessages: 3, missingFolder: true },
+}
+
+// App-owned state in userData/app-state.json.
+export interface AppState {
+  pins: string[]
+  names: Record<string, string>
+  archived: string[]
+  keptAt: Record<string, number>
+  settings: Settings
+}
