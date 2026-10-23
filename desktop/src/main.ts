@@ -12,13 +12,13 @@ import { parseDetails } from './core/details'
 import { claudeLaunchFrom, continueInvocation, pruneHandoffs, writeHandoff, type ClaudeLaunch } from './core/continue'
 import { applySettings, archive, dismissNotifyTip, keep, loadAppState, restore, setName, togglePin, updateAppState } from './core/app-state'
 import { notificationText, trackWaiting, type Stretch } from './core/notify'
-import { readStatusline } from './core/statusline-data'
+import { readStatusline, rememberExtras } from './core/statusline-data'
 import { connectStatusLine, disconnectStatusLine, gitBashFrom, isLinked, type ConnectResult } from './core/statusline-link'
 import { usageTooltip } from './core/usage-text'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
-import { DEFAULT_SETTINGS, type AppState, type StatuslineSnapshot, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload } from './core/types'
+import { DEFAULT_SETTINGS, type AppState, type SessionExtras, type StatuslineSnapshot, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload } from './core/types'
 
 const CLAUDE_DIR = join(homedir(), '.claude')
 const PROJECTS_DIR = join(CLAUDE_DIR, 'projects')
@@ -55,6 +55,7 @@ let claudeReady: Promise<ClaudeLaunch> = Promise.resolve({ kind: 'unknown' })
 let hasWt = false
 let statusline: StatuslineSnapshot | null = null
 let statuslineLinked = false
+let sessionExtras: Record<string, SessionExtras> = {}
 // Windows needs Git Bash for the connected status line; macOS and Linux always have a POSIX shell.
 let canLinkStatusline = process.platform !== 'win32'
 let waitingStretches = new Map<string, Stretch>()
@@ -84,7 +85,7 @@ const openWindows = () => [popover, mainWindow, settingsWindow].filter((w): w is
 
 function payload(): SessionsPayload {
   const { pins, names, archived, keptAt, notifyTipDone, settings } = state
-  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, notifyTipDone, settings, hasWt, statusline, statuslineLinked, canLinkStatusline }
+  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, notifyTipDone, settings, hasWt, statusline, statuslineLinked, canLinkStatusline, sessionExtras: statuslineLinked ? sessionExtras : {} }
 }
 
 function broadcast(): void {
@@ -151,6 +152,7 @@ async function pollLive(): Promise<void> {
   statusline = await readStatusline(statuslineDir())
   legacyHooks = hasLegacyHooks(SETTINGS_PATH)
   statuslineLinked = state.statusLink !== null && isLinked(SETTINGS_PATH, state.statusLink)
+  if (statuslineLinked) sessionExtras = rememberExtras(sessionExtras, statusline)
   // A brand-new session is live before its transcript has been scanned; rescan once per such session.
   const unknown = unknownLiveIds(live.keys(), new Set(records.map(r => r.id)), rescannedForLive)
   if (unknown.length > 0) {
@@ -234,7 +236,7 @@ function openMainWindow(opts: OpenWindowOptions = {}): void {
 }
 
 function openSettings(section?: unknown): void {
-  const send = () => { if (section === 'stats') settingsWindow?.webContents.send('settings:section', section) }
+  const send = () => { if (section === 'overview') settingsWindow?.webContents.send('settings:section', section) }
   if (!settingsWindow || settingsWindow.isDestroyed()) {
     settingsWindow = createWindow('settings', { width: 900, height: 640, minWidth: 640, minHeight: 480, backgroundColor: windowBackground() })
     settingsWindow.once('ready-to-show', () => { settingsWindow?.show(); send() })
@@ -390,7 +392,7 @@ ipcMain.on('app:open-window', (_e, opts: unknown) => openMainWindow(opts && type
 ipcMain.on('app:remove-legacy-hooks', removeLegacyHooks)
 ipcMain.on('app:open-settings', (_e, section: unknown) => openSettings(section))
 
-// The only writes to ~/.claude besides removing old hooks; each runs on an explicit click in Settings → Stats.
+// The only writes to ~/.claude besides removing old hooks; each runs on an explicit click in Settings → Overview.
 ipcMain.handle('statusline:connect', async (): Promise<ConnectResult | { ok: false; reason: 'no-bash' }> => {
   if (!canLinkStatusline) return { ok: false, reason: 'no-bash' }
   await mkdir(statuslineDir(), { recursive: true })

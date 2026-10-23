@@ -4,7 +4,7 @@ import { DetailPanel } from '../components/DetailPanel'
 import { FilterBar } from '../components/FilterBar'
 import { LegacyHooksBanner } from '../components/LegacyHooksBanner'
 import { NotifyTip } from '../components/NotifyTip'
-import { StatsLine } from '../components/StatsLine'
+import { OverviewLine } from '../components/OverviewLine'
 import { SessionList } from '../components/SessionList'
 import { Cleanup } from './Cleanup'
 
@@ -30,7 +30,7 @@ export function Window() {
         >
           Clean up{s.stale.length > 0 ? ` · ${s.stale.length}` : ''}
         </button>
-        <StatsLine records={s.records} items={s.settings.stats} statusline={s.statusline} now={s.now} className="ml-auto justify-end" />
+        <OverviewLine records={s.records} items={s.settings.overview} statusline={s.statusline} now={s.now} className="ml-auto justify-end" />
         <button
           aria-label="Settings"
           title="Settings"

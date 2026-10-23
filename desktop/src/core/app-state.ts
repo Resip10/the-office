@@ -1,5 +1,5 @@
 import { readFile, rename, writeFile } from 'fs/promises'
-import { APP_STATS, DEFAULT_SETTINGS, NOTIFY_AFTER_MIN, STATUSLINE_STATS, type AppState, type NotifyAfterMin, type Settings, type StatId, type StatusLink } from './types'
+import { OVERVIEW_APP_ITEMS, DEFAULT_SETTINGS, NOTIFY_AFTER_MIN, OVERVIEW_STATUSLINE_ITEMS, type AppState, type NotifyAfterMin, type Settings, type OverviewItem, type StatusLink } from './types'
 
 type Rec = Record<string, unknown>
 
@@ -11,11 +11,11 @@ const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fa
 const threshold = (v: unknown, fallback: number | null) =>
   v === null ? null : Number.isInteger(v) && (v as number) > 0 ? (v as number) : fallback
 
-const STAT_IDS: readonly string[] = [...APP_STATS, ...STATUSLINE_STATS]
+const OVERVIEW_IDS: readonly string[] = [...OVERVIEW_APP_ITEMS, ...OVERVIEW_STATUSLINE_ITEMS]
 
-function statIds(v: unknown, fallback: StatId[]): StatId[] {
+function overviewItems(v: unknown, fallback: OverviewItem[]): OverviewItem[] {
   if (!Array.isArray(v)) return fallback
-  return v.filter((x, i): x is StatId => typeof x === 'string' && STAT_IDS.includes(x) && v.indexOf(x) === i)
+  return v.filter((x, i): x is OverviewItem => typeof x === 'string' && OVERVIEW_IDS.includes(x) && v.indexOf(x) === i)
 }
 
 function statusLink(v: unknown): StatusLink | null {
@@ -43,7 +43,7 @@ export function settingsFrom(v: unknown): Settings {
     terminal: oneOf(s.terminal, ['auto', 'wt', 'powershell', 'terminal'], d.terminal),
     launchAtLogin: bool(s.launchAtLogin, d.launchAtLogin),
     notify: bool(s.notify, d.notify),
-    stats: statIds(s.stats, d.stats),
+    overview: overviewItems(s.overview, d.overview),
     notifyAfterMin: NOTIFY_AFTER_MIN.includes(s.notifyAfterMin as NotifyAfterMin) ? s.notifyAfterMin as NotifyAfterMin : d.notifyAfterMin,
     stale: {
       idleDays: threshold(stale.idleDays, d.stale.idleDays),

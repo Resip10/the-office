@@ -1,11 +1,11 @@
-import type { SessionRecord, StatId, StatuslineSnapshot } from '../../../desktop/src/core/types'
+import type { SessionRecord, OverviewItem, StatuslineSnapshot } from '../../../desktop/src/core/types'
 import { statuslineParts, usageStale, type StatPart } from '../../../desktop/src/core/usage-text'
 import { relativeTime } from '../lib/list'
-import { appStatParts } from '../lib/stats'
+import { appOverviewParts } from '../lib/overview'
 
 interface Props {
   records: SessionRecord[]
-  items: StatId[]
+  items: OverviewItem[]
   // Only passed while the status line is connected.
   statusline: StatuslineSnapshot | null
   now: number
@@ -23,13 +23,13 @@ function Part({ part }: { part: StatPart }) {
 }
 
 // The app's own items first; items from the user's Claude Code status line sit in a marked group after them.
-export function StatsLine({ records, items, statusline, now, showEdit = false, className = '' }: Props) {
-  const app = appStatParts(records, items, now)
+export function OverviewLine({ records, items, statusline, now, showEdit = false, className = '' }: Props) {
+  const app = appOverviewParts(records, items, now)
   const fromStatusline = statusline ? statuslineParts(statusline, items, now) : []
   const stale = statusline ? usageStale(statusline, now) : null
 
   return (
-    <div aria-label="Stats" className={`flex items-center gap-3 min-w-0 overflow-hidden font-mono text-[11px] text-muted ${className}`}>
+    <div aria-label="Overview" className={`flex items-center gap-3 min-w-0 overflow-hidden font-mono text-[11px] text-muted ${className}`}>
       {app.map((p, i) => <Part key={i} part={p} />)}
       {statusline && fromStatusline.length > 0 && (
         <div
@@ -45,9 +45,9 @@ export function StatsLine({ records, items, statusline, now, showEdit = false, c
       )}
       {showEdit && (
         <button
-          aria-label="Edit stats"
+          aria-label="Edit overview"
           title="Choose what shows here"
-          onClick={() => window.sessionTray.openSettings('stats')}
+          onClick={() => window.sessionTray.openSettings('overview')}
           className="ml-auto shrink-0 flex items-center justify-center w-5 h-5 rounded text-faint hover:text-text hover:bg-hover"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

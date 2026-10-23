@@ -1,6 +1,6 @@
-import type { LimitWindow, StatId, StatuslineSnapshot } from './types'
+import type { LimitWindow, OverviewItem, StatuslineSnapshot } from './types'
 
-// Pure: text for status line items in the stats line (renderer) and the tray tooltip (main).
+// Pure: text for status line items in the overview line (renderer) and the tray tooltip (main).
 
 const MIN = 60_000
 const HOUR = 60 * MIN
@@ -37,23 +37,17 @@ export function usageParts(s: StatuslineSnapshot, now: number): StatPart[] {
   return parts
 }
 
-function itemParts(s: StatuslineSnapshot, id: StatId, now: number): StatPart[] {
+function itemParts(s: StatuslineSnapshot, id: OverviewItem, now: number): StatPart[] {
   const plain = (label: string | null, text: string): StatPart[] => [{ label, text, warn: false }]
   switch (id) {
     case 'limits': return usageParts(s, now)
-    case 'lines': return s.linesAdded === null || s.linesRemoved === null ? [] : plain(null, `+${s.linesAdded} −${s.linesRemoved}`)
-    case 'cache':
-      if (s.cacheHitPct === null) return []
-      return plain('cache', s.cacheColdAt !== null && s.cacheColdAt > now ? `${s.cacheHitPct}% · cold in ${resetText(s.cacheColdAt, now)}` : `${s.cacheHitPct}%`)
-    case 'effort': return s.effort === null ? [] : plain('effort', s.thinking ? `${s.effort} · thinking` : s.effort)
-    case 'pr': return s.pr === null ? [] : plain('PR', s.pr.reviewState ? `#${s.pr.number} · ${s.pr.reviewState}` : `#${s.pr.number}`)
     case 'text': return s.text === null ? [] : plain(null, s.text)
     default: return []
   }
 }
 
 // Status line items in the user's order; the app's own items are skipped here.
-export function statuslineParts(s: StatuslineSnapshot, items: StatId[], now: number): StatPart[] {
+export function statuslineParts(s: StatuslineSnapshot, items: OverviewItem[], now: number): StatPart[] {
   return items.flatMap(id => itemParts(s, id, now))
 }
 

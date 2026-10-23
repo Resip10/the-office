@@ -2,7 +2,7 @@ import { vi } from 'vitest'
 import { DEFAULT_SETTINGS, type SessionsPayload } from '../../../desktop/src/core/types'
 
 export function makePayload(over: Partial<SessionsPayload> = {}): SessionsPayload {
-  return { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, notifyTipDone: false, settings: DEFAULT_SETTINGS, hasWt: false, statusline: null, statuslineLinked: false, canLinkStatusline: true, ...over }
+  return { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, notifyTipDone: false, settings: DEFAULT_SETTINGS, hasWt: false, statusline: null, statuslineLinked: false, canLinkStatusline: true, sessionExtras: {}, ...over }
 }
 
 // A full window.sessionTray mock; onUpdate delivers `payload` immediately when given.

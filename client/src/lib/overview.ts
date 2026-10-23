@@ -1,4 +1,4 @@
-import type { SessionRecord, StatId } from '../../../desktop/src/core/types'
+import type { SessionRecord, OverviewItem } from '../../../desktop/src/core/types'
 import type { StatPart } from '../../../desktop/src/core/usage-text'
 
 const WEEK_MS = 7 * 86_400_000
@@ -7,8 +7,8 @@ const startOfToday = (now: number) => { const d = new Date(now); d.setHours(0, 0
 const cost = (records: SessionRecord[], since: number) =>
   records.filter(r => r.costUSD !== null && r.lastActivityAt >= since).reduce((sum, r) => sum + (r.costUSD as number), 0)
 
-// The app's own stats line items, in the user's order; empty values are left out.
-export function appStatParts(records: SessionRecord[], items: StatId[], now: number): StatPart[] {
+// The app's own overview line items, in the user's order; empty values are left out.
+export function appOverviewParts(records: SessionRecord[], items: OverviewItem[], now: number): StatPart[] {
   const plain = (text: string): StatPart[] => [{ label: null, text, warn: false }]
   return items.flatMap(id => {
     switch (id) {

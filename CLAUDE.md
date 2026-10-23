@@ -44,9 +44,9 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/continue.ts` | `continueInvocation`, handoff files in `userData/handoffs/` (pruned after 7 days) |
 | `desktop/src/core/notify.ts` | `trackWaiting`, `notificationText` — when a waiting session is due a notification (pure) |
 | `desktop/src/core/statusline-link.ts` | Connect/Disconnect: wrap the `statusLine` command in `~/.claude/settings.json`, restore the original |
-| `desktop/src/core/statusline-data.ts` | `readStatusline` — what the connected status line saved in `userData/statusline/` |
+| `desktop/src/core/statusline-data.ts` | `readStatusline`, `rememberExtras` — what the connected status line saved in `userData/statusline/`; effort/thinking per session |
 | `desktop/src/core/usage-text.ts` | `statuslineParts`, `usageStale`, `usageTooltip` (pure; used by the renderer too) |
-| `client/src/lib/stats.ts`, `components/StatsLine.tsx` | Stats line: app items, then the `>_` status line group |
+| `client/src/lib/overview.ts`, `components/OverviewLine.tsx` | Overview line: app items, then the `>_` status line group |
 | `desktop/src/core/stale.ts` | `staleReasons` — idle / trivial / folder-gone rules (pure) |
 | `desktop/src/core/app-state.ts` | `userData/app-state.json`: pins, names, archived, keptAt, settings |
 | `desktop/src/core/legacy-hooks.ts` | Detect/remove the old `localhost:7777` hooks |
@@ -87,7 +87,7 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 - **Notifications are opt-in.** Off by default, silent, one per waiting stretch after 1/5/15/30 min; a one-time tip offers them (`notifyTipDone`).
 - **Fail soft.** Unknown records are ignored, unknown values show as "—"; `core/` never throws on bad input.
 - **Disposable cache.** `userData/index-v2.json`; deleting it costs one cold scan.
-- **Status line data is optional and marked.** Claude Code passes `rate_limits`, cost/lines, cache, PR and the printed text only to the status line. Connect wraps the user's command (`tee input | { original } | tee output`, errors silenced, ends with `true`) into `userData/statusline/`. Windows needs Git Bash. In the UI it sits in its own `>_` group so it never looks built in.
+- **Status line data is optional and marked.** Claude Code passes `rate_limits`, effort/thinking and the printed text only to the status line. Connect wraps the user's command (`tee input | { original } | tee output`, errors silenced, ends with `true`) into `userData/statusline/`. Windows needs Git Bash. Global items (limits, text) sit in the overview line's own `>_` group; per-session effort/thinking show quietly in the detail panel with the same `>_` mark, so nothing looks built in.
 - **Cost is an estimate.** `costUSD` is Claude Code's API-price figure, labelled "≈ API cost".
 - **Run actions through the CLI.** Resume = `claude --resume <id>` in the project folder; ids validated first.
 - **Continue in… passes the prompt by file.** Windows runs an encoded PowerShell script that reads the handoff file; npm installs run `cli.js` with node because `claude.cmd` cuts arguments at newlines.
@@ -96,7 +96,7 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 
 - **v1 (done):** list, metadata, search/filters, copy + resume, pins, legacy-hook removal
 - **P1 (done):** Carbon redesign + themes, handoff summary, Continue in…, stale detection + archive, message peek, rename, Settings
-- **P2 (in progress):** waiting-for-input badge + notifications (done), stats line + status line data + context % (done), git hints, tags and notes
+- **P2 (in progress):** waiting-for-input badge + notifications (done), overview line + status line data + context % (done), git hints, tags and notes
 - **Ideas:** active subagents per session; read-only snapshot of installed MCP servers and plugins (never show secrets)
 - **P3:** Codex adapter, LLM summaries, global hotkey, full-text search
 

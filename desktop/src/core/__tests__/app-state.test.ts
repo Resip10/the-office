@@ -161,11 +161,11 @@ describe('notifications', () => {
   })
 })
 
-describe('stats and status link', () => {
-  it('stats keep known ids once, in order; anything else falls back to the default', () => {
-    expect(settingsFrom({ stats: ['limits', 'nope', 'running', 'limits'] }).stats).toEqual(['limits', 'running'])
-    expect(settingsFrom({ stats: [] }).stats).toEqual([])
-    expect(settingsFrom({ stats: 'running' }).stats).toEqual(DEFAULT_SETTINGS.stats)
+describe('overview and status link', () => {
+  it('overview keeps known ids once, in order; anything else falls back to the default', () => {
+    expect(settingsFrom({ overview: ['limits', 'nope', 'running', 'limits'] }).overview).toEqual(['limits', 'running'])
+    expect(settingsFrom({ overview: [] }).overview).toEqual([])
+    expect(settingsFrom({ overview: 'running' }).overview).toEqual(DEFAULT_SETTINGS.overview)
   })
 
   it('loads a status link only when its command is a string', async () => {

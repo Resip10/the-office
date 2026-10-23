@@ -23,9 +23,9 @@ contextBridge.exposeInMainWorld('sessionTray', {
   },
   removeLegacyHooks: () => ipcRenderer.send('app:remove-legacy-hooks'),
   setSettings: (patch: Partial<Settings>) => ipcRenderer.send('settings:set', patch),
-  openSettings: (section?: 'stats') => ipcRenderer.send('app:open-settings', section),
-  onSettingsSection(cb: (section: 'stats') => void): () => void {
-    const handler = (_e: IpcRendererEvent, section: 'stats') => cb(section)
+  openSettings: (section?: 'overview') => ipcRenderer.send('app:open-settings', section),
+  onSettingsSection(cb: (section: 'overview') => void): () => void {
+    const handler = (_e: IpcRendererEvent, section: 'overview') => cb(section)
     ipcRenderer.on('settings:section', handler)
     return () => { ipcRenderer.removeListener('settings:section', handler) }
   },

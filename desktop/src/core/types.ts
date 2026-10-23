@@ -58,6 +58,8 @@ export interface SessionsPayload {
   statuslineLinked: boolean
   // False on Windows without Git Bash, where Claude Code runs status lines through PowerShell.
   canLinkStatusline: boolean
+  // Latest effort and thinking per session id, from status line refreshes while connected.
+  sessionExtras: Record<string, SessionExtras>
 }
 
 // One plan limit from Claude Code's status line input; resetsAt in ms.
@@ -69,17 +71,20 @@ export interface LimitWindow {
 export interface StatuslineSnapshot {
   // When the status line last saved it (file mtime).
   capturedAt: number
+  // The session that refreshed the status line; effort and thinking belong to it.
+  sessionId: string | null
   fiveHour: LimitWindow | null
   sevenDay: LimitWindow | null
-  linesAdded: number | null
-  linesRemoved: number | null
-  cacheHitPct: number | null
-  cacheColdAt: number | null
   effort: string | null
   thinking: boolean | null
-  pr: { number: number; url: string; reviewState: string | null } | null
   // What the user's script printed, without colors.
   text: string | null
+}
+
+// Per-session details only the status line knows; shown quietly in the session detail when known.
+export interface SessionExtras {
+  effort: string | null
+  thinking: boolean | null
 }
 
 // What the window should show when it is opened from the popover.
@@ -92,10 +97,10 @@ export type ThemeId = 'carbon' | 'graphite' | 'midnight' | 'ink' | 'paper'
 export type TerminalChoice = 'auto' | 'wt' | 'powershell' | 'terminal'
 export const NOTIFY_AFTER_MIN = [1, 5, 15, 30] as const
 export type NotifyAfterMin = typeof NOTIFY_AFTER_MIN[number]
-// Stats line items: the app's own first, then ones that need the connected status line.
-export const APP_STATS = ['running', 'costToday', 'costWeek', 'sessionsToday'] as const
-export const STATUSLINE_STATS = ['limits', 'lines', 'cache', 'effort', 'pr', 'text'] as const
-export type StatId = typeof APP_STATS[number] | typeof STATUSLINE_STATS[number]
+// Overview line items: the app's own first, then ones that need the connected status line.
+export const OVERVIEW_APP_ITEMS = ['running', 'costToday', 'costWeek', 'sessionsToday'] as const
+export const OVERVIEW_STATUSLINE_ITEMS = ['limits', 'text'] as const
+export type OverviewItem = typeof OVERVIEW_APP_ITEMS[number] | typeof OVERVIEW_STATUSLINE_ITEMS[number]
 
 export interface Settings {
   theme: ThemeId
@@ -109,8 +114,8 @@ export interface Settings {
   // Notify when a session has been waiting for input this many minutes.
   notify: boolean
   notifyAfterMin: NotifyAfterMin
-  // Items in the stats line, in display order.
-  stats: StatId[]
+  // Items in the overview line, in display order.
+  overview: OverviewItem[]
   // A threshold of null turns that rule off.
   stale: { idleDays: number | null; trivialMessages: number | null; missingFolder: boolean }
 }
@@ -125,7 +130,7 @@ export const DEFAULT_SETTINGS: Settings = {
   launchAtLogin: false,
   notify: false,
   notifyAfterMin: 5,
-  stats: ['running', 'costWeek', 'limits'],
+  overview: ['running', 'costWeek', 'limits'],
   stale: { idleDays: 30, trivialMessages: 3, missingFolder: true },
 }
 

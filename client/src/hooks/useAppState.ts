@@ -13,5 +13,6 @@ export function useAppState() {
     statusline: payload?.statusline ?? null,
     statuslineLinked: payload?.statuslineLinked ?? false,
     canLinkStatusline: payload?.canLinkStatusline ?? false,
+    sessionExtras: payload?.sessionExtras ?? {},
   }
 }

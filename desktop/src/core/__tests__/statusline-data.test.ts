@@ -1,32 +1,27 @@
 import { mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { cleanText, parseStatusline, readStatusline } from '../statusline-data'
+import { cleanText, parseStatusline, readStatusline, rememberExtras } from '../statusline-data'
 
 const FIX = join(__dirname, 'fixtures', 'statusline')
 const read = (p: string) => readFileSync(join(FIX, p), 'utf8')
 
 describe('parseStatusline', () => {
-  it('reads limits, lines, cache, effort, PR and the printed text', () => {
+  it('reads the session, limits, effort, thinking and the printed text', () => {
     expect(parseStatusline(read('full/input.json'), read('full/output.txt'), 123)).toEqual({
       capturedAt: 123,
+      sessionId: '11111111-1111-4111-8111-111111111111',
       fiveHour: { usedPct: 17, resetsAt: 1792794000_000 },
       sevenDay: { usedPct: 48.5, resetsAt: 1792990800_000 },
-      linesAdded: 4104,
-      linesRemoved: 227,
-      cacheHitPct: 97,
-      cacheColdAt: 1792789061_000,
       effort: 'medium',
       thinking: true,
-      pr: { number: 13, url: 'https://github.com/acme/app/pull/13', reviewState: 'pending' },
       text: 'app on main · link  ctx 29%',
     })
   })
 
   it('malformed or missing fields are null; other limit types are ignored', () => {
     expect(parseStatusline(read('partial/input.json'), null, 1)).toEqual({
-      capturedAt: 1, fiveHour: null, sevenDay: null, linesAdded: null, linesRemoved: null,
-      cacheHitPct: null, cacheColdAt: null, effort: null, thinking: null, pr: null, text: null,
+      capturedAt: 1, sessionId: null, fiveHour: null, sevenDay: null, effort: null, thinking: null, text: null,
     })
   })
 
@@ -59,5 +54,24 @@ describe('readStatusline', () => {
     const s = await readStatusline(dir)
     expect(s?.capturedAt).toBe(1_700_000_000_000)
     expect(s?.text).toBeNull()
+  })
+})
+
+describe('rememberExtras', () => {
+  const ID = '11111111-1111-4111-8111-111111111111'
+  const snap = (over = {}) => ({ capturedAt: 1, sessionId: ID, fiveHour: null, sevenDay: null, effort: 'high', thinking: true, text: null, ...over })
+
+  it('keeps the latest effort and thinking per session', () => {
+    const one = rememberExtras({}, snap())
+    expect(one).toEqual({ [ID]: { effort: 'high', thinking: true } })
+    expect(rememberExtras(one, snap({ effort: 'low' }))[ID]).toEqual({ effort: 'low', thinking: true })
+  })
+
+  it('unchanged, unknown session or nothing known → same object', () => {
+    const one = rememberExtras({}, snap())
+    expect(rememberExtras(one, snap())).toBe(one)
+    expect(rememberExtras(one, snap({ sessionId: null }))).toBe(one)
+    expect(rememberExtras(one, snap({ effort: null, thinking: null }))).toBe(one)
+    expect(rememberExtras(one, null)).toBe(one)
   })
 })

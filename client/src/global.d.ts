@@ -15,8 +15,8 @@ declare global {
       onOpen(cb: (opts: OpenWindowOptions) => void): () => void
       removeLegacyHooks(): void
       setSettings(patch: Partial<Settings>): void
-      openSettings(section?: 'stats'): void
-      onSettingsSection(cb: (section: 'stats') => void): () => void
+      openSettings(section?: 'overview'): void
+      onSettingsSection(cb: (section: 'overview') => void): () => void
       connectStatusLine(): Promise<{ ok: boolean; reason?: string }>
       disconnectStatusLine(): Promise<string>
       details(id: string): Promise<SessionDetails | null>

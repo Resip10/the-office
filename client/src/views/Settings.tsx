@@ -1,33 +1,29 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { describeInvocation, resumeInvocation } from '../../../desktop/src/core/commands'
-import { APP_STATS, NOTIFY_AFTER_MIN, STATUSLINE_STATS, type NotifyAfterMin, type Settings as SettingsShape, type StatId, type TerminalChoice } from '../../../desktop/src/core/types'
+import { OVERVIEW_APP_ITEMS, NOTIFY_AFTER_MIN, OVERVIEW_STATUSLINE_ITEMS, type NotifyAfterMin, type Settings as SettingsShape, type OverviewItem, type TerminalChoice } from '../../../desktop/src/core/types'
 import { useAppState } from '../hooks/useAppState'
 import { useNow } from '../hooks/useSessions'
 import { relativeTime } from '../lib/list'
 import { THEMES, type ThemeId } from '../lib/themes'
 
-type Section = 'general' | 'appearance' | 'stats' | 'terminal' | 'cleanup'
+type Section = 'general' | 'appearance' | 'overview' | 'terminal' | 'cleanup'
 
 const SECTIONS: Array<[Section, string, boolean]> = [
   ['general', 'General', true],
   ['appearance', 'Appearance', true],
-  ['stats', 'Stats', true],
+  ['overview', 'Overview', true],
   ['terminal', 'Terminal', true],
   ['cleanup', 'Cleanup', true],
 ]
 
 const STATUSLINE_GUIDE = 'https://code.claude.com/docs/en/statusline'
 
-const STAT_LABELS: Record<StatId, [string, string?]> = {
+const OVERVIEW_LABELS: Record<OverviewItem, [string, string?]> = {
   running: ['Running and waiting', 'How many sessions are working or waiting for you.'],
   costToday: ['≈ Cost today', 'API-price estimate of sessions active today.'],
   costWeek: ['≈ Cost this week', 'API-price estimate of sessions active in the last 7 days.'],
   sessionsToday: ['Sessions today'],
   limits: ['Plan limits', '5-hour and weekly use, with reset times.'],
-  lines: ['Lines added and removed'],
-  cache: ['Prompt cache', 'Hit rate, and when the cache goes cold.'],
-  effort: ['Effort and thinking'],
-  pr: ['Pull request', 'Number and review state.'],
   text: ['Status line text', 'Whatever your status line script prints.'],
 }
 
@@ -119,18 +115,18 @@ const Badge = () => (
 
 const button = 'h-[30px] px-3 rounded-[7px] border border-line-strong bg-control text-[12.5px] text-text hover:border-muted disabled:opacity-40 disabled:hover:border-line-strong'
 
-function StatsSection() {
+function OverviewSection() {
   const { settings, statusline, statuslineLinked, canLinkStatusline } = useAppState()
   const now = useNow()
   const [message, setMessage] = useState<string | null>(null)
   const isWindows = window.sessionTray.platform === 'win32'
-  const toggle = (id: StatId) => set({ stats: settings.stats.includes(id) ? settings.stats.filter(x => x !== id) : [...settings.stats, id] })
+  const toggle = (id: OverviewItem) => set({ overview: settings.overview.includes(id) ? settings.overview.filter(x => x !== id) : [...settings.overview, id] })
 
-  const row = (id: StatId, disabled = false) => {
-    const [title, hint] = STAT_LABELS[id]
+  const row = (id: OverviewItem, disabled = false) => {
+    const [title, hint] = OVERVIEW_LABELS[id]
     return (
       <Row key={id} title={title} hint={hint}>
-        <Switch label={title} checked={settings.stats.includes(id)} disabled={disabled} onChange={() => toggle(id)} />
+        <Switch label={title} checked={settings.overview.includes(id)} disabled={disabled} onChange={() => toggle(id)} />
       </Row>
     )
   }
@@ -155,18 +151,19 @@ function StatsSection() {
   return (
     <>
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight">Stats</h1>
-        <p className="text-[13px] text-muted">Choose what the stats line shows in the popover and the window.</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+        <p className="text-[13px] text-muted">Choose what the overview line shows in the popover and the window.</p>
       </div>
 
       <section className="flex flex-col gap-3">
         <Label>From Session Tray</Label>
-        <Group>{APP_STATS.map(id => row(id))}</Group>
+        <Group>{OVERVIEW_APP_ITEMS.map(id => row(id))}</Group>
       </section>
 
       <section className="flex flex-col gap-3">
         <span className="flex items-center gap-2"><Badge /><Label>From your Claude Code status line</Label></span>
-        <Group>{STATUSLINE_STATS.map(id => row(id, !statuslineLinked))}</Group>
+        <Group>{OVERVIEW_STATUSLINE_ITEMS.map(id => row(id, !statuslineLinked))}</Group>
+        <p className="m-0 text-[12.5px] text-muted">While connected, each session's details also show its effort level and whether thinking is on.</p>
       </section>
 
       <Group>
@@ -262,7 +259,7 @@ export function Settings() {
           </>
         )}
 
-        {section === 'stats' && <StatsSection />}
+        {section === 'overview' && <OverviewSection />}
 
         {section === 'appearance' && (
           <>

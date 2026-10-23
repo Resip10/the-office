@@ -10,9 +10,8 @@ const usage = (over: Partial<StatuslineSnapshot> = {}): StatuslineSnapshot => ({
   fiveHour: { usedPct: 11, resetsAt: NOW + 2 * HOUR + 14 * MIN },
   sevenDay: { usedPct: 47.5, resetsAt: SAT_14 },
   capturedAt: NOW,
-  linesAdded: 4104, linesRemoved: 227, cacheHitPct: 97, cacheColdAt: NOW + 23 * MIN,
+  sessionId: null,
   effort: 'medium', thinking: true,
-  pr: { number: 13, url: 'https://github.com/a/b/pull/13', reviewState: 'pending' },
   text: 'app on main',
   ...over,
 })
@@ -65,25 +64,15 @@ describe('usageTooltip', () => {
 })
 
 describe('statuslineParts', () => {
-  it('follows the chosen items and their order', () => {
-    expect(statuslineParts(usage(), ['text', 'lines', 'cache', 'effort', 'pr'], NOW)).toEqual([
+  it('follows the chosen items and their order; app items are skipped', () => {
+    expect(statuslineParts(usage(), ['text', 'running', 'limits'], NOW)).toEqual([
       { label: null, text: 'app on main', warn: false },
-      { label: null, text: '+4104 −227', warn: false },
-      { label: 'cache', text: '97% · cold in 23m', warn: false },
-      { label: 'effort', text: 'medium · thinking', warn: false },
-      { label: 'PR', text: '#13 · pending', warn: false },
+      { label: '5h', text: '11% · resets 2h 14m', warn: false },
+      { label: 'wk', text: '48% · resets Sat 14:00', warn: false },
     ])
   })
 
-  it('limits expand to both windows; app items are skipped', () => {
-    expect(statuslineParts(usage(), ['running', 'limits'], NOW).map(p => p.label)).toEqual(['5h', 'wk'])
-  })
-
-  it('missing values drop their item; a cold cache shows only the hit rate', () => {
-    const s = usage({ linesAdded: null, pr: null, text: null, thinking: false, cacheColdAt: NOW - MIN })
-    expect(statuslineParts(s, ['lines', 'pr', 'text', 'effort', 'cache'], NOW)).toEqual([
-      { label: 'effort', text: 'medium', warn: false },
-      { label: 'cache', text: '97%', warn: false },
-    ])
+  it('missing values drop their item', () => {
+    expect(statuslineParts(usage({ text: null, fiveHour: null, sevenDay: null }), ['text', 'limits'], NOW)).toEqual([])
   })
 })

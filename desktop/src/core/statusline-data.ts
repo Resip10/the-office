@@ -1,6 +1,6 @@
 import { readFile, stat } from 'fs/promises'
 import { join } from 'path'
-import type { LimitWindow, StatuslineSnapshot } from './types'
+import type { LimitWindow, SessionExtras, StatuslineSnapshot } from './types'
 
 // What Claude Code last passed to the user's status line, saved by the connected status line command
 // (see statusline-link.ts) as input.json, plus what the script printed (output.txt). Fail soft throughout.
@@ -10,6 +10,7 @@ const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null)
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() !== '' ? v : null)
 const TEXT_MAX = 200
+const SESSION_ID = /^[0-9a-f-]{36}$/
 
 function limitWindow(v: unknown): LimitWindow | null {
   if (!isRec(v)) return null
@@ -37,24 +38,14 @@ export function parseStatusline(input: string, output: string | null, capturedAt
   }
   if (!isRec(obj)) return null
   const limits = isRec(obj.rate_limits) ? obj.rate_limits : {}
-  const cost = isRec(obj.cost) ? obj.cost : {}
-  const cache = isRec(obj.prompt_cache) ? obj.prompt_cache : {}
-  const hit = num(cache.hit_ratio)
-  const cold = num(cache.expires_at)
-  const pr = isRec(obj.pr) && num(obj.pr.number) !== null && str(obj.pr.url)
-    ? { number: obj.pr.number as number, url: obj.pr.url as string, reviewState: str(obj.pr.review_state) }
-    : null
+  const sessionId = str(obj.session_id)
   return {
     capturedAt,
+    sessionId: sessionId && SESSION_ID.test(sessionId) ? sessionId : null,
     fiveHour: limitWindow(limits.five_hour),
     sevenDay: limitWindow(limits.seven_day),
-    linesAdded: num(cost.total_lines_added),
-    linesRemoved: num(cost.total_lines_removed),
-    cacheHitPct: hit === null ? null : Math.round(hit * 100),
-    cacheColdAt: cold === null ? null : cold * 1000,
     effort: isRec(obj.effort) ? str(obj.effort.level) : null,
     thinking: isRec(obj.thinking) && typeof obj.thinking.enabled === 'boolean' ? obj.thinking.enabled : null,
-    pr,
     text: output === null ? null : cleanText(output),
   }
 }
@@ -68,4 +59,12 @@ export async function readStatusline(dir: string): Promise<StatuslineSnapshot | 
   } catch {
     return null
   }
+}
+
+// Keeps the latest effort and thinking per session as status line refreshes come in.
+export function rememberExtras(prev: Record<string, SessionExtras>, s: StatuslineSnapshot | null): Record<string, SessionExtras> {
+  if (!s?.sessionId || (s.effort === null && s.thinking === null)) return prev
+  const old = prev[s.sessionId]
+  if (old && old.effort === s.effort && old.thinking === s.thinking) return prev
+  return { ...prev, [s.sessionId]: { effort: s.effort, thinking: s.thinking } }
 }
