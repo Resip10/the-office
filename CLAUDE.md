@@ -43,6 +43,10 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/handoff-prompt.ts` | `handoffPrompt`, `continuePreview` (pure; used by the renderer too) |
 | `desktop/src/core/continue.ts` | `continueInvocation`, handoff files in `userData/handoffs/` (pruned after 7 days) |
 | `desktop/src/core/notify.ts` | `trackWaiting`, `notificationText` — when a waiting session is due a notification (pure) |
+| `desktop/src/core/statusline-link.ts` | Connect/Disconnect: wrap the `statusLine` command in `~/.claude/settings.json`, restore the original |
+| `desktop/src/core/statusline-data.ts` | `readStatusline`, `rememberExtras` — what the connected status line saved in `userData/statusline/`; text/effort/thinking per session |
+| `desktop/src/core/usage-text.ts` | `statuslineParts`, `usageStale`, `usageTooltip` (pure; used by the renderer too) |
+| `client/src/lib/overview.ts`, `components/OverviewLine.tsx` | Overview line: app items, then the `>_` status line group |
 | `desktop/src/core/stale.ts` | `staleReasons` — idle / trivial / folder-gone rules (pure) |
 | `desktop/src/core/app-state.ts` | `userData/app-state.json`: pins, names, archived, keptAt, settings |
 | `desktop/src/core/legacy-hooks.ts` | Detect/remove the old `localhost:7777` hooks |
@@ -77,12 +81,13 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 
 ## Design decisions
 
-- **Read-only on `~/.claude`.** The only write is removing the old hooks, on an explicit click.
+- **Read-only on `~/.claude`.** The only writes, each on an explicit click: removing the old hooks, and Connect/Disconnect of the status line (only `statusLine` in `settings.json`; Disconnect restores the original only if our command is still there).
 - **Archive is hide-only, rename is app-only.** Both live in `app-state.json`; transcripts are never moved, deleted or renamed.
 - **No server, no port, no hooks.** Live status comes from `~/.claude/sessions/<pid>.json`, including `waiting` + `waitingFor` (Claude Code 2.1.303+).
 - **Notifications are opt-in.** Off by default, silent, one per waiting stretch after 1/5/15/30 min; a one-time tip offers them (`notifyTipDone`).
 - **Fail soft.** Unknown records are ignored, unknown values show as "—"; `core/` never throws on bad input.
 - **Disposable cache.** `userData/index-v2.json`; deleting it costs one cold scan.
+- **Status line data is optional and marked.** Claude Code passes `rate_limits`, effort/thinking and the printed text only to the status line. Connect wraps the user's command (`tee input | { original } | tee output`, errors silenced, ends with `true`) into `userData/statusline/`. Windows needs Git Bash. Only account-wide plan limits sit in the overview line's `>_` group; per-session status line text, effort and thinking show quietly in the detail panel with the same `>_` mark, so nothing looks built in.
 - **Cost is an estimate.** `costUSD` is Claude Code's API-price figure, labelled "≈ API cost".
 - **Run actions through the CLI.** Resume = `claude --resume <id>` in the project folder; ids validated first.
 - **Continue in… passes the prompt by file.** Windows runs an encoded PowerShell script that reads the handoff file; npm installs run `cli.js` with node because `claude.cmd` cuts arguments at newlines.
@@ -91,7 +96,8 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 
 - **v1 (done):** list, metadata, search/filters, copy + resume, pins, legacy-hook removal
 - **P1 (done):** Carbon redesign + themes, handoff summary, Continue in…, stale detection + archive, message peek, rename, Settings
-- **P2 (in progress):** waiting-for-input badge + notifications (done), token/cost totals, git hints, tags and notes
+- **P2 (in progress):** waiting-for-input badge + notifications (done), overview line + status line data + context % (done), git hints, tags and notes
+- **Ideas:** active subagents per session; token totals across sessions (parser change); read-only snapshot of installed MCP servers and plugins (never show secrets)
 - **P3:** Codex adapter, LLM summaries, global hotkey, full-text search
 
 Spec: `docs/superpowers/specs/2026-10-18-session-tray-design.md`. Product vision: `docs/product/session-tray-plan.md`.

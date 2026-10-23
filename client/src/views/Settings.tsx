@@ -1,17 +1,30 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { describeInvocation, resumeInvocation } from '../../../desktop/src/core/commands'
-import { NOTIFY_AFTER_MIN, type NotifyAfterMin, type Settings as SettingsShape, type TerminalChoice } from '../../../desktop/src/core/types'
+import { OVERVIEW_APP_ITEMS, NOTIFY_AFTER_MIN, OVERVIEW_STATUSLINE_ITEMS, type NotifyAfterMin, type Settings as SettingsShape, type OverviewItem, type TerminalChoice } from '../../../desktop/src/core/types'
 import { useAppState } from '../hooks/useAppState'
+import { useNow } from '../hooks/useSessions'
+import { relativeTime } from '../lib/list'
 import { THEMES, type ThemeId } from '../lib/themes'
 
-type Section = 'general' | 'appearance' | 'terminal' | 'cleanup'
+type Section = 'general' | 'appearance' | 'overview' | 'terminal' | 'cleanup'
 
 const SECTIONS: Array<[Section, string, boolean]> = [
   ['general', 'General', true],
   ['appearance', 'Appearance', true],
+  ['overview', 'Overview', true],
   ['terminal', 'Terminal', true],
   ['cleanup', 'Cleanup', true],
 ]
+
+const STATUSLINE_GUIDE = 'https://code.claude.com/docs/en/statusline'
+
+const OVERVIEW_LABELS: Record<OverviewItem, [string, string?]> = {
+  running: ['Running and waiting', 'How many sessions are working or waiting for you.'],
+  costToday: ['≈ Cost today', 'API-price estimate of sessions active today.'],
+  costWeek: ['≈ Cost this week', 'API-price estimate of sessions active in the last 7 days.'],
+  sessionsToday: ['Sessions today'],
+  limits: ['Plan limits', '5-hour and weekly use, with reset times.'],
+}
 
 const PICKABLE: ThemeId[] = ['carbon', 'graphite', 'midnight', 'ink', 'paper']
 
@@ -19,14 +32,15 @@ const SAMPLE_ID = '4f1c9a2e-7b31-4d0c-9e55-2a8f61c0d7b3'
 
 const set = (patch: Partial<SettingsShape>) => window.sessionTray.setSettings(patch)
 
-function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Switch({ label, checked, onChange, disabled = false }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
     <button
       role="switch"
       aria-checked={checked}
       aria-label={label}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`flex w-9 h-5 p-0.5 rounded-full shrink-0 ${checked ? 'bg-accent justify-end' : 'bg-line-strong justify-start'}`}
+      className={`flex w-9 h-5 p-0.5 rounded-full shrink-0 disabled:opacity-40 ${checked ? 'bg-accent justify-end' : 'bg-line-strong justify-start'}`}
     >
       <span className={`w-4 h-4 rounded-full ${checked ? 'bg-on-accent' : 'bg-muted'}`} />
     </button>
@@ -94,9 +108,104 @@ function ThemeCard({ id, selected }: { id: ThemeId; selected: boolean }) {
   )
 }
 
+const Badge = () => (
+  <span aria-hidden="true" className="px-1 rounded border border-line-strong font-mono text-[10px] text-faint">&gt;_</span>
+)
+
+const button = 'h-[30px] px-3 rounded-[7px] border border-line-strong bg-control text-[12.5px] text-text hover:border-muted disabled:opacity-40 disabled:hover:border-line-strong'
+
+function OverviewSection() {
+  const { settings, statusline, statuslineLinked, canLinkStatusline } = useAppState()
+  const now = useNow()
+  const [message, setMessage] = useState<string | null>(null)
+  const isWindows = window.sessionTray.platform === 'win32'
+  const toggle = (id: OverviewItem) => set({ overview: settings.overview.includes(id) ? settings.overview.filter(x => x !== id) : [...settings.overview, id] })
+
+  const row = (id: OverviewItem, disabled = false) => {
+    const [title, hint] = OVERVIEW_LABELS[id]
+    return (
+      <Row key={id} title={title} hint={hint}>
+        <Switch label={title} checked={settings.overview.includes(id)} disabled={disabled} onChange={() => toggle(id)} />
+      </Row>
+    )
+  }
+
+  async function connect() {
+    setMessage(null)
+    const r = await window.sessionTray.connectStatusLine()
+    if (!r.ok) {
+      setMessage(r.reason === 'unsupported'
+        ? "Your status line isn't a command, so it was left alone."
+        : "Couldn't read Claude Code's settings file, so nothing was changed.")
+    }
+  }
+
+  async function disconnect() {
+    setMessage(null)
+    const r = await window.sessionTray.disconnectStatusLine()
+    if (r === 'changed') setMessage('Your status line was changed after connecting, so it was left as it is.')
+    if (r === 'unreadable') setMessage("Couldn't read Claude Code's settings file, so nothing was changed.")
+  }
+
+  return (
+    <>
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+        <p className="text-[13px] text-muted">Choose what the overview line shows in the popover and the window.</p>
+      </div>
+
+      <section className="flex flex-col gap-3">
+        <Label>From Session Tray</Label>
+        <Group>{OVERVIEW_APP_ITEMS.map(id => row(id))}</Group>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <span className="flex items-center gap-2"><Badge /><Label>From your Claude Code status line</Label></span>
+        <Group>{OVERVIEW_STATUSLINE_ITEMS.map(id => row(id, !statuslineLinked))}</Group>
+        <p className="m-0 text-[12.5px] text-muted">While connected, each session's details also show its own status line text, effort level and whether thinking is on.</p>
+      </section>
+
+      <Group>
+        <Row
+          title="Claude Code status line"
+          hint={statuslineLinked
+            ? (statusline ? `Connected · updated ${relativeTime(statusline.capturedAt, now)}` : 'Connected · waiting for the first update from Claude Code')
+            : 'Not connected'}
+        >
+          {statuslineLinked
+            ? <button className={button} onClick={() => void disconnect()}>Disconnect</button>
+            : <button className={button} disabled={!canLinkStatusline} onClick={() => void connect()}>Connect status line</button>}
+        </Row>
+        {!statuslineLinked && (
+          <div className="flex flex-col gap-2 px-4 pb-4 text-[12.5px] text-muted">
+            <span className="text-text-2 font-medium">What Connect does</span>
+            <ul className="m-0 pl-4 flex flex-col gap-1 list-disc">
+              <li>Session Tray changes one setting in Claude Code: the status line command in <code className="font-mono">~/.claude/settings.json</code>.</li>
+              <li>Your status line keeps working and looks the same. It just also saves a copy of its data for Session Tray.</li>
+              <li>If you have no status line yet, Session Tray adds one that shows nothing. Claude Code then hides some keyboard hints at the bottom, such as “esc to interrupt”.</li>
+              <li>Nothing is sent anywhere. The copy stays on this computer, in Session Tray's own folder.</li>
+              <li>Disconnect puts your original setting back exactly as it was. If you uninstall Session Tray, disconnect first.</li>
+            </ul>
+            {!canLinkStatusline && isWindows && (
+              <span className="text-run">On Windows this needs Git Bash, which Claude Code uses to run status lines. Install Git for Windows, then reopen Settings.</span>
+            )}
+          </div>
+        )}
+        {message && <p className="m-0 px-4 pb-4 text-[12.5px] text-run">{message}</p>}
+      </Group>
+
+      <p className="m-0 text-[12.5px] text-muted">
+        Tip: a status line can show anything, like git status, a clock or the weather. Once connected, its text can show here too.{' '}
+        <button className="text-accent-text hover:underline" onClick={() => window.sessionTray.openUrl(STATUSLINE_GUIDE)}>Status line guide</button>
+      </p>
+    </>
+  )
+}
+
 export function Settings() {
   const { settings, hasWt } = useAppState()
   const [section, setSection] = useState<Section>('general')
+  useEffect(() => window.sessionTray.onSettingsSection?.(s => setSection(s)), [])
   const platform = window.sessionTray.platform
   const sample = { id: SAMPLE_ID, projectPath: platform === 'win32' ? 'C:\\projects\\app' : '/Users/me/app' }
   const preview = resumeInvocation(sample, platform, settings.terminal, hasWt)
@@ -148,6 +257,8 @@ export function Settings() {
             </Group>
           </>
         )}
+
+        {section === 'overview' && <OverviewSection />}
 
         {section === 'appearance' && (
           <>

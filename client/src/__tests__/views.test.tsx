@@ -173,3 +173,49 @@ describe('Window', () => {
     expect(screen.getByRole('heading', { name: 'Second part' })).toBeInTheDocument()
   })
 })
+
+describe('overview line', () => {
+  const HOUR = 3_600_000
+  const snapshot = {
+    capturedAt: Date.now(),
+    fiveHour: { usedPct: 11, resetsAt: Date.now() + 2 * HOUR + 30 * 60_000 },
+    sevenDay: { usedPct: 85, resetsAt: Date.now() + 3 * 24 * HOUR },
+    sessionId: null, effort: null, thinking: null, text: null,
+  }
+  const busy = { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null }
+
+  it('shows the app items, then status line items in their own marked group', () => {
+    mockBridge({ records: [rec(A, { live: busy })], statusline: snapshot, statuslineLinked: true })
+    render(<Popover />)
+    const stats = screen.getByLabelText('Overview')
+    expect(within(stats).getByText('1 running')).toBeInTheDocument()
+    const fromStatusline = within(stats).getByRole('group', { name: 'From your Claude Code status line' })
+    expect(within(fromStatusline).getByText(/^11% · resets 2h \d+m$/)).not.toHaveClass('text-run')
+    expect(within(fromStatusline).getByText(/^85% · resets/)).toHaveClass('text-run')
+  })
+
+  it('the cog opens Settings on the Overview section', () => {
+    mockBridge({ records: [rec(A)] })
+    render(<Popover />)
+    fireEvent.click(screen.getByRole('button', { name: 'Edit overview' }))
+    expect(window.sessionTray.openSettings).toHaveBeenCalledWith('overview')
+  })
+
+  it('no status line group until one is connected; old data says how old', () => {
+    mockBridge({ records: [rec(A)], statusline: null })
+    const { unmount } = render(<Popover />)
+    expect(screen.queryByRole('group', { name: 'From your Claude Code status line' })).toBeNull()
+    unmount()
+    mockBridge({ records: [rec(A)], statusline: { ...snapshot, capturedAt: Date.now() - 2 * HOUR }, statuslineLinked: true })
+    render(<Popover />)
+    expect(screen.getByText('as of 2h ago')).toBeInTheDocument()
+  })
+
+  it('the window header shows the overview line', () => {
+    mockBridge({ records: [rec(A, { costUSD: 2.5, lastActivityAt: Date.now() })], statusline: snapshot, statuslineLinked: true })
+    render(<Window />)
+    const stats = screen.getByLabelText('Overview')
+    expect(within(stats).getByText('≈ $2.50 this week')).toBeInTheDocument()
+    expect(within(stats).getByText(/^11%/)).toBeInTheDocument()
+  })
+})

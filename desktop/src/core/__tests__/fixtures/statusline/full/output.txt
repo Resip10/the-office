@@ -1,0 +1,3 @@
+[36mapp[0m on [33mmain[0m
+]8;;https://example.com\link]8;;\  ctx 29%
+

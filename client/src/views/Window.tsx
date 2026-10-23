@@ -4,16 +4,12 @@ import { DetailPanel } from '../components/DetailPanel'
 import { FilterBar } from '../components/FilterBar'
 import { LegacyHooksBanner } from '../components/LegacyHooksBanner'
 import { NotifyTip } from '../components/NotifyTip'
+import { OverviewLine } from '../components/OverviewLine'
 import { SessionList } from '../components/SessionList'
 import { Cleanup } from './Cleanup'
 
-const WEEK_MS = 7 * 86_400_000
-
 export function Window() {
   const s = useListState()
-  const weekCost = s.records
-    .filter(r => r.costUSD !== null && r.lastActivityAt >= s.now - WEEK_MS)
-    .reduce((sum, r) => sum + (r.costUSD as number), 0)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -34,12 +30,12 @@ export function Window() {
         >
           Clean up{s.stale.length > 0 ? ` · ${s.stale.length}` : ''}
         </button>
-        {weekCost > 0 && <span className="ml-auto font-mono text-[11px] text-muted">≈ ${weekCost.toFixed(2)} this week</span>}
+        <OverviewLine records={s.records} items={s.settings.overview} statusline={s.statusline} now={s.now} className="ml-auto justify-end" />
         <button
           aria-label="Settings"
           title="Settings"
           onClick={() => window.sessionTray.openSettings()}
-          className={`${weekCost > 0 ? '' : 'ml-auto '}flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-text hover:bg-hover`}
+          className={`flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-text hover:bg-hover`}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />

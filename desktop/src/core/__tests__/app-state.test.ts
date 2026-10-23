@@ -7,7 +7,7 @@ import { DEFAULT_SETTINGS, type AppState } from '../types'
 let dir: string
 let path: string
 
-const EMPTY: AppState = { pins: [], names: {}, archived: [], keptAt: {}, notifyTipDone: false, settings: DEFAULT_SETTINGS }
+const EMPTY: AppState = { pins: [], names: {}, archived: [], keptAt: {}, notifyTipDone: false, statusLink: null, settings: DEFAULT_SETTINGS }
 
 beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), 'app-state-'))
@@ -158,5 +158,23 @@ describe('notifications', () => {
 
   it('dismissing the tip retires it', () => {
     expect(dismissNotifyTip(EMPTY).notifyTipDone).toBe(true)
+  })
+})
+
+describe('overview and status link', () => {
+  it('overview keeps known ids once, in order; anything else falls back to the default', () => {
+    expect(settingsFrom({ overview: ['limits', 'nope', 'running', 'limits'] }).overview).toEqual(['limits', 'running'])
+    expect(settingsFrom({ overview: [] }).overview).toEqual([])
+    expect(settingsFrom({ overview: 'running' }).overview).toEqual(DEFAULT_SETTINGS.overview)
+  })
+
+  it('loads a status link only when its command is a string', async () => {
+    const link = { original: { type: 'command', command: 'bash sl.sh' }, command: 'tee x | { bash sl.sh; }' }
+    writeFileSync(path, JSON.stringify({ statusLink: link }))
+    expect((await loadAppState(path)).statusLink).toEqual(link)
+    writeFileSync(path, JSON.stringify({ statusLink: { original: null, command: 'cat > x' } }))
+    expect((await loadAppState(path)).statusLink).toEqual({ original: null, command: 'cat > x' })
+    writeFileSync(path, JSON.stringify({ statusLink: { original: 'x', command: 5 } }))
+    expect((await loadAppState(path)).statusLink).toBeNull()
   })
 })

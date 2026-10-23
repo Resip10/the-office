@@ -9,6 +9,8 @@
 - **All sessions, one list.** Every Claude Code transcript in `~/.claude/projects`, from the CLI, IDE extensions and the desktop app, grouped into Running, Pinned and Recent.
 - **Live status without setup.** Running, idle and waiting sessions come from Claude Code's own `~/.claude/sessions` files. No hooks, no server, no settings changes.
 - **Waiting for input.** A session that needs you shows why ("waiting · input needed"), sorts to the top, and puts a dot on the tray icon (a count on macOS). Optional silent notifications after 1, 5, 15 or 30 minutes of waiting; off by default.
+- **Overview line and context.** Running rows show how full their context is ("25% ctx"). An overview line in the popover and window shows what you pick in Settings → Overview: running and waiting counts, ≈ cost today or this week, sessions today.
+- **Data from your Claude Code status line (optional).** Claude Code passes some things only to its status line: plan limits ("5h 11% · resets 2h 14m"), and per session: effort, thinking and whatever your status line prints. Settings → Overview → **Connect status line** makes this available with one click. Plan limits (account-wide) show in the overview line, in their own group marked `>_`; each session's own status line text, effort and thinking show quietly in its details, with the same mark. Connect changes one setting in `~/.claude/settings.json`: your status line command also saves a copy of its data into Session Tray's folder. It keeps working and looks the same, nothing is sent anywhere, and **Disconnect** restores the original. On Windows it needs Git Bash.
 - **Useful rows.** Title (your rename, your `/rename`, Claude's auto-title, or the first prompt), project, git branch, last activity, message count.
 - **Session details.** In the window you get:
   - messages, context used, ≈ API cost and active time
@@ -27,7 +29,7 @@
   - project folder gone
 
   Archive them in bulk, or restore them later. Archive only hides sessions in the app; transcripts are never moved or deleted. Pinned and running sessions are never flagged.
-- **Themes and settings.** Five themes: Carbon (default), Graphite, Midnight, Ink and Paper (light). Paper can follow your system's light mode. The Settings window also has row density, the terminal used for Resume, cleanup rules, waiting notifications and launch at login.
+- **Themes and settings.** Five themes: Carbon (default), Graphite, Midnight, Ink and Paper (light). Paper can follow your system's light mode. The Settings window also has row density, the terminal used for Resume, cleanup rules, waiting notifications, what the overview line shows, and launch at login.
 
 "≈ API cost" is Claude Code's own estimate at API prices. On a Pro or Max subscription you are not billed this amount.
 
@@ -84,16 +86,18 @@ Quit the installed Session Tray before `npm run dev`: only one copy can run at a
                                  React renderer: tray popover, window, settings
 ```
 
-The app only reads `~/.claude`. Its own data lives in the app's user-data folder and can be deleted at any time:
-- `app-state.json`: pins, names, archive and settings
+The app only reads `~/.claude`, except on an explicit click: removing the old The Office hooks, and Connect/Disconnect of the status line. Its own data lives in the app's user-data folder and can be deleted at any time:
+- `app-state.json`: pins, names, archive, settings, and the original status line while connected
 - `index-v2.json`: the scan cache
 - `handoffs/`: Continue prompt files
+- `statusline/`: what the connected status line last received and printed
 
 ## Roadmap
 
 - **v1 (done):** list, metadata, search and filters, copy and resume, pins
 - **P1 (done):** redesign and themes, handoff summary, Continue in…, stale-session cleanup and archive, message peek, rename, settings
-- **P2 (in progress):** waiting-for-input badge and notifications (done); next: token and cost totals, git hints, tags and notes
+- **P2 (in progress):** waiting-for-input badge and notifications, overview line with status line data and context % (done); next: git hints, tags and notes
+- **Ideas:** active subagents per session; token totals across sessions; a read-only snapshot of installed MCP servers and plugins
 - **Later:** Codex sessions, LLM summaries, global hotkey, full-text search
 
 Design: [v1 spec](docs/superpowers/specs/2026-10-18-session-tray-design.md) · [P1 spec](docs/superpowers/specs/2026-10-22-p1-design.md)

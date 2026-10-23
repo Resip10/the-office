@@ -35,3 +35,10 @@ export function contextWindow(model: string | null, tokens: number): number | nu
   const window = large ? LARGE_WINDOW : DEFAULT_WINDOW
   return tokens > window ? LARGE_WINDOW : window
 }
+
+// Context used as a whole-number share of the model's window; null when either is unknown.
+export function ctxPercent(model: string | null, tokens: number | null): number | null {
+  if (tokens === null) return null
+  const window = contextWindow(model, tokens)
+  return window === null ? null : Math.round((tokens / window) * 100)
+}

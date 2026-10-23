@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import type { SessionDetails, SessionRecord } from '../../../desktop/src/core/types'
 import { handoffPrompt } from '../../../desktop/src/core/handoff-prompt'
 import { DetailPanel } from '../components/DetailPanel'
-import { mockApi } from './bridge'
+import { makePayload, mockApi } from './bridge'
 
 const NOW = Date.now()
 const A = '11111111-1111-4111-8111-111111111111'
@@ -120,6 +120,19 @@ describe('DetailPanel', () => {
     rerender(<DetailPanel record={rec({ id: B, title: 'Other' })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
     expect(screen.queryByRole('region', { name: 'Handoff' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Continue in…' })).toBeDisabled()
+  })
+
+  it("the session's status line text, effort and thinking show quietly, marked as such", () => {
+    const r = rec()
+    window.sessionTray = mockApi(makePayload({ statuslineLinked: true, sessionExtras: { [r.id]: { text: 'Opus 5.5 | main', effort: 'high', thinking: true } } }))
+    render(<DetailPanel record={r} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+    expect(screen.getByLabelText('From your Claude Code status line')).toHaveTextContent('Opus 5.5 | main · effort high · thinking on')
+  })
+
+  it('no status line row when nothing is known for the session', () => {
+    window.sessionTray = mockApi(makePayload())
+    render(<DetailPanel record={rec()} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+    expect(screen.queryByLabelText('From your Claude Code status line')).toBeNull()
   })
 
   it('Archive is disabled for a running session', () => {

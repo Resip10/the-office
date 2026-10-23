@@ -2,7 +2,7 @@ import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeImage, nati
 import { autoUpdater } from 'electron-updater'
 import { execFile, spawn } from 'child_process'
 import { existsSync } from 'fs'
-import { stat } from 'fs/promises'
+import { mkdir, stat } from 'fs/promises'
 import { homedir } from 'os'
 import { join } from 'path'
 import { applyNames, attachLive, loadCache, saveCache, scanClaude, type IndexCache } from './core/scanner'
@@ -12,10 +12,13 @@ import { parseDetails } from './core/details'
 import { claudeLaunchFrom, continueInvocation, pruneHandoffs, writeHandoff, type ClaudeLaunch } from './core/continue'
 import { applySettings, archive, dismissNotifyTip, keep, loadAppState, restore, setName, togglePin, updateAppState } from './core/app-state'
 import { notificationText, trackWaiting, type Stretch } from './core/notify'
+import { readStatusline, rememberExtras } from './core/statusline-data'
+import { connectStatusLine, disconnectStatusLine, gitBashFrom, isLinked, type ConnectResult } from './core/statusline-link'
+import { usageTooltip } from './core/usage-text'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
-import { DEFAULT_SETTINGS, type AppState, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload } from './core/types'
+import { DEFAULT_SETTINGS, type AppState, type SessionExtras, type StatuslineSnapshot, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload } from './core/types'
 
 const CLAUDE_DIR = join(homedir(), '.claude')
 const PROJECTS_DIR = join(CLAUDE_DIR, 'projects')
@@ -37,7 +40,7 @@ let popoverHiddenAt = 0
 let cache: IndexCache | null = null
 let records: SessionRecord[] = []
 let live = new Map<string, LiveInfo>()
-let state: AppState = { pins: [], names: {}, archived: [], keptAt: {}, notifyTipDone: false, settings: DEFAULT_SETTINGS }
+let state: AppState = { pins: [], names: {}, archived: [], keptAt: {}, notifyTipDone: false, statusLink: null, settings: DEFAULT_SETTINGS }
 let settingsWindow: BrowserWindow | null = null
 let legacyHooks = false
 let lastPayload = ''
@@ -50,6 +53,11 @@ const rescannedForLive = new Set<string>()
 let wtReady: Promise<boolean> = Promise.resolve(false)
 let claudeReady: Promise<ClaudeLaunch> = Promise.resolve({ kind: 'unknown' })
 let hasWt = false
+let statusline: StatuslineSnapshot | null = null
+let statuslineLinked = false
+let sessionExtras: Record<string, SessionExtras> = {}
+// Windows needs Git Bash for the connected status line; macOS and Linux always have a POSIX shell.
+let canLinkStatusline = process.platform !== 'win32'
 let waitingStretches = new Map<string, Stretch>()
 // Held so the click handler isn't garbage-collected while the notification is on screen.
 let lastNotification: Notification | null = null
@@ -70,12 +78,14 @@ const isSessionAlive = createPidChecker({ pidExists: pidIsAlive, startTimeOf: pr
 const cachePath = () => join(app.getPath('userData'), 'index-v2.json')
 const statePath = () => join(app.getPath('userData'), 'app-state.json')
 const handoffsDir = () => join(app.getPath('userData'), 'handoffs')
+// Where the connected status line saves what Claude Code passes it (statusline-link.ts).
+const statuslineDir = () => join(app.getPath('userData'), 'statusline')
 const findRecord = (id: unknown) => records.find(r => r.id === id)
 const openWindows = () => [popover, mainWindow, settingsWindow].filter((w): w is BrowserWindow => !!w && !w.isDestroyed())
 
 function payload(): SessionsPayload {
   const { pins, names, archived, keptAt, notifyTipDone, settings } = state
-  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, notifyTipDone, settings, hasWt }
+  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, notifyTipDone, settings, hasWt, statusline, statuslineLinked, canLinkStatusline, sessionExtras: statuslineLinked ? sessionExtras : {} }
 }
 
 function broadcast(): void {
@@ -95,7 +105,8 @@ function updateTray(): void {
   const statuses = [...live.values()].map(l => l.status)
   const running = statuses.filter(s => s === 'busy').length
   const waiting = statuses.filter(s => s === 'waiting').length
-  tray.setToolTip(`Session Tray — ${waiting > 0 ? `${waiting} waiting, ` : ''}${running} running`)
+  const usage = statuslineLinked && statusline ? usageTooltip(statusline, Date.now()) : ''
+  tray.setToolTip(`Session Tray — ${waiting > 0 ? `${waiting} waiting, ` : ''}${running} running${usage ? ` · ${usage}` : ''}`)
   if (process.platform === 'darwin') tray.setTitle(waiting > 0 ? String(waiting) : '')
   else if ((waiting > 0) !== trayWaiting) tray.setImage(trayIcon(waiting > 0))
   trayWaiting = waiting > 0
@@ -138,7 +149,10 @@ async function rescan(): Promise<void> {
 
 async function pollLive(): Promise<void> {
   live = await readLiveSessions(SESSIONS_DIR, isSessionAlive)
+  statusline = await readStatusline(statuslineDir())
   legacyHooks = hasLegacyHooks(SETTINGS_PATH)
+  statuslineLinked = state.statusLink !== null && isLinked(SETTINGS_PATH, state.statusLink)
+  if (statuslineLinked) sessionExtras = rememberExtras(sessionExtras, statusline)
   // A brand-new session is live before its transcript has been scanned; rescan once per such session.
   const unknown = unknownLiveIds(live.keys(), new Set(records.map(r => r.id)), rescannedForLive)
   if (unknown.length > 0) {
@@ -221,13 +235,15 @@ function openMainWindow(opts: OpenWindowOptions = {}): void {
   void rescan()
 }
 
-function openSettings(): void {
+function openSettings(section?: unknown): void {
+  const send = () => { if (section === 'overview') settingsWindow?.webContents.send('settings:section', section) }
   if (!settingsWindow || settingsWindow.isDestroyed()) {
     settingsWindow = createWindow('settings', { width: 900, height: 640, minWidth: 640, minHeight: 480, backgroundColor: windowBackground() })
-    settingsWindow.once('ready-to-show', () => settingsWindow?.show())
+    settingsWindow.once('ready-to-show', () => { settingsWindow?.show(); send() })
   } else {
     settingsWindow.show()
     settingsWindow.focus()
+    send()
   }
   popover?.hide()
 }
@@ -256,7 +272,7 @@ function buildMenu(): Menu {
   if (legacyHooks) items.push({ label: 'Remove old The Office hooks', click: removeLegacyHooks })
   items.push(
     { type: 'separator' },
-    { label: 'Settings…', click: openSettings },
+    { label: 'Settings…', click: () => openSettings() },
     { type: 'separator' },
     { label: 'Quit', click: () => app.quit() },
   )
@@ -374,7 +390,31 @@ ipcMain.on('app:open-url', (_e, url: unknown) => {
 
 ipcMain.on('app:open-window', (_e, opts: unknown) => openMainWindow(opts && typeof opts === 'object' ? opts as OpenWindowOptions : {}))
 ipcMain.on('app:remove-legacy-hooks', removeLegacyHooks)
-ipcMain.on('app:open-settings', openSettings)
+ipcMain.on('app:open-settings', (_e, section: unknown) => openSettings(section))
+
+// The only writes to ~/.claude besides removing old hooks; each runs on an explicit click in Settings → Overview.
+ipcMain.handle('statusline:connect', async (): Promise<ConnectResult | { ok: false; reason: 'no-bash' }> => {
+  if (!canLinkStatusline) return { ok: false, reason: 'no-bash' }
+  await mkdir(statuslineDir(), { recursive: true })
+  const result = connectStatusLine(SETTINGS_PATH, statuslineDir())
+  if (result.ok) {
+    state = await updateAppState(statePath(), s => ({ ...s, statusLink: result.link }))
+    statuslineLinked = true
+    broadcast()
+  }
+  return result
+})
+
+ipcMain.handle('statusline:disconnect', async (): Promise<'restored' | 'changed' | 'unreadable' | 'none'> => {
+  if (!state.statusLink) return 'none'
+  const result = disconnectStatusLine(SETTINGS_PATH, state.statusLink)
+  if (result !== 'unreadable') {
+    state = await updateAppState(statePath(), s => ({ ...s, statusLink: null }))
+    statuslineLinked = false
+    broadcast()
+  }
+  return result
+})
 
 ipcMain.on('settings:set', async (_e, patch: unknown) => {
   if (!patch || typeof patch !== 'object') return
@@ -403,6 +443,10 @@ async function main(): Promise<void> {
       resolve(claudeLaunchFrom(err ? null : out, existsSync))
     }))
     void wtReady.then(found => { hasWt = found; broadcast() })
+    execFile('where.exe', ['git'], (err, out) => {
+      canLinkStatusline = gitBashFrom(err ? null : out, process.env.CLAUDE_CODE_GIT_BASH_PATH, existsSync)
+      broadcast()
+    })
   }
   void pruneHandoffs(handoffsDir(), Date.now())
 
