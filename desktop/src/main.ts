@@ -393,8 +393,9 @@ async function main(): Promise<void> {
   app.setName('Session Tray')
   if (!app.requestSingleInstanceLock()) { app.quit(); return }
   await app.whenReady()
-  // Windows shows notifications under this id; it matches electron-builder's appId.
-  if (process.platform === 'win32') app.setAppUserModelId('com.the-office.app')
+  // Windows shows notifications under the installer's shortcut id (electron-builder's appId). Dev runs have no
+  // such shortcut, so they keep Electron's default id, which Windows can show.
+  if (process.platform === 'win32' && app.isPackaged) app.setAppUserModelId('com.the-office.app')
 
   if (process.platform === 'win32') {
     wtReady = new Promise(resolve => execFile('where.exe', ['wt.exe'], err => resolve(!err)))
