@@ -3,7 +3,7 @@ import { buildSections, staleList, type Filters } from '../lib/list'
 import { DEFAULT_SETTINGS, type SessionsPayload } from '../../../desktop/src/core/types'
 import { useNow, useSessions } from './useSessions'
 
-const EMPTY: SessionsPayload = { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, settings: DEFAULT_SETTINGS, hasWt: false }
+const EMPTY: SessionsPayload = { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, notifyTipDone: false, settings: DEFAULT_SETTINGS, hasWt: false }
 const DEFAULT_FILTERS: Filters = { query: '', range: '7d', project: null, runningOnly: false }
 
 // Everything both views share: data, filters, sections and the selected session.
@@ -13,6 +13,7 @@ export function useListState() {
   const settings = payload?.settings ?? DEFAULT_SETTINGS
   const archived = payload?.archived ?? EMPTY.archived
   const keptAt = payload?.keptAt ?? EMPTY.keptAt
+  const notifyTip = !(payload?.notifyTipDone ?? true) && !settings.notify && records.some(r => r.live?.status === 'waiting')
   const [mode, setMode] = useState<'sessions' | 'cleanup'>('sessions')
   const loading = payload === null
   const now = useNow()
@@ -45,5 +46,5 @@ export function useListState() {
     if (opts.view === 'cleanup') setMode('cleanup')
   }), [])
 
-  return { records, pins, legacyHooks, settings, archived, stale, mode, setMode, loading, now, filters, setFilters, sections, listedIds, projects, selected, selectedId, select }
+  return { records, pins, legacyHooks, settings, archived, notifyTip, stale, mode, setMode, loading, now, filters, setFilters, sections, listedIds, projects, selected, selectedId, select }
 }

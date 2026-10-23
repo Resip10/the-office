@@ -44,7 +44,7 @@ describe('SessionRow', () => {
   })
 
   it("labels Resume 'Open another' when the session is running", () => {
-    renderRow({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })
+    renderRow({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } })
     expect(screen.getByRole('button', { name: 'Open another' })).toBeEnabled()
   })
 
@@ -102,10 +102,16 @@ describe('SessionRow', () => {
     expect(screen.queryByRole('button', { name: 'Peek' })).toBeNull()
   })
 
+  it('a waiting session shows the reason in the waiting color', () => {
+    const { container } = renderRow({ live: { pid: 1, status: 'waiting', name: null, updatedAt: NOW, waitingFor: 'input needed', statusUpdatedAt: NOW } })
+    expect(screen.getByText('waiting · input needed')).toHaveClass('text-wait')
+    expect(container.querySelector('[title="waiting"]')).toHaveClass('bg-wait')
+  })
+
   it('a running dot pulses only when pulse is on', () => {
-    const { container, rerender } = renderRow({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })
+    const { container, rerender } = renderRow({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } })
     expect(container.querySelector('[title="running"]')).toHaveClass('pulse')
-    rerender(<SessionRow record={rec({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })} pinned={false} now={NOW} continuedListed={false} onSelect={vi.fn()} pulse={false} />)
+    rerender(<SessionRow record={rec({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } })} pinned={false} now={NOW} continuedListed={false} onSelect={vi.fn()} pulse={false} />)
     expect(container.querySelector('[title="running"]')).not.toHaveClass('pulse')
   })
 })

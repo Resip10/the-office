@@ -42,6 +42,12 @@ describe('all themes', () => {
     expect(new Set(ids.map(id => THEMES[id].tokens.accent)).size).toBe(5)
   })
 
+  it.each(['carbon', 'graphite', 'midnight', 'ink', 'paper'] as ThemeId[])('%s has a waiting color unlike the accent and other states', id => {
+    const t = THEMES[id].tokens
+    expect(new Set([t.wait, t.accent, t.run, t.idle, t.other, t.ended]).size).toBe(6)
+    expect(contrast(t.wait, t.raised)).toBeGreaterThanOrEqual(3)
+  })
+
   it.each(['carbon', 'graphite', 'midnight', 'ink', 'paper'] as ThemeId[])('%s passes 4.5:1 for text, labels, secondary text and buttons', id => {
     const t = THEMES[id].tokens
     expect(contrast(t.text, t.canvas)).toBeGreaterThanOrEqual(4.5)

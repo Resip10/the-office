@@ -41,15 +41,15 @@ export function FilterBar({ filters, onChange, projects }: Props) {
         />
         <kbd className="font-mono text-[10.5px] text-muted border border-line-strong rounded px-1.5">esc</kbd>
       </label>
-      <div className="flex flex-wrap items-center gap-2">
-        <div role="group" aria-label="Time range" className="flex gap-0.5 p-0.5 rounded-[7px] bg-sunken border border-line">
+      <div className="flex items-center gap-2">
+        <div role="group" aria-label="Time range" className="flex shrink-0 gap-0.5 p-0.5 rounded-[7px] bg-sunken border border-line">
           {RANGES.map(([range, label]) => (
             <button key={range} aria-pressed={filters.range === range} className={segment(filters.range === range)} onClick={() => set({ range })}>{label}</button>
           ))}
         </div>
         <button
           aria-pressed={filters.runningOnly}
-          className={`px-2.5 h-7 rounded-md border text-[11.5px] font-medium ${filters.runningOnly ? 'border-run-chip-border bg-run-chip-fill text-run' : 'border-line-strong bg-control text-text-2 hover:text-text'}`}
+          className={`shrink-0 px-2.5 h-7 rounded-md border text-[11.5px] font-medium ${filters.runningOnly ? 'border-run-chip-border bg-run-chip-fill text-run' : 'border-line-strong bg-control text-text-2 hover:text-text'}`}
           onClick={() => set({ runningOnly: !filters.runningOnly })}
         >
           Running
@@ -58,7 +58,7 @@ export function FilterBar({ filters, onChange, projects }: Props) {
           aria-label="Project"
           value={filters.project ?? ''}
           onChange={e => set({ project: e.target.value || null })}
-          className="ml-auto max-w-[40%] h-7 px-2 rounded-md bg-control border border-line-strong text-[11.5px] text-text-2"
+          className="ml-auto min-w-0 flex-1 max-w-[160px] h-7 px-2 rounded-md bg-control border border-line-strong text-[11.5px] text-text-2"
         >
           <option value="">All projects</option>
           {projects.map(p => <option key={p} value={p}>{projectName(p)}</option>)}

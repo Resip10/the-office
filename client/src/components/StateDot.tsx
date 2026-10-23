@@ -1,6 +1,7 @@
 const COLORS: Record<string, string> = {
   running: 'bg-run',
   idle: 'bg-idle',
+  waiting: 'bg-wait',
   ended: 'bg-ended',
 }
 

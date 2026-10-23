@@ -2,7 +2,7 @@ import { vi } from 'vitest'
 import { DEFAULT_SETTINGS, type SessionsPayload } from '../../../desktop/src/core/types'
 
 export function makePayload(over: Partial<SessionsPayload> = {}): SessionsPayload {
-  return { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, settings: DEFAULT_SETTINGS, hasWt: false, ...over }
+  return { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, notifyTipDone: false, settings: DEFAULT_SETTINGS, hasWt: false, ...over }
 }
 
 // A full window.sessionTray mock; onUpdate delivers `payload` immediately when given.
@@ -15,6 +15,6 @@ export function mockApi(payload?: SessionsPayload): Window['sessionTray'] {
     removeLegacyHooks: vi.fn(), setSettings: vi.fn(), openSettings: vi.fn(),
     details: vi.fn(async () => null), copyText: vi.fn(), rename: vi.fn(),
     continueIn: vi.fn(), pickFolder: vi.fn(async () => null),
-    archive: vi.fn(), restore: vi.fn(), keep: vi.fn(),
+    archive: vi.fn(), restore: vi.fn(), keep: vi.fn(), dismissNotifyTip: vi.fn(),
   }
 }

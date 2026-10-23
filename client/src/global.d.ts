@@ -24,6 +24,7 @@ declare global {
       archive(ids: string[]): void
       restore(ids: string[]): void
       keep(ids: string[]): void
+      dismissNotifyTip(): void
     }
   }
 }

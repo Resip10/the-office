@@ -7,7 +7,8 @@
 ## What it does
 
 - **All sessions, one list.** Every Claude Code transcript in `~/.claude/projects`, from the CLI, IDE extensions and the desktop app, grouped into Running, Pinned and Recent.
-- **Live status without setup.** Running and idle sessions come from Claude Code's own `~/.claude/sessions` files. No hooks, no server, no settings changes.
+- **Live status without setup.** Running, idle and waiting sessions come from Claude Code's own `~/.claude/sessions` files. No hooks, no server, no settings changes.
+- **Waiting for input.** A session that needs you shows why ("waiting · input needed"), sorts to the top, and puts a dot on the tray icon (a count on macOS). Optional silent notifications after 1, 5, 15 or 30 minutes of waiting; off by default.
 - **Useful rows.** Title (your rename, your `/rename`, Claude's auto-title, or the first prompt), project, git branch, last activity, message count.
 - **Session details.** In the window you get:
   - messages, context used, ≈ API cost and active time
@@ -26,7 +27,7 @@
   - project folder gone
 
   Archive them in bulk, or restore them later. Archive only hides sessions in the app; transcripts are never moved or deleted. Pinned and running sessions are never flagged.
-- **Themes and settings.** Five themes: Carbon (default), Graphite, Midnight, Ink and Paper (light). Paper can follow your system's light mode. The Settings window also has row density, the terminal used for Resume, cleanup rules and launch at login.
+- **Themes and settings.** Five themes: Carbon (default), Graphite, Midnight, Ink and Paper (light). Paper can follow your system's light mode. The Settings window also has row density, the terminal used for Resume, cleanup rules, waiting notifications and launch at login.
 
 "≈ API cost" is Claude Code's own estimate at API prices. On a Pro or Max subscription you are not billed this amount.
 
@@ -92,7 +93,7 @@ The app only reads `~/.claude`. Its own data lives in the app's user-data folder
 
 - **v1 (done):** list, metadata, search and filters, copy and resume, pins
 - **P1 (done):** redesign and themes, handoff summary, Continue in…, stale-session cleanup and archive, message peek, rename, settings
-- **Next:** waiting-for-input badge, git hints, token and cost totals, tags and notes
+- **P2 (in progress):** waiting-for-input badge and notifications (done); next: token and cost totals, git hints, tags and notes
 - **Later:** Codex sessions, LLM summaries, global hotkey, full-text search
 
 Design: [v1 spec](docs/superpowers/specs/2026-10-18-session-tray-design.md) · [P1 spec](docs/superpowers/specs/2026-10-22-p1-design.md)

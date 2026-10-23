@@ -3,7 +3,7 @@ const TOKENS = [
   'canvas', 'sunken', 'surface', 'raised', 'control', 'selected', 'hover',
   'line', 'line-strong', 'text', 'text-2', 'muted', 'faint',
   'accent', 'on-accent', 'accent-text',
-  'run', 'idle', 'other', 'ended', 'run-chip-border', 'run-chip-fill',
+  'run', 'idle', 'other', 'ended', 'run-chip-border', 'run-chip-fill', 'wait',
 ]
 
 // Colors are CSS variables set by src/lib/themes.ts, so themes switch at runtime.

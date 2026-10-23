@@ -124,7 +124,7 @@ describe('DetailPanel', () => {
 
   it('Archive is disabled for a running session', () => {
     window.sessionTray = mockApi()
-    render(<DetailPanel record={rec({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+    render(<DetailPanel record={rec({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled()
   })
 })

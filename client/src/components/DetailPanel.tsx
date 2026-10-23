@@ -90,8 +90,8 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect, show
             </>
           )}
           {r.live && (
-            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[11px] ${state === 'running' ? 'border-run-chip-border bg-run-chip-fill text-run' : 'border-line-strong text-text-2'}`}>
-              {state} · pid {r.live.pid}{r.live.name ? ` · ${r.live.name}` : ''}
+            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[11px] ${state === 'running' ? 'border-run-chip-border bg-run-chip-fill text-run' : state === 'waiting' ? 'border-line-strong text-wait' : 'border-line-strong text-text-2'}`}>
+              {state}{r.live.waitingFor ? ` · ${r.live.waitingFor}` : ''} · pid {r.live.pid}{r.live.name ? ` · ${r.live.name}` : ''}
             </span>
           )}
         </div>

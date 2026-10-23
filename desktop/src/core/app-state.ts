@@ -1,5 +1,5 @@
 import { readFile, rename, writeFile } from 'fs/promises'
-import { DEFAULT_SETTINGS, type AppState, type Settings } from './types'
+import { DEFAULT_SETTINGS, NOTIFY_AFTER_MIN, type AppState, type NotifyAfterMin, type Settings } from './types'
 
 type Rec = Record<string, unknown>
 
@@ -29,6 +29,8 @@ export function settingsFrom(v: unknown): Settings {
     peekTools: bool(s.peekTools, d.peekTools),
     terminal: oneOf(s.terminal, ['auto', 'wt', 'powershell', 'terminal'], d.terminal),
     launchAtLogin: bool(s.launchAtLogin, d.launchAtLogin),
+    notify: bool(s.notify, d.notify),
+    notifyAfterMin: NOTIFY_AFTER_MIN.includes(s.notifyAfterMin as NotifyAfterMin) ? s.notifyAfterMin as NotifyAfterMin : d.notifyAfterMin,
     stale: {
       idleDays: threshold(stale.idleDays, d.stale.idleDays),
       trivialMessages: threshold(stale.trivialMessages, d.stale.trivialMessages),
@@ -50,6 +52,7 @@ export async function loadAppState(path: string): Promise<AppState> {
     names: record(obj.names, (x): x is string => typeof x === 'string'),
     archived: strings(obj.archived),
     keptAt: record(obj.keptAt, (x): x is number => typeof x === 'number' && Number.isFinite(x)),
+    notifyTipDone: bool(obj.notifyTipDone, false),
     settings: settingsFrom(obj.settings),
   }
 }
@@ -104,4 +107,13 @@ export function restore(state: AppState, ids: string[]): AppState {
 // Marks sessions as reviewed in Cleanup; see stale.ts for how long that holds.
 export function keep(state: AppState, ids: string[], now: number): AppState {
   return { ...state, keptAt: { ...state.keptAt, ...Object.fromEntries(ids.map(id => [id, now])) } }
+}
+
+export function applySettings(state: AppState, patch: object): AppState {
+  const settings = settingsFrom({ ...state.settings, ...patch })
+  return { ...state, settings, notifyTipDone: state.notifyTipDone || settings.notify }
+}
+
+export function dismissNotifyTip(state: AppState): AppState {
+  return { ...state, notifyTipDone: true }
 }

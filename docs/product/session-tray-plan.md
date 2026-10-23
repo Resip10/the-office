@@ -99,7 +99,7 @@ Every session shown in the app has these fields. Unknown values are shown as "â€
 11. Rename (app-owned display name, optionally synced to the tool's own name).
 
 ### P2 â€” Nice to have
-12. **Live status**: running / waiting / idle, with a tray badge and optional notification when an agent needs input.
+12. **Live status**: running / waiting / idle, with a tray badge and optional notification when an agent needs input. *(Done in 0.3.2: reads `waiting` / `waitingFor`; notifications off by default.)*
 13. **Git awareness**: branch merged? worktree deleted? uncommitted changes? Shown as hints on stale detection.
 14. **Exact migration** via an external migration tool when installed; the button is hidden otherwise.
 15. Tags and personal notes.
