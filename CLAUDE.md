@@ -43,6 +43,8 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/handoff-prompt.ts` | `handoffPrompt`, `continuePreview` (pure; used by the renderer too) |
 | `desktop/src/core/continue.ts` | `continueInvocation`, handoff files in `userData/handoffs/` (pruned after 7 days) |
 | `desktop/src/core/notify.ts` | `trackWaiting`, `notificationText` — when a waiting session is due a notification (pure) |
+| `desktop/src/core/plan-usage.ts` | `readPlanUsage` — 5h / weekly limits from `~/.session-tray/statusline.json` |
+| `desktop/src/core/usage-text.ts` | `usageParts`, `usageStale`, `usageTooltip` (pure; used by the renderer too) |
 | `desktop/src/core/stale.ts` | `staleReasons` — idle / trivial / folder-gone rules (pure) |
 | `desktop/src/core/app-state.ts` | `userData/app-state.json`: pins, names, archived, keptAt, settings |
 | `desktop/src/core/legacy-hooks.ts` | Detect/remove the old `localhost:7777` hooks |
@@ -83,6 +85,7 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 - **Notifications are opt-in.** Off by default, silent, one per waiting stretch after 1/5/15/30 min; a one-time tip offers them (`notifyTipDone`).
 - **Fail soft.** Unknown records are ignored, unknown values show as "—"; `core/` never throws on bad input.
 - **Disposable cache.** `userData/index-v2.json`; deleting it costs one cold scan.
+- **Plan limits come from the user's status line.** Claude Code passes `rate_limits` only to the status line command; the user adds one line that saves that JSON to `~/.session-tray/statusline.json`. The app reads it and never edits the script or `~/.claude`.
 - **Cost is an estimate.** `costUSD` is Claude Code's API-price figure, labelled "≈ API cost".
 - **Run actions through the CLI.** Resume = `claude --resume <id>` in the project folder; ids validated first.
 - **Continue in… passes the prompt by file.** Windows runs an encoded PowerShell script that reads the handoff file; npm installs run `cli.js` with node because `claude.cmd` cuts arguments at newlines.
@@ -91,7 +94,8 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 
 - **v1 (done):** list, metadata, search/filters, copy + resume, pins, legacy-hook removal
 - **P1 (done):** Carbon redesign + themes, handoff summary, Continue in…, stale detection + archive, message peek, rename, Settings
-- **P2 (in progress):** waiting-for-input badge + notifications (done), token/cost totals, git hints, tags and notes
+- **P2 (in progress):** waiting-for-input badge + notifications (done), plan usage + context % (done), git hints, tags and notes
+- **Ideas:** active subagents per session; read-only snapshot of installed MCP servers and plugins (never show secrets)
 - **P3:** Codex adapter, LLM summaries, global hotkey, full-text search
 
 Spec: `docs/superpowers/specs/2026-10-18-session-tray-design.md`. Product vision: `docs/product/session-tray-plan.md`.

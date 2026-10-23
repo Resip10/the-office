@@ -173,3 +173,36 @@ describe('Window', () => {
     expect(screen.getByRole('heading', { name: 'Second part' })).toBeInTheDocument()
   })
 })
+
+describe('plan usage', () => {
+  const HOUR = 3_600_000
+  const planUsage = {
+    fiveHour: { usedPct: 11, resetsAt: Date.now() + 2 * HOUR + 30 * 60_000 },
+    sevenDay: { usedPct: 85, resetsAt: Date.now() + 3 * 24 * HOUR },
+    capturedAt: Date.now(),
+  }
+
+  it('the popover shows both limits, amber at 80% or more', () => {
+    mockBridge({ records: [rec(A)], planUsage })
+    render(<Popover />)
+    const bar = screen.getByLabelText('Plan usage')
+    expect(within(bar).getByText(/^11% · resets 2h \d+m$/)).not.toHaveClass('text-run')
+    expect(within(bar).getByText(/^85% · resets/)).toHaveClass('text-run')
+  })
+
+  it('the window header shows them too', () => {
+    mockBridge({ records: [rec(A)], planUsage })
+    render(<Window />)
+    expect(within(screen.getByLabelText('Plan usage')).getByText(/^11%/)).toBeInTheDocument()
+  })
+
+  it('old data says how old; not connected shows nothing', () => {
+    mockBridge({ records: [rec(A)], planUsage: { ...planUsage, capturedAt: Date.now() - 2 * HOUR } })
+    const { unmount } = render(<Popover />)
+    expect(screen.getByText('as of 2h ago')).toBeInTheDocument()
+    unmount()
+    mockBridge({ records: [rec(A)], planUsage: null })
+    render(<Popover />)
+    expect(screen.queryByLabelText('Plan usage')).toBeNull()
+  })
+})

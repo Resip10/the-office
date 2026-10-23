@@ -2,6 +2,7 @@ import { useListState } from '../hooks/useListState'
 import { FilterBar } from '../components/FilterBar'
 import { LegacyHooksBanner } from '../components/LegacyHooksBanner'
 import { NotifyTip } from '../components/NotifyTip'
+import { PlanUsageBar } from '../components/PlanUsageBar'
 import { SessionList } from '../components/SessionList'
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
@@ -29,6 +30,7 @@ export function Popover() {
           compact={s.settings.density === 'compact'}
         />
       </div>
+      {s.planUsage && <PlanUsageBar usage={s.planUsage} now={s.now} className="px-3.5 py-1.5 border-t border-line bg-surface" />}
       <div className="flex items-center gap-2.5 px-3.5 py-2 border-t border-line bg-surface font-mono text-[11px] text-muted">
         {!s.loading && <span>{plural(listed, 'session')} · {plural(s.projects.length, 'project')}</span>}
         {s.stale.length > 0 && (

@@ -3,7 +3,7 @@ import { buildSections, staleList, type Filters } from '../lib/list'
 import { DEFAULT_SETTINGS, type SessionsPayload } from '../../../desktop/src/core/types'
 import { useNow, useSessions } from './useSessions'
 
-const EMPTY: SessionsPayload = { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, notifyTipDone: false, settings: DEFAULT_SETTINGS, hasWt: false }
+const EMPTY: SessionsPayload = { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, notifyTipDone: false, settings: DEFAULT_SETTINGS, hasWt: false, planUsage: null }
 const DEFAULT_FILTERS: Filters = { query: '', range: '7d', project: null, runningOnly: false }
 
 // Everything both views share: data, filters, sections and the selected session.
@@ -46,5 +46,5 @@ export function useListState() {
     if (opts.view === 'cleanup') setMode('cleanup')
   }), [])
 
-  return { records, pins, legacyHooks, settings, archived, notifyTip, stale, mode, setMode, loading, now, filters, setFilters, sections, listedIds, projects, selected, selectedId, select }
+  return { records, pins, legacyHooks, settings, archived, notifyTip, planUsage: payload?.planUsage ?? null, stale, mode, setMode, loading, now, filters, setFilters, sections, listedIds, projects, selected, selectedId, select }
 }

@@ -45,6 +45,19 @@ describe('Settings', () => {
     expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ notifyAfterMin: 15 })
   })
 
+  it('Plan usage: not connected, with a line to copy into the status line', () => {
+    render(<Settings />)
+    expect(screen.getByText('Not connected')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Copy line' }))
+    expect(window.sessionTray.copyText).toHaveBeenCalledWith(expect.stringContaining('~/.session-tray/statusline.json'))
+  })
+
+  it('Plan usage: connected shows when it last updated', () => {
+    mockBridge({ planUsage: { fiveHour: null, sevenDay: null, capturedAt: Date.now() - 5 * 60_000 } })
+    render(<Settings />)
+    expect(screen.getByText('Updated 5m ago')).toBeInTheDocument()
+  })
+
   it('pulse switch turns the pulse off', () => {
     render(<Settings />)
     fireEvent.click(screen.getByRole('button', { name: 'Appearance' }))

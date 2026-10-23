@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { SessionRecord } from '../../../desktop/src/core/types'
 import { projectName, relativeTime, stateOf } from '../lib/list'
-import { formatCost, formatTokens } from '../lib/format'
+import { ctxPercent, formatCost, formatTokens } from '../lib/format'
 import { StateDot } from './StateDot'
 
 interface Props {
@@ -41,6 +41,7 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
     r.contextTokens !== null ? `${formatTokens(r.contextTokens)} ctx` : null,
   ].filter(Boolean).join(' · ')
   const when = !r.live ? relativeTime(r.lastActivityAt, now) : r.live.waitingFor ? `${state} · ${r.live.waitingFor}` : state
+  const ctx = r.live ? ctxPercent(r.model, r.contextTokens) : null
   const whenColor = running ? 'text-run' : state === 'idle' ? 'text-idle' : state === 'waiting' ? 'text-wait' : r.live ? 'text-other' : 'text-muted'
 
   function copy() {
@@ -63,6 +64,7 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
         </div>
         <div className="flex items-center gap-2 font-mono text-[11px] text-muted">
           <span className="flex-1 truncate">{location}</span>
+          {ctx !== null && <span className={`shrink-0 tabular-nums ${ctx >= 80 ? 'text-run' : ''}`}>{ctx}% ctx</span>}
           {!compact && <span className="shrink-0 tabular-nums">{r.messageCount} msg</span>}
           {continued && (
             <button

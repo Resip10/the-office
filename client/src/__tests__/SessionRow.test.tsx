@@ -108,6 +108,19 @@ describe('SessionRow', () => {
     expect(container.querySelector('[title="waiting"]')).toHaveClass('bg-wait')
   })
 
+  it('running rows show context used as a percentage, amber from 80%', () => {
+    renderRow({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null }, model: 'claude-opus-5-5', contextTokens: 250_000 })
+    expect(screen.getByText('25% ctx')).not.toHaveClass('text-run')
+  })
+
+  it('context at 80% or more is amber; ended rows show no percentage', () => {
+    const { unmount } = renderRow({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null }, model: 'claude-sonnet-4-5', contextTokens: 170_000 })
+    expect(screen.getByText('85% ctx')).toHaveClass('text-run')
+    unmount()
+    renderRow({ model: 'claude-opus-5-5', contextTokens: 250_000 })
+    expect(screen.queryByText(/% ctx/)).toBeNull()
+  })
+
   it('a running dot pulses only when pulse is on', () => {
     const { container, rerender } = renderRow({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } })
     expect(container.querySelector('[title="running"]')).toHaveClass('pulse')

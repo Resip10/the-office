@@ -1,4 +1,4 @@
-import { contextWindow, formatBytes, formatCost, formatDuration, formatTokens } from '../lib/format'
+import { contextWindow, ctxPercent, formatBytes, formatCost, formatDuration, formatTokens } from '../lib/format'
 
 describe('formatTokens', () => {
   it.each([[0, '0'], [950, '950'], [1_000, '1k'], [157_721, '158k'], [1_250_000, '1.3M']])('%d → %s', (n, s) => {
@@ -38,5 +38,14 @@ describe('contextWindow', () => {
 
   it('never reports a window smaller than the tokens in use', () => {
     expect(contextWindow('claude-sonnet-4-5', 451_000)).toBe(1_000_000)
+  })
+})
+
+describe('ctxPercent', () => {
+  it('context used as a share of the model window, rounded; null when unknown', () => {
+    expect(ctxPercent('claude-opus-5-5', 250_000)).toBe(25)
+    expect(ctxPercent('claude-sonnet-4-5', 180_000)).toBe(90)
+    expect(ctxPercent(null, 5_000)).toBeNull()
+    expect(ctxPercent('claude-opus-5-5', null)).toBeNull()
   })
 })

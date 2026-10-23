@@ -12,15 +12,19 @@ import { parseDetails } from './core/details'
 import { claudeLaunchFrom, continueInvocation, pruneHandoffs, writeHandoff, type ClaudeLaunch } from './core/continue'
 import { applySettings, archive, dismissNotifyTip, keep, loadAppState, restore, setName, togglePin, updateAppState } from './core/app-state'
 import { notificationText, trackWaiting, type Stretch } from './core/notify'
+import { readPlanUsage } from './core/plan-usage'
+import { usageTooltip } from './core/usage-text'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
-import { DEFAULT_SETTINGS, type AppState, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload } from './core/types'
+import { DEFAULT_SETTINGS, type AppState, type PlanUsage, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload } from './core/types'
 
 const CLAUDE_DIR = join(homedir(), '.claude')
 const PROJECTS_DIR = join(CLAUDE_DIR, 'projects')
 const SESSIONS_DIR = join(CLAUDE_DIR, 'sessions')
 const SETTINGS_PATH = join(CLAUDE_DIR, 'settings.json')
+// Written by the user's own status line script (Settings → Plan usage); we only read it.
+const PLAN_USAGE_PATH = join(homedir(), '.session-tray', 'statusline.json')
 
 const SESSION_ID = /^[0-9a-f-]{36}$/
 const LIVE_POLL_MS = 2_000
@@ -50,6 +54,7 @@ const rescannedForLive = new Set<string>()
 let wtReady: Promise<boolean> = Promise.resolve(false)
 let claudeReady: Promise<ClaudeLaunch> = Promise.resolve({ kind: 'unknown' })
 let hasWt = false
+let planUsage: PlanUsage | null = null
 let waitingStretches = new Map<string, Stretch>()
 // Held so the click handler isn't garbage-collected while the notification is on screen.
 let lastNotification: Notification | null = null
@@ -75,7 +80,7 @@ const openWindows = () => [popover, mainWindow, settingsWindow].filter((w): w is
 
 function payload(): SessionsPayload {
   const { pins, names, archived, keptAt, notifyTipDone, settings } = state
-  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, notifyTipDone, settings, hasWt }
+  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, notifyTipDone, settings, hasWt, planUsage }
 }
 
 function broadcast(): void {
@@ -95,7 +100,8 @@ function updateTray(): void {
   const statuses = [...live.values()].map(l => l.status)
   const running = statuses.filter(s => s === 'busy').length
   const waiting = statuses.filter(s => s === 'waiting').length
-  tray.setToolTip(`Session Tray — ${waiting > 0 ? `${waiting} waiting, ` : ''}${running} running`)
+  const usage = planUsage ? usageTooltip(planUsage, Date.now()) : ''
+  tray.setToolTip(`Session Tray — ${waiting > 0 ? `${waiting} waiting, ` : ''}${running} running${usage ? ` · ${usage}` : ''}`)
   if (process.platform === 'darwin') tray.setTitle(waiting > 0 ? String(waiting) : '')
   else if ((waiting > 0) !== trayWaiting) tray.setImage(trayIcon(waiting > 0))
   trayWaiting = waiting > 0
@@ -138,6 +144,7 @@ async function rescan(): Promise<void> {
 
 async function pollLive(): Promise<void> {
   live = await readLiveSessions(SESSIONS_DIR, isSessionAlive)
+  planUsage = await readPlanUsage(PLAN_USAGE_PATH)
   legacyHooks = hasLegacyHooks(SETTINGS_PATH)
   // A brand-new session is live before its transcript has been scanned; rescan once per such session.
   const unknown = unknownLiveIds(live.keys(), new Set(records.map(r => r.id)), rescannedForLive)

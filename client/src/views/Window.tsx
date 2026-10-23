@@ -4,6 +4,7 @@ import { DetailPanel } from '../components/DetailPanel'
 import { FilterBar } from '../components/FilterBar'
 import { LegacyHooksBanner } from '../components/LegacyHooksBanner'
 import { NotifyTip } from '../components/NotifyTip'
+import { PlanUsageBar } from '../components/PlanUsageBar'
 import { SessionList } from '../components/SessionList'
 import { Cleanup } from './Cleanup'
 
@@ -34,12 +35,14 @@ export function Window() {
         >
           Clean up{s.stale.length > 0 ? ` · ${s.stale.length}` : ''}
         </button>
-        {weekCost > 0 && <span className="ml-auto font-mono text-[11px] text-muted">≈ ${weekCost.toFixed(2)} this week</span>}
+        <span className="ml-auto" />
+        {s.planUsage && <PlanUsageBar usage={s.planUsage} now={s.now} />}
+        {weekCost > 0 && <span className="font-mono text-[11px] text-muted">≈ ${weekCost.toFixed(2)} this week</span>}
         <button
           aria-label="Settings"
           title="Settings"
           onClick={() => window.sessionTray.openSettings()}
-          className={`${weekCost > 0 ? '' : 'ml-auto '}flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-text hover:bg-hover`}
+          className={`flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-text hover:bg-hover`}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />

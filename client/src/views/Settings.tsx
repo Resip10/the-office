@@ -2,6 +2,8 @@ import { useState, type ReactNode } from 'react'
 import { describeInvocation, resumeInvocation } from '../../../desktop/src/core/commands'
 import { NOTIFY_AFTER_MIN, type NotifyAfterMin, type Settings as SettingsShape, type TerminalChoice } from '../../../desktop/src/core/types'
 import { useAppState } from '../hooks/useAppState'
+import { useNow } from '../hooks/useSessions'
+import { relativeTime } from '../lib/list'
 import { THEMES, type ThemeId } from '../lib/themes'
 
 type Section = 'general' | 'appearance' | 'terminal' | 'cleanup'
@@ -18,6 +20,9 @@ const PICKABLE: ThemeId[] = ['carbon', 'graphite', 'midnight', 'ink', 'paper']
 const SAMPLE_ID = '4f1c9a2e-7b31-4d0c-9e55-2a8f61c0d7b3'
 
 const set = (patch: Partial<SettingsShape>) => window.sessionTray.setSettings(patch)
+
+// Added by the user at the end of their own status line script; the app only reads the file.
+const STATUSLINE_LINE = `mkdir -p ~/.session-tray && printf '%s' "$input" > ~/.session-tray/statusline.json.tmp && mv -f ~/.session-tray/statusline.json.tmp ~/.session-tray/statusline.json`
 
 function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -95,7 +100,8 @@ function ThemeCard({ id, selected }: { id: ThemeId; selected: boolean }) {
 }
 
 export function Settings() {
-  const { settings, hasWt } = useAppState()
+  const { settings, hasWt, planUsage } = useAppState()
+  const now = useNow()
   const [section, setSection] = useState<Section>('general')
   const platform = window.sessionTray.platform
   const sample = { id: SAMPLE_ID, projectPath: platform === 'win32' ? 'C:\\projects\\app' : '/Users/me/app' }
@@ -145,6 +151,25 @@ export function Settings() {
                   {NOTIFY_AFTER_MIN.map(m => <option key={m} value={m}>{m} min</option>)}
                 </select>
               </Row>
+            </Group>
+            <Group>
+              <Row
+                title="Plan usage"
+                hint={<>Claude Code passes your plan limits only to the status line. Add this line at the end of your status line script (it receives the JSON as <code className="font-mono">$input</code>); Session Tray reads <code className="font-mono">~/.session-tray/statusline.json</code>.</>}
+              >
+                <span className="font-mono text-[11.5px] text-muted whitespace-nowrap">
+                  {planUsage ? `Updated ${relativeTime(planUsage.capturedAt, now)}` : 'Not connected'}
+                </span>
+              </Row>
+              <div className="flex items-start gap-2 px-4 pb-3.5">
+                <code className="flex-1 min-w-0 break-all font-mono text-[11px] text-text-2 bg-sunken border border-line rounded-md px-2.5 py-2">{STATUSLINE_LINE}</code>
+                <button
+                  className="h-7 px-2.5 rounded-md border border-line-strong bg-control text-[12px] text-text hover:border-muted"
+                  onClick={() => window.sessionTray.copyText(STATUSLINE_LINE)}
+                >
+                  Copy line
+                </button>
+              </div>
             </Group>
           </>
         )}

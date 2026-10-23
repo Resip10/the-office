@@ -52,6 +52,21 @@ export interface SessionsPayload {
   notifyTipDone: boolean
   settings: Settings
   hasWt: boolean
+  // null until the user's status line saves ~/.session-tray/statusline.json.
+  planUsage: PlanUsage | null
+}
+
+// One plan limit from Claude Code's status line input; resetsAt in ms.
+export interface LimitWindow {
+  usedPct: number
+  resetsAt: number | null
+}
+
+export interface PlanUsage {
+  fiveHour: LimitWindow | null
+  sevenDay: LimitWindow | null
+  // When the status line last saved the file (its mtime).
+  capturedAt: number
 }
 
 // What the window should show when it is opened from the popover.
