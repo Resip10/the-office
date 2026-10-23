@@ -101,7 +101,7 @@ Every session shown in the app has these fields. Unknown values are shown as "�
 ### P2 — Nice to have
 12. **Live status**: running / waiting / idle, with a tray badge and optional notification when an agent needs input. *(Done in 0.3.2: reads `waiting` / `waitingFor`; notifications off by default.)*
 13. **Git awareness**: branch merged? worktree deleted? uncommitted changes? Shown as hints on stale detection.
-14. **Exact migration** via an external migration tool when installed; the button is hidden otherwise.
+14. **Exact migration** via an external migration tool when installed; the button is hidden otherwise. *(Parked: not in the CLAUDE.md roadmap; needs the owner's decision before any work.)*
 15. Tags and personal notes.
 16. Token and context usage per session, plus totals. *(Done in 0.3.3: context % on running rows; an overview line with app totals (running/waiting, ≈ cost today or this week, sessions today); and, after a one-click Connect of the Claude Code status line, account-wide plan limits in the overview line plus each session's own status line text, effort and thinking in its details, all marked `>_`. Token totals across sessions are left for later.)*
 
@@ -110,6 +110,27 @@ Every session shown in the app has these fields. Unknown values are shown as "�
 18. Global hotkey to open the popover with search focused.
 19. Full-text transcript search with an index.
 20. The same core exposed as a CLI and a Claude Code `/sessions` command.
+
+## 7a. Progress (updated 2026-10-23)
+
+Shipped:
+- **0.3.0** — P1 (#9), README (#10).
+- **0.3.1** — P1 deferred minors (#11).
+- **0.3.2** — item 12: waiting state, tray badge, opt-in notifications (#12).
+- **0.3.3** — item 16: context % on running rows, overview line, optional one-click Connect of the Claude Code status line (#13).
+
+Next, one branch and PR each, brainstormed with the owner first:
+1. **13 Git hints** — branch merged or deleted, worktree gone, uncommitted changes; hints in Cleanup and the §8 "branch merged or deleted" rule. Read-only `git` calls only.
+2. **15 Tags and notes** — app-only, in `app-state.json`.
+3. **14 Exact migration** — parked until the owner decides.
+
+Ideas, not scheduled: active subagents per session; token totals across sessions (parser change); a read-only snapshot of installed MCP servers and plugins (never show secrets).
+
+Not yet checked by hand:
+- Waiting notification card and click-to-open in the **installed** Windows build (dev runs as "Electron": Windows files the notification without a card and drops clicks).
+- Status line Connect/Disconnect on macOS.
+- Continue and Resume on macOS; a real Continue launch with the npm `claude` on Windows.
+- A visual pass of all five themes; installing over 0.2.0.
 
 ## 8. Stale detection rules
 
