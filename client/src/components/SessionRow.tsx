@@ -40,8 +40,8 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
     r.costUSD !== null ? formatCost(r.costUSD) : null,
     r.contextTokens !== null ? `${formatTokens(r.contextTokens)} ctx` : null,
   ].filter(Boolean).join(' · ')
-  const when = r.live ? state : relativeTime(r.lastActivityAt, now)
-  const whenColor = running ? 'text-run' : state === 'idle' ? 'text-idle' : r.live ? 'text-other' : 'text-muted'
+  const when = !r.live ? relativeTime(r.lastActivityAt, now) : r.live.waitingFor ? `${state} · ${r.live.waitingFor}` : state
+  const whenColor = running ? 'text-run' : state === 'idle' ? 'text-idle' : state === 'waiting' ? 'text-wait' : r.live ? 'text-other' : 'text-muted'
 
   function copy() {
     window.sessionTray.copy(r.id)

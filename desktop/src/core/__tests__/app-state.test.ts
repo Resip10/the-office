@@ -1,13 +1,13 @@
 import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { archive, keep, loadAppState, restore, setName, togglePin, updateAppState } from '../app-state'
+import { applySettings, archive, dismissNotifyTip, keep, loadAppState, restore, setName, settingsFrom, togglePin, updateAppState } from '../app-state'
 import { DEFAULT_SETTINGS, type AppState } from '../types'
 
 let dir: string
 let path: string
 
-const EMPTY: AppState = { pins: [], names: {}, archived: [], keptAt: {}, settings: DEFAULT_SETTINGS }
+const EMPTY: AppState = { pins: [], names: {}, archived: [], keptAt: {}, notifyTipDone: false, settings: DEFAULT_SETTINGS }
 
 beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), 'app-state-'))
@@ -126,5 +126,37 @@ describe('archive / restore / keep', () => {
 
   it('keep stamps each id with now', () => {
     expect(keep(EMPTY, ['a', 'b'], 123).keptAt).toEqual({ a: 123, b: 123 })
+  })
+})
+
+describe('notifications', () => {
+  it('are off by default with a 5 minute threshold', () => {
+    expect(DEFAULT_SETTINGS.notify).toBe(false)
+    expect(DEFAULT_SETTINGS.notifyAfterMin).toBe(5)
+  })
+
+  it('threshold accepts only 1, 5, 15 or 30 minutes', () => {
+    expect(settingsFrom({ notifyAfterMin: 15 }).notifyAfterMin).toBe(15)
+    expect(settingsFrom({ notifyAfterMin: 7 }).notifyAfterMin).toBe(5)
+    expect(settingsFrom({ notifyAfterMin: '1' }).notifyAfterMin).toBe(5)
+  })
+
+  it('loads notifyTipDone, defaulting to false', async () => {
+    writeFileSync(path, JSON.stringify({ notifyTipDone: true }))
+    expect((await loadAppState(path)).notifyTipDone).toBe(true)
+    writeFileSync(path, JSON.stringify({ notifyTipDone: 'yes' }))
+    expect((await loadAppState(path)).notifyTipDone).toBe(false)
+  })
+
+  it('turning notifications on retires the tip for good', () => {
+    const on = applySettings(EMPTY, { notify: true })
+    expect(on.settings.notify).toBe(true)
+    expect(on.notifyTipDone).toBe(true)
+    expect(applySettings(on, { notify: false }).notifyTipDone).toBe(true)
+    expect(applySettings(EMPTY, { theme: 'ink' }).notifyTipDone).toBe(false)
+  })
+
+  it('dismissing the tip retires it', () => {
+    expect(dismissNotifyTip(EMPTY).notifyTipDone).toBe(true)
   })
 })

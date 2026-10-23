@@ -8,7 +8,14 @@ describe('readLiveSessions', () => {
   it('maps sessionId to live info', async () => {
     const live = await readLiveSessions(DIR, allAlive)
     expect(live.get('11111111-1111-4111-8111-111111111111')).toEqual({
-      pid: 100, status: 'busy', name: 'app-1c', updatedAt: 1792348470184,
+      pid: 100, status: 'busy', name: 'app-1c', updatedAt: 1792348470184, waitingFor: null, statusUpdatedAt: null,
+    })
+  })
+
+  it('reads the waiting reason and when the status last changed', async () => {
+    const live = await readLiveSessions(DIR, allAlive)
+    expect(live.get('66666666-6666-4666-8666-666666666666')).toEqual({
+      pid: 600, status: 'waiting', name: 'app-3', updatedAt: 1792348600000, waitingFor: 'input needed', statusUpdatedAt: 1792348500000,
     })
   })
 
@@ -20,7 +27,7 @@ describe('readLiveSessions', () => {
 
   it('ignores non-json files and malformed json', async () => {
     const live = await readLiveSessions(DIR, allAlive)
-    expect(live.size).toBe(3)
+    expect(live.size).toBe(4)
   })
 
   it('missing dir returns empty map', async () => {

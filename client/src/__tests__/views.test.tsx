@@ -26,7 +26,7 @@ function mockBridge(payload: Partial<SessionsPayload>) {
 describe('Popover', () => {
   it('shows Running and Recent sections from the bridge payload', () => {
     mockBridge({
-      records: [rec(A, { title: 'Live one', live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } }), rec(B, { title: 'Old one' })],
+      records: [rec(A, { title: 'Live one', live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } }), rec(B, { title: 'Old one' })],
       pins: [], legacyHooks: false,
     })
     render(<Popover />)
@@ -34,6 +34,35 @@ describe('Popover', () => {
     const recent = screen.getByText('Recent', { selector: 'h2' }).closest('section') as HTMLElement
     expect(within(running).getByText('Live one')).toBeInTheDocument()
     expect(within(recent).getByText('Old one')).toBeInTheDocument()
+  })
+
+  it('a waiting session shows the notifications tip; Turn on enables them', () => {
+    mockBridge({ records: [rec(A, { live: { pid: 1, status: 'waiting', name: null, updatedAt: NOW, waitingFor: 'input needed', statusUpdatedAt: NOW } })] })
+    render(<Popover />)
+    expect(screen.getByText(/waiting for input/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Turn on' }))
+    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ notify: true })
+  })
+
+  it('closing the tip retires it', () => {
+    mockBridge({ records: [rec(A, { live: { pid: 1, status: 'waiting', name: null, updatedAt: NOW, waitingFor: 'input needed', statusUpdatedAt: NOW } })] })
+    render(<Popover />)
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss tip' }))
+    expect(window.sessionTray.dismissNotifyTip).toHaveBeenCalled()
+  })
+
+  it('no tip once it is done, when notifications are on, or with nothing waiting', () => {
+    const waitingRec = rec(A, { live: { pid: 1, status: 'waiting', name: null, updatedAt: NOW, waitingFor: 'input needed', statusUpdatedAt: NOW } })
+    for (const payload of [
+      { records: [waitingRec], notifyTipDone: true },
+      { records: [waitingRec], settings: { ...makePayload().settings, notify: true } },
+      { records: [rec(A)] },
+    ]) {
+      mockBridge(payload)
+      const { unmount } = render(<Popover />)
+      expect(screen.queryByRole('button', { name: 'Turn on' })).toBeNull()
+      unmount()
+    }
   })
 
   it('shows the legacy hooks banner and removes on click', () => {
@@ -68,7 +97,7 @@ describe('Popover', () => {
 
 describe('Popover footer and headers', () => {
   it('section headers show their count', () => {
-    mockBridge({ records: [rec(A, { live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })], pins: [], legacyHooks: false })
+    mockBridge({ records: [rec(A, { live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } })], pins: [], legacyHooks: false })
     render(<Popover />)
     const header = screen.getByText('Running', { selector: 'h2' })
     expect(within(header).getByText('1')).toBeInTheDocument()

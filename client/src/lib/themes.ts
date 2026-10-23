@@ -6,7 +6,7 @@ export const TOKEN_NAMES = [
   'canvas', 'sunken', 'surface', 'raised', 'control', 'selected', 'hover',
   'line', 'line-strong', 'text', 'text-2', 'muted', 'faint',
   'accent', 'on-accent', 'accent-text',
-  'run', 'idle', 'other', 'ended', 'run-chip-border', 'run-chip-fill',
+  'run', 'idle', 'other', 'ended', 'run-chip-border', 'run-chip-fill', 'wait',
 ] as const
 
 export type TokenName = typeof TOKEN_NAMES[number]
@@ -39,6 +39,7 @@ const carbon: Tokens = {
   idle: '#32D74B',
   other: '#BF8CFF',
   ended: '#636369',
+  wait: '#FF6B7A',
   'run-chip-border': '#4D3812',
   'run-chip-fill': '#1F170A',
 }
@@ -64,6 +65,7 @@ const graphite: Tokens = {
   idle: '#5BC77A',
   other: '#BF8CFF',
   ended: '#6B6F77',
+  wait: '#EE7482',
   'run-chip-border': '#4D3B1F',
   'run-chip-fill': '#211C14',
 }
@@ -89,6 +91,7 @@ const midnight: Tokens = {
   idle: '#4FCB86',
   other: '#C39BFF',
   ended: '#5E6878',
+  wait: '#FF7D8C',
   'run-chip-border': '#4F3E23',
   'run-chip-fill': '#211D18',
 }
@@ -114,6 +117,7 @@ const ink: Tokens = {
   idle: '#56C77E',
   other: '#C09AF5',
   ended: '#5D6B70',
+  wait: '#F47C88',
   'run-chip-border': '#4E3D1F',
   'run-chip-fill': '#1F1C14',
 }
@@ -139,6 +143,7 @@ const paper: Tokens = {
   idle: '#1E8E4A',
   other: '#7A4FD1',
   ended: '#9A9AA0',
+  wait: '#C4314B',
   'run-chip-border': '#E2CCAC',
   'run-chip-fill': '#EDE6DA',
 }

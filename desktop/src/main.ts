@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeImage, nativeTheme, screen, shell, Tray } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { execFile, spawn } from 'child_process'
 import { existsSync } from 'fs'
@@ -10,7 +10,8 @@ import { createPidChecker, pidIsAlive, readLiveSessions } from './core/live-stat
 import { copyCommand, resumeInvocation } from './core/commands'
 import { parseDetails } from './core/details'
 import { claudeLaunchFrom, continueInvocation, pruneHandoffs, writeHandoff, type ClaudeLaunch } from './core/continue'
-import { archive, keep, loadAppState, restore, setName, settingsFrom, togglePin, updateAppState } from './core/app-state'
+import { applySettings, archive, dismissNotifyTip, keep, loadAppState, restore, setName, togglePin, updateAppState } from './core/app-state'
+import { notificationText, trackWaiting, type Stretch } from './core/notify'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
@@ -36,7 +37,7 @@ let popoverHiddenAt = 0
 let cache: IndexCache | null = null
 let records: SessionRecord[] = []
 let live = new Map<string, LiveInfo>()
-let state: AppState = { pins: [], names: {}, archived: [], keptAt: {}, settings: DEFAULT_SETTINGS }
+let state: AppState = { pins: [], names: {}, archived: [], keptAt: {}, notifyTipDone: false, settings: DEFAULT_SETTINGS }
 let settingsWindow: BrowserWindow | null = null
 let legacyHooks = false
 let lastPayload = ''
@@ -49,6 +50,10 @@ const rescannedForLive = new Set<string>()
 let wtReady: Promise<boolean> = Promise.resolve(false)
 let claudeReady: Promise<ClaudeLaunch> = Promise.resolve({ kind: 'unknown' })
 let hasWt = false
+let waitingStretches = new Map<string, Stretch>()
+// Held so the click handler isn't garbage-collected while the notification is on screen.
+let lastNotification: Notification | null = null
+let trayWaiting = false
 
 // Process start time as a FILETIME string, matching procStart in ~/.claude/sessions/<pid>.json (Windows only).
 function processStartTime(pid: number): Promise<string | null> {
@@ -69,8 +74,8 @@ const findRecord = (id: unknown) => records.find(r => r.id === id)
 const openWindows = () => [popover, mainWindow, settingsWindow].filter((w): w is BrowserWindow => !!w && !w.isDestroyed())
 
 function payload(): SessionsPayload {
-  const { pins, names, archived, keptAt, settings } = state
-  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, settings, hasWt }
+  const { pins, names, archived, keptAt, notifyTipDone, settings } = state
+  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, notifyTipDone, settings, hasWt }
 }
 
 function broadcast(): void {
@@ -80,8 +85,37 @@ function broadcast(): void {
   if (json === lastPayload) return
   lastPayload = json
   for (const win of openWindows()) win.webContents.send('sessions:update', p)
-  const running = [...live.values()].filter(l => l.status === 'busy').length
-  tray?.setToolTip(`Session Tray — ${running} running`)
+  updateTray()
+}
+
+const trayIcon = (waiting: boolean) => nativeImage.createFromPath(join(__dirname, '..', 'assets', waiting ? 'tray-waiting.png' : 'tray.png'))
+
+function updateTray(): void {
+  if (!tray) return
+  const statuses = [...live.values()].map(l => l.status)
+  const running = statuses.filter(s => s === 'busy').length
+  const waiting = statuses.filter(s => s === 'waiting').length
+  tray.setToolTip(`Session Tray — ${waiting > 0 ? `${waiting} waiting, ` : ''}${running} running`)
+  if (process.platform === 'darwin') tray.setTitle(waiting > 0 ? String(waiting) : '')
+  else if ((waiting > 0) !== trayWaiting) tray.setImage(trayIcon(waiting > 0))
+  trayWaiting = waiting > 0
+}
+
+// One silent notification per waiting stretch that passes the user's threshold; several at once are grouped.
+function notifyWaiting(): void {
+  if (!state.settings.notify || !Notification.isSupported()) { waitingStretches = new Map(); return }
+  const waiting = [...live].filter(([, l]) => l.status === 'waiting').map(([id, l]) => ({ id, since: l.statusUpdatedAt ?? l.updatedAt }))
+  const { next, due } = trackWaiting(waitingStretches, waiting, Date.now(), state.settings.notifyAfterMin * 60_000)
+  waitingStretches = next
+  if (due.length === 0) return
+  const named = applyNames(records, state.names)
+  const text = notificationText(due.map(id => ({
+    title: named.find(r => r.id === id)?.title || live.get(id)?.name || 'A session',
+    waitingFor: live.get(id)?.waitingFor ?? null,
+  })))
+  lastNotification = new Notification({ ...text, silent: true })
+  lastNotification.on('click', () => openMainWindow(due.length === 1 ? { id: due[0] } : {}))
+  lastNotification.show()
 }
 
 async function rescan(): Promise<void> {
@@ -111,6 +145,7 @@ async function pollLive(): Promise<void> {
     unknown.forEach(id => rescannedForLive.add(id))
     void rescan()
   }
+  notifyWaiting()
   broadcast()
 }
 
@@ -343,8 +378,13 @@ ipcMain.on('app:open-settings', openSettings)
 
 ipcMain.on('settings:set', async (_e, patch: unknown) => {
   if (!patch || typeof patch !== 'object') return
-  state = await updateAppState(statePath(), s => ({ ...s, settings: settingsFrom({ ...s.settings, ...patch }) }))
+  state = await updateAppState(statePath(), s => applySettings(s, patch))
   applyLoginItem()
+  broadcast()
+})
+
+ipcMain.on('app:dismiss-notify-tip', async () => {
+  state = await updateAppState(statePath(), dismissNotifyTip)
   broadcast()
 })
 
@@ -353,6 +393,8 @@ async function main(): Promise<void> {
   app.setName('Session Tray')
   if (!app.requestSingleInstanceLock()) { app.quit(); return }
   await app.whenReady()
+  // Windows shows notifications under this id; it matches electron-builder's appId.
+  if (process.platform === 'win32') app.setAppUserModelId('com.the-office.app')
 
   if (process.platform === 'win32') {
     wtReady = new Promise(resolve => execFile('where.exe', ['wt.exe'], err => resolve(!err)))
@@ -363,7 +405,7 @@ async function main(): Promise<void> {
   }
   void pruneHandoffs(handoffsDir(), Date.now())
 
-  tray = new Tray(nativeImage.createFromPath(join(__dirname, '..', 'assets', 'tray.png')))
+  tray = new Tray(trayIcon(false))
   tray.setToolTip('Session Tray')
   tray.on('click', togglePopover)
   tray.on('right-click', () => tray?.popUpContextMenu(buildMenu()))

@@ -71,6 +71,8 @@ export function buildSections(records: SessionRecord[], pins: string[], f: Filte
     else if (pinned.has(r.id)) sections.pinned.push(r)
     else if (r.lastActivityAt >= since) sections.recent.push(r)
   }
+  // Sessions that need input come first; the sort is stable, so activity order holds within each group.
+  sections.running.sort((a, b) => Number(b.live?.status === 'waiting') - Number(a.live?.status === 'waiting'))
   return sections
 }
 

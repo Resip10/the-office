@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { describeInvocation, resumeInvocation } from '../../../desktop/src/core/commands'
-import type { Settings as SettingsShape, TerminalChoice } from '../../../desktop/src/core/types'
+import { NOTIFY_AFTER_MIN, type NotifyAfterMin, type Settings as SettingsShape, type TerminalChoice } from '../../../desktop/src/core/types'
 import { useAppState } from '../hooks/useAppState'
 import { THEMES, type ThemeId } from '../lib/themes'
 
@@ -128,6 +128,22 @@ export function Settings() {
             <Group>
               <Row title="Launch at login" hint="Start Session Tray when you sign in.">
                 <Switch label="Launch at login" checked={settings.launchAtLogin} onChange={v => set({ launchAtLogin: v })} />
+              </Row>
+            </Group>
+            <Group>
+              <Row title="Notify when a session needs input" hint="A silent notification once a session has been waiting this long.">
+                <Switch label="Notify when a session needs input" checked={settings.notify} onChange={v => set({ notify: v })} />
+              </Row>
+              <Row title="Notify after" hint="How long a session waits before you're notified.">
+                <select
+                  aria-label="Notify after"
+                  disabled={!settings.notify}
+                  value={settings.notifyAfterMin}
+                  onChange={e => set({ notifyAfterMin: Number(e.target.value) as NotifyAfterMin })}
+                  className="h-[30px] px-2.5 rounded-[7px] border border-line-strong bg-control text-[12.5px] text-text disabled:opacity-40"
+                >
+                  {NOTIFY_AFTER_MIN.map(m => <option key={m} value={m}>{m} min</option>)}
+                </select>
               </Row>
             </Group>
           </>

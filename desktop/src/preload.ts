@@ -33,4 +33,5 @@ contextBridge.exposeInMainWorld('sessionTray', {
   archive: (ids: string[]) => ipcRenderer.send('session:archive', ids),
   restore: (ids: string[]) => ipcRenderer.send('session:restore', ids),
   keep: (ids: string[]) => ipcRenderer.send('session:keep', ids),
+  dismissNotifyTip: () => ipcRenderer.send('app:dismiss-notify-tip'),
 })

@@ -26,6 +26,9 @@ export interface LiveInfo {
   status: string
   name: string | null
   updatedAt: number
+  // Set while status is 'waiting', e.g. "input needed" (Claude Code 2.1.303+).
+  waitingFor: string | null
+  statusUpdatedAt: number | null
 }
 
 export interface SessionRecord extends Omit<TranscriptMeta, 'sessionId' | 'lastTimestamp' | 'titleSource'> {
@@ -46,6 +49,7 @@ export interface SessionsPayload {
   names: Record<string, string>
   archived: string[]
   keptAt: Record<string, number>
+  notifyTipDone: boolean
   settings: Settings
   hasWt: boolean
 }
@@ -58,6 +62,8 @@ export interface OpenWindowOptions {
 
 export type ThemeId = 'carbon' | 'graphite' | 'midnight' | 'ink' | 'paper'
 export type TerminalChoice = 'auto' | 'wt' | 'powershell' | 'terminal'
+export const NOTIFY_AFTER_MIN = [1, 5, 15, 30] as const
+export type NotifyAfterMin = typeof NOTIFY_AFTER_MIN[number]
 
 export interface Settings {
   theme: ThemeId
@@ -68,6 +74,9 @@ export interface Settings {
   peekTools: boolean
   terminal: TerminalChoice
   launchAtLogin: boolean
+  // Notify when a session has been waiting for input this many minutes.
+  notify: boolean
+  notifyAfterMin: NotifyAfterMin
   // A threshold of null turns that rule off.
   stale: { idleDays: number | null; trivialMessages: number | null; missingFolder: boolean }
 }
@@ -80,6 +89,8 @@ export const DEFAULT_SETTINGS: Settings = {
   peekTools: false,
   terminal: 'auto',
   launchAtLogin: false,
+  notify: false,
+  notifyAfterMin: 5,
   stale: { idleDays: 30, trivialMessages: 3, missingFolder: true },
 }
 
@@ -89,6 +100,8 @@ export interface AppState {
   names: Record<string, string>
   archived: string[]
   keptAt: Record<string, number>
+  // The "turn on notifications" tip was closed, or notifications were ever turned on.
+  notifyTipDone: boolean
   settings: Settings
 }
 

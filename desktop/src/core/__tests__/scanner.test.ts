@@ -123,7 +123,7 @@ describe('scanClaude', () => {
 describe('attachLive', () => {
   it('sets live by sessionId, null otherwise', async () => {
     const { records } = await scanClaude({ projectsDir, cache: null })
-    const info: LiveInfo = { pid: 1, status: 'busy', name: 'app-1c', updatedAt: 5 }
+    const info: LiveInfo = { pid: 1, status: 'busy', name: 'app-1c', updatedAt: 5, waitingFor: null, statusUpdatedAt: null }
     const out = attachLive(records, new Map([[TITLED, info]]))
     expect(byId(out, TITLED)?.live).toEqual(info)
     expect(byId(out, LOCAL)?.live).toBeNull()

@@ -1,6 +1,7 @@
 import { useListState } from '../hooks/useListState'
 import { FilterBar } from '../components/FilterBar'
 import { LegacyHooksBanner } from '../components/LegacyHooksBanner'
+import { NotifyTip } from '../components/NotifyTip'
 import { SessionList } from '../components/SessionList'
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
@@ -13,6 +14,7 @@ export function Popover() {
     <div className="flex flex-col h-full bg-raised text-text font-sans border border-line rounded-[14px] overflow-hidden">
       <FilterBar filters={s.filters} onChange={s.setFilters} projects={s.projects} />
       {s.legacyHooks && <LegacyHooksBanner />}
+      {s.notifyTip && <NotifyTip />}
       <div className="flex-1 overflow-y-auto bg-raised">
         <SessionList
           sections={s.sections}

@@ -42,6 +42,7 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/details.ts` | `parseDetails` — handoff + message peek for one session, on demand |
 | `desktop/src/core/handoff-prompt.ts` | `handoffPrompt`, `continuePreview` (pure; used by the renderer too) |
 | `desktop/src/core/continue.ts` | `continueInvocation`, handoff files in `userData/handoffs/` (pruned after 7 days) |
+| `desktop/src/core/notify.ts` | `trackWaiting`, `notificationText` — when a waiting session is due a notification (pure) |
 | `desktop/src/core/stale.ts` | `staleReasons` — idle / trivial / folder-gone rules (pure) |
 | `desktop/src/core/app-state.ts` | `userData/app-state.json`: pins, names, archived, keptAt, settings |
 | `desktop/src/core/legacy-hooks.ts` | Detect/remove the old `localhost:7777` hooks |
@@ -57,10 +58,11 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 |---|---|---|
 | live status `busy` | running | amber `#FFB340`, pulses |
 | live status `idle` | idle | green `#32D74B` |
+| live status `waiting` | waiting · `waitingFor` | coral `#FF6B7A`; sorts first in Running |
 | other live status | raw value | purple `#BF8CFF` |
 | no live entry (pid gone) | ended | gray `#636369` |
 
-Values are Carbon's; each theme in `client/src/lib/themes.ts` tunes them. The accent is never amber, green or purple.
+Values are Carbon's; each theme in `client/src/lib/themes.ts` tunes them. The accent is never amber, green, purple or coral.
 
 Sections: Running (any live session) > Pinned > Recent. The time filter applies to Recent only. Archived sessions are left out of Pinned and Recent but still show in Running when live.
 

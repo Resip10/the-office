@@ -3,6 +3,7 @@ import { useListState } from '../hooks/useListState'
 import { DetailPanel } from '../components/DetailPanel'
 import { FilterBar } from '../components/FilterBar'
 import { LegacyHooksBanner } from '../components/LegacyHooksBanner'
+import { NotifyTip } from '../components/NotifyTip'
 import { SessionList } from '../components/SessionList'
 import { Cleanup } from './Cleanup'
 
@@ -47,6 +48,7 @@ export function Window() {
         </button>
       </div>
       {s.legacyHooks && <LegacyHooksBanner />}
+      {s.notifyTip && <NotifyTip />}
       <div className="flex flex-1 min-h-0">
         <div className="flex flex-col w-[360px] shrink-0 border-r border-line bg-sunken">
           <FilterBar filters={s.filters} onChange={s.setFilters} projects={s.projects} />

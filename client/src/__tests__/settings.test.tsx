@@ -27,6 +27,24 @@ describe('Settings', () => {
     expect(window.sessionTray.setSettings).toHaveBeenLastCalledWith({ stale: { idleDays: null, trivialMessages: 3, missingFolder: true } })
   })
 
+  it('notifications are off by default; the delay picker offers 1, 5, 15 and 30 minutes', () => {
+    render(<Settings />)
+    const sw = screen.getByRole('switch', { name: 'Notify when a session needs input' })
+    expect(sw).toHaveAttribute('aria-checked', 'false')
+    const picker = screen.getByRole('combobox', { name: 'Notify after' })
+    expect(picker).toBeDisabled()
+    expect(within(picker).getAllByRole('option').map(o => o.textContent)).toEqual(['1 min', '5 min', '15 min', '30 min'])
+    fireEvent.click(sw)
+    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ notify: true })
+  })
+
+  it('the delay picker saves minutes as a number', () => {
+    mockBridge({ settings: { ...makePayload().settings, notify: true } })
+    render(<Settings />)
+    fireEvent.change(screen.getByRole('combobox', { name: 'Notify after' }), { target: { value: '15' } })
+    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ notifyAfterMin: 15 })
+  })
+
   it('pulse switch turns the pulse off', () => {
     render(<Settings />)
     fireEvent.click(screen.getByRole('button', { name: 'Appearance' }))

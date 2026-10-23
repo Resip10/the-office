@@ -54,6 +54,8 @@ export async function readLiveSessions(dir: string, isAlive: (pid: number, procS
         status: typeof obj.status === 'string' ? obj.status : 'unknown',
         name: typeof obj.name === 'string' ? obj.name : null,
         updatedAt: typeof obj.updatedAt === 'number' ? obj.updatedAt : 0,
+        waitingFor: typeof obj.waitingFor === 'string' ? obj.waitingFor : null,
+        statusUpdatedAt: typeof obj.statusUpdatedAt === 'number' ? obj.statusUpdatedAt : null,
       })
     } catch {
       // unreadable or malformed — skip

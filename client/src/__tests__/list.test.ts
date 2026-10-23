@@ -16,8 +16,9 @@ function rec(id: string, over: Partial<SessionRecord> = {}): SessionRecord {
     subagentCount: 0, live: null, ...over,
   }
 }
-const busy = { pid: 1, status: 'busy', name: null, updatedAt: NOW }
-const idle = { pid: 2, status: 'idle', name: null, updatedAt: NOW }
+const busy = { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null }
+const idle = { pid: 2, status: 'idle', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null }
+const waiting = { pid: 3, status: 'waiting', name: null, updatedAt: NOW, waitingFor: 'input needed', statusUpdatedAt: NOW }
 const ALL: Filters = { query: '', range: 'all', project: null, runningOnly: false }
 const ids = (list: SessionRecord[]) => list.map(r => r.id)
 
@@ -33,6 +34,11 @@ describe('buildSections', () => {
   it('Running holds every live session, busy or idle', () => {
     const s = buildSections([rec('a', { live: idle }), rec('b', { live: busy })], [], ALL, NOW)
     expect(ids(s.running).sort()).toEqual(['a', 'b'])
+  })
+
+  it('Running lists waiting sessions first', () => {
+    const s = buildSections([rec('a', { live: busy, lastActivityAt: NOW }), rec('b', { live: waiting, lastActivityAt: NOW - DAY })], [], ALL, NOW)
+    expect(ids(s.running)).toEqual(['b', 'a'])
   })
 
   it('sorts each section by lastActivityAt desc', () => {

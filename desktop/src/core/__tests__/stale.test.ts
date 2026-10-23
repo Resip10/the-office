@@ -47,7 +47,7 @@ describe('staleReasons', () => {
     const old = rec({ lastActivityAt: NOW - 40 * DAY })
     expect(staleReasons(old, ctx({ pinned: true }))).toEqual([])
     expect(staleReasons(old, ctx({ archived: true }))).toEqual([])
-    expect(staleReasons(rec({ lastActivityAt: NOW - 40 * DAY, live: { pid: 1, status: 'idle', name: null, updatedAt: NOW } }), ctx())).toEqual([])
+    expect(staleReasons(rec({ lastActivityAt: NOW - 40 * DAY, live: { pid: 1, status: 'idle', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } }), ctx())).toEqual([])
   })
 
   it('a kept session stays quiet until new activity or 30 days pass', () => {

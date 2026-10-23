@@ -7,7 +7,8 @@
 ## What it does
 
 - **All sessions, one list.** Every Claude Code transcript in `~/.claude/projects`, from the CLI, IDE extensions and the desktop app, grouped into Running, Pinned and Recent.
-- **Live status without setup.** Running and idle sessions come from Claude Code's own `~/.claude/sessions` files. No hooks, no server, no settings changes.
+- **Live status without setup.** Running, idle and waiting sessions come from Claude Code's own `~/.claude/sessions` files. No hooks, no server, no settings changes.
+- **Waiting for input.** A session that needs you shows why ("waiting · input needed"), sorts to the top, and puts a dot on the tray icon (a count on macOS). Optional silent notifications after 1, 5, 15 or 30 minutes of waiting; off by default.
 - **Useful rows.** Title (your rename, your `/rename`, Claude's auto-title, or the first prompt), project, git branch, last activity, message count.
 - **Session details.** In the window you get:
   - messages, context used, ≈ API cost and active time
