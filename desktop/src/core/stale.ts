@@ -19,7 +19,8 @@ export function staleReasons(
   const idleDays = Math.floor((ctx.now - r.lastActivityAt) / DAY)
   if (ctx.rules.idleDays !== null && idleDays > ctx.rules.idleDays) reasons.push({ kind: 'idle', days: idleDays })
   if (ctx.rules.trivialMessages !== null && r.messageCount < ctx.rules.trivialMessages && r.editCount === 0) reasons.push({ kind: 'trivial' })
-  if (ctx.rules.missingFolder && !r.projectExists) reasons.push({ kind: 'folder-gone' })
+  // No recorded folder means unknown, not gone.
+  if (ctx.rules.missingFolder && r.projectPath !== null && !r.projectExists) reasons.push({ kind: 'folder-gone' })
   return reasons
 }
 

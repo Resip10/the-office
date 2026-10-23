@@ -95,13 +95,13 @@ function ThemeCard({ id, selected }: { id: ThemeId; selected: boolean }) {
 }
 
 export function Settings() {
-  const { settings } = useAppState()
+  const { settings, hasWt } = useAppState()
   const [section, setSection] = useState<Section>('general')
   const platform = window.sessionTray.platform
   const sample = { id: SAMPLE_ID, projectPath: platform === 'win32' ? 'C:\\projects\\app' : '/Users/me/app' }
-  const preview = resumeInvocation(sample, platform, settings.terminal, true)
+  const preview = resumeInvocation(sample, platform, settings.terminal, hasWt)
   const terminals: Array<[TerminalChoice, string]> = platform === 'win32'
-    ? [['auto', 'Windows Terminal if installed'], ['wt', 'Windows Terminal'], ['powershell', 'PowerShell window']]
+    ? [['auto', 'Windows Terminal if installed'], ['wt', hasWt ? 'Windows Terminal' : 'Windows Terminal (not installed)'], ['powershell', 'PowerShell window']]
     : [['auto', 'Terminal']]
 
   return (

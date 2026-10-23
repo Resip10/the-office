@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeImage, nativeTheme, screen, shell, Tray } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { execFile, spawn } from 'child_process'
 import { existsSync } from 'fs'
@@ -45,8 +45,10 @@ let scanning = false
 let scannedOnce = false
 let lastScanAt = 0
 const rescannedForLive = new Set<string>()
+// Resolved once `where.exe` answers (Windows); launches wait for them instead of guessing.
+let wtReady: Promise<boolean> = Promise.resolve(false)
+let claudeReady: Promise<ClaudeLaunch> = Promise.resolve({ kind: 'unknown' })
 let hasWt = false
-let claudeLaunch: ClaudeLaunch = { kind: 'unknown' }
 
 // Process start time as a FILETIME string, matching procStart in ~/.claude/sessions/<pid>.json (Windows only).
 function processStartTime(pid: number): Promise<string | null> {
@@ -68,7 +70,7 @@ const openWindows = () => [popover, mainWindow, settingsWindow].filter((w): w is
 
 function payload(): SessionsPayload {
   const { pins, names, archived, keptAt, settings } = state
-  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, settings }
+  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, settings, hasWt }
 }
 
 function broadcast(): void {
@@ -117,14 +119,19 @@ function scanTick(): void {
   if (scanDue({ visible, lastScanAt, now: Date.now() })) void rescan()
 }
 
+// Same rule as the renderer's effectiveTheme; passed in the URL so the first paint uses it.
+const bootTheme = () => (state.settings.followSystem && !nativeTheme.shouldUseDarkColors ? 'paper' : state.settings.theme)
+const windowBackground = () => (bootTheme() === 'paper' ? '#F3F3F1' : '#08080A')
+
 function loadView(win: BrowserWindow, view: View): void {
+  const query = { view, theme: bootTheme() }
   if (app.isPackaged) {
-    win.loadFile(join(process.resourcesPath, 'client', 'dist', 'index.html'), { query: { view } })
+    win.loadFile(join(process.resourcesPath, 'client', 'dist', 'index.html'), { query })
     return
   }
   // Vite may still be starting when Electron boots in dev.
   win.webContents.on('did-fail-load', () => setTimeout(() => win.isDestroyed() || win.reload(), 1000))
-  win.loadURL(`http://localhost:5173/?view=${view}`)
+  win.loadURL(`http://localhost:5173/?${new URLSearchParams(query)}`)
 }
 
 function createWindow(view: View, options: Electron.BrowserWindowConstructorOptions): BrowserWindow {
@@ -168,7 +175,7 @@ function openMainWindow(opts: OpenWindowOptions = {}): void {
   if (opts?.view === 'cleanup') valid.view = 'cleanup'
   const send = () => { if (valid.id || valid.view) mainWindow?.webContents.send('window:open', valid) }
   if (!mainWindow || mainWindow.isDestroyed()) {
-    mainWindow = createWindow('window', { width: 1180, height: 760, minWidth: 760, minHeight: 500, backgroundColor: '#08080A' })
+    mainWindow = createWindow('window', { width: 1180, height: 760, minWidth: 760, minHeight: 500, backgroundColor: windowBackground() })
     mainWindow.once('ready-to-show', () => { mainWindow?.show(); send() })
   } else {
     mainWindow.show()
@@ -181,7 +188,7 @@ function openMainWindow(opts: OpenWindowOptions = {}): void {
 
 function openSettings(): void {
   if (!settingsWindow || settingsWindow.isDestroyed()) {
-    settingsWindow = createWindow('settings', { width: 900, height: 640, minWidth: 640, minHeight: 480, backgroundColor: '#08080A' })
+    settingsWindow = createWindow('settings', { width: 900, height: 640, minWidth: 640, minHeight: 480, backgroundColor: windowBackground() })
     settingsWindow.once('ready-to-show', () => settingsWindow?.show())
   } else {
     settingsWindow.show()
@@ -224,10 +231,10 @@ function buildMenu(): Menu {
 // null tells the renderer to keep showing "Scanning…"; the first broadcast follows the first scan.
 ipcMain.handle('sessions:get', () => (scannedOnce ? payload() : null))
 
-ipcMain.on('session:resume', (_e, id: unknown) => {
+ipcMain.on('session:resume', async (_e, id: unknown) => {
   const r = findRecord(id)
   if (!r?.projectExists) return
-  const inv = resumeInvocation(r, process.platform, state.settings.terminal, hasWt)
+  const inv = resumeInvocation(r, process.platform, state.settings.terminal, await wtReady)
   if (!inv) return
   spawn(inv.file, inv.args, { cwd: inv.cwd, detached: true, stdio: 'ignore' }).on('error', () => {}).unref()
 })
@@ -279,9 +286,11 @@ ipcMain.on('session:continue', async (_e, id: unknown, opts: unknown) => {
   if (!r || typeof o.prompt !== 'string' || o.prompt.trim() === '') return
   if (o.target === 'clipboard') { clipboard.writeText(o.prompt); return }
   if (typeof o.folder !== 'string' || !(await stat(o.folder).then(st => st.isDirectory(), () => false))) return
-  const promptFile = await writeHandoff(handoffsDir(), r.id, o.prompt, Date.now())
+  const promptFile = await writeHandoff(handoffsDir(), r.id, o.prompt, Date.now()).catch(() => null)
+  if (!promptFile) return
   const inv = continueInvocation({
-    folder: o.folder, promptFile, platform: process.platform, terminal: state.settings.terminal, hasWt, claude: claudeLaunch,
+    folder: o.folder, promptFile, platform: process.platform, terminal: state.settings.terminal,
+    hasWt: await wtReady, claude: await claudeReady,
   })
   if (!inv) return
   spawn(inv.file, inv.args, { cwd: inv.cwd, detached: true, stdio: 'ignore' }).on('error', () => {}).unref()
@@ -346,10 +355,11 @@ async function main(): Promise<void> {
   await app.whenReady()
 
   if (process.platform === 'win32') {
-    execFile('where.exe', ['wt.exe'], err => { hasWt = !err })
-    execFile('where.exe', ['claude'], (err, out) => {
-      claudeLaunch = claudeLaunchFrom(err ? null : out, existsSync)
-    })
+    wtReady = new Promise(resolve => execFile('where.exe', ['wt.exe'], err => resolve(!err)))
+    claudeReady = new Promise(resolve => execFile('where.exe', ['claude'], (err, out) => {
+      resolve(claudeLaunchFrom(err ? null : out, existsSync))
+    }))
+    void wtReady.then(found => { hasWt = found; broadcast() })
   }
   void pruneHandoffs(handoffsDir(), Date.now())
 

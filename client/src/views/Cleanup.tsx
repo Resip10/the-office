@@ -71,7 +71,7 @@ export function Cleanup() {
               onClick={() => setTab(t)}
               className={`px-2.5 py-1 rounded-[5px] text-xs font-medium ${tab === t ? 'bg-line-strong text-text' : 'text-muted hover:text-text'}`}
             >
-              {t === 'stale' ? 'Stale' : `Archive${s.archived.length ? ` · ${s.archived.length}` : ''}`}
+              {t === 'stale' ? 'Stale' : `Archive${archivedRecords.length ? ` · ${archivedRecords.length}` : ''}`}
             </button>
           ))}
         </div>

@@ -68,4 +68,9 @@ describe('Cleanup', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Restore' }))
     expect(window.sessionTray.restore).toHaveBeenCalledWith([ids[2]])
   })
+
+  it('the Archive tab count skips archived ids whose transcripts are gone', () => {
+    setup({ archived: [ids[2], '99999999-9999-4999-8999-999999999999'] })
+    expect(screen.getByRole('tab', { name: 'Archive' })).toHaveTextContent(/^Archive · 1$/)
+  })
 })

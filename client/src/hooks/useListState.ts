@@ -3,7 +3,7 @@ import { buildSections, staleList, type Filters } from '../lib/list'
 import { DEFAULT_SETTINGS, type SessionsPayload } from '../../../desktop/src/core/types'
 import { useNow, useSessions } from './useSessions'
 
-const EMPTY: SessionsPayload = { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, settings: DEFAULT_SETTINGS }
+const EMPTY: SessionsPayload = { records: [], pins: [], legacyHooks: false, names: {}, archived: [], keptAt: {}, settings: DEFAULT_SETTINGS, hasWt: false }
 const DEFAULT_FILTERS: Filters = { query: '', range: '7d', project: null, runningOnly: false }
 
 // Everything both views share: data, filters, sections and the selected session.

@@ -1,5 +1,5 @@
 import { DEFAULT_SETTINGS } from '../../../desktop/src/core/types'
-import { applyTheme, contrast, effectiveTheme, THEMES, type ThemeId } from '../lib/themes'
+import { applyTheme, bootTheme, contrast, effectiveTheme, THEMES, type ThemeId } from '../lib/themes'
 
 describe('applyTheme', () => {
   it('sets Carbon tokens as CSS variables and data-theme', () => {
@@ -8,6 +8,15 @@ describe('applyTheme', () => {
     expect(root.style.getPropertyValue('--canvas')).toBe('#08080A')
     expect(root.style.getPropertyValue('--accent')).toBe('#F2F2F4')
     expect(root.dataset.theme).toBe('carbon')
+  })
+})
+
+describe('bootTheme', () => {
+  it('reads a known theme from the query, otherwise Carbon', () => {
+    expect(bootTheme('?view=window&theme=paper')).toBe('paper')
+    expect(bootTheme('?view=window')).toBe('carbon')
+    expect(bootTheme('?theme=neon')).toBe('carbon')
+    expect(bootTheme('?theme=toString')).toBe('carbon')
   })
 })
 

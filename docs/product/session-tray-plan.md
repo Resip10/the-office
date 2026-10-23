@@ -136,6 +136,8 @@ Resume always starts in the session's original project folder.
 
 ## 10. Archive and delete
 
+> **As shipped in P1:** archive is hide-only. It is a list in the app's `app-state.json`; transcripts are never moved or deleted, and Restore just removes the id. The file-moving design below is kept for reference and is not planned.
+
 - **Archive** moves the session's files into the app's archive folder, along with related per-session files where known. The entry disappears from the tool's own picker.
 - **Restore** moves files back exactly as they were.
 - **Permanent removal** happens only after the retention period (default 30 days), or by explicit "empty archive".

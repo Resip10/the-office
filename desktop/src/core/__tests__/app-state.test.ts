@@ -68,6 +68,13 @@ describe('updateAppState', () => {
     ])
     expect((await loadAppState(path)).pins.sort()).toEqual(['a', 'b'])
   })
+
+  it('a failed write resolves to what is on disk instead of rejecting', async () => {
+    writeFileSync(path, JSON.stringify({ pins: ['a'] }))
+    const unwritable = join(dir, 'missing-dir', 'app-state.json')
+    await expect(updateAppState(unwritable, s => ({ ...s, pins: ['b'] }))).resolves.toEqual(EMPTY)
+    await expect(updateAppState(path, s => ({ ...s, pins: [...s.pins, 'b'] }))).resolves.toEqual({ ...EMPTY, pins: ['a', 'b'] })
+  })
 })
 
 describe('togglePin', () => {
