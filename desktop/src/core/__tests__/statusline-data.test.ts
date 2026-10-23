@@ -59,19 +59,19 @@ describe('readStatusline', () => {
 
 describe('rememberExtras', () => {
   const ID = '11111111-1111-4111-8111-111111111111'
-  const snap = (over = {}) => ({ capturedAt: 1, sessionId: ID, fiveHour: null, sevenDay: null, effort: 'high', thinking: true, text: null, ...over })
+  const snap = (over = {}) => ({ capturedAt: 1, sessionId: ID, fiveHour: null, sevenDay: null, effort: 'high', thinking: true, text: 'Opus | main', ...over })
 
-  it('keeps the latest effort and thinking per session', () => {
+  it('keeps the latest text, effort and thinking per session', () => {
     const one = rememberExtras({}, snap())
-    expect(one).toEqual({ [ID]: { effort: 'high', thinking: true } })
-    expect(rememberExtras(one, snap({ effort: 'low' }))[ID]).toEqual({ effort: 'low', thinking: true })
+    expect(one).toEqual({ [ID]: { text: 'Opus | main', effort: 'high', thinking: true } })
+    expect(rememberExtras(one, snap({ effort: 'low', text: 'Opus | dev' }))[ID]).toEqual({ text: 'Opus | dev', effort: 'low', thinking: true })
   })
 
   it('unchanged, unknown session or nothing known → same object', () => {
     const one = rememberExtras({}, snap())
     expect(rememberExtras(one, snap())).toBe(one)
     expect(rememberExtras(one, snap({ sessionId: null }))).toBe(one)
-    expect(rememberExtras(one, snap({ effort: null, thinking: null }))).toBe(one)
+    expect(rememberExtras(one, snap({ effort: null, thinking: null, text: null }))).toBe(one)
     expect(rememberExtras(one, null)).toBe(one)
   })
 })

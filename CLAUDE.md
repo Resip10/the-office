@@ -44,7 +44,7 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/continue.ts` | `continueInvocation`, handoff files in `userData/handoffs/` (pruned after 7 days) |
 | `desktop/src/core/notify.ts` | `trackWaiting`, `notificationText` — when a waiting session is due a notification (pure) |
 | `desktop/src/core/statusline-link.ts` | Connect/Disconnect: wrap the `statusLine` command in `~/.claude/settings.json`, restore the original |
-| `desktop/src/core/statusline-data.ts` | `readStatusline`, `rememberExtras` — what the connected status line saved in `userData/statusline/`; effort/thinking per session |
+| `desktop/src/core/statusline-data.ts` | `readStatusline`, `rememberExtras` — what the connected status line saved in `userData/statusline/`; text/effort/thinking per session |
 | `desktop/src/core/usage-text.ts` | `statuslineParts`, `usageStale`, `usageTooltip` (pure; used by the renderer too) |
 | `client/src/lib/overview.ts`, `components/OverviewLine.tsx` | Overview line: app items, then the `>_` status line group |
 | `desktop/src/core/stale.ts` | `staleReasons` — idle / trivial / folder-gone rules (pure) |
@@ -87,7 +87,7 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 - **Notifications are opt-in.** Off by default, silent, one per waiting stretch after 1/5/15/30 min; a one-time tip offers them (`notifyTipDone`).
 - **Fail soft.** Unknown records are ignored, unknown values show as "—"; `core/` never throws on bad input.
 - **Disposable cache.** `userData/index-v2.json`; deleting it costs one cold scan.
-- **Status line data is optional and marked.** Claude Code passes `rate_limits`, effort/thinking and the printed text only to the status line. Connect wraps the user's command (`tee input | { original } | tee output`, errors silenced, ends with `true`) into `userData/statusline/`. Windows needs Git Bash. Global items (limits, text) sit in the overview line's own `>_` group; per-session effort/thinking show quietly in the detail panel with the same `>_` mark, so nothing looks built in.
+- **Status line data is optional and marked.** Claude Code passes `rate_limits`, effort/thinking and the printed text only to the status line. Connect wraps the user's command (`tee input | { original } | tee output`, errors silenced, ends with `true`) into `userData/statusline/`. Windows needs Git Bash. Only account-wide plan limits sit in the overview line's `>_` group; per-session status line text, effort and thinking show quietly in the detail panel with the same `>_` mark, so nothing looks built in.
 - **Cost is an estimate.** `costUSD` is Claude Code's API-price figure, labelled "≈ API cost".
 - **Run actions through the CLI.** Resume = `claude --resume <id>` in the project folder; ids validated first.
 - **Continue in… passes the prompt by file.** Windows runs an encoded PowerShell script that reads the handoff file; npm installs run `cli.js` with node because `claude.cmd` cuts arguments at newlines.

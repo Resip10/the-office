@@ -22,7 +22,7 @@ function Part({ part }: { part: StatPart }) {
   )
 }
 
-// The app's own items first; items from the user's Claude Code status line sit in a marked group after them.
+// The app's own items first; plan limits from the user's Claude Code status line sit in a marked group after them.
 export function OverviewLine({ records, items, statusline, now, showEdit = false, className = '' }: Props) {
   const app = appOverviewParts(records, items, now)
   const fromStatusline = statusline ? statuslineParts(statusline, items, now) : []

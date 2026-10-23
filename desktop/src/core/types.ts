@@ -58,7 +58,7 @@ export interface SessionsPayload {
   statuslineLinked: boolean
   // False on Windows without Git Bash, where Claude Code runs status lines through PowerShell.
   canLinkStatusline: boolean
-  // Latest effort and thinking per session id, from status line refreshes while connected.
+  // Latest status line text, effort and thinking per session id, from refreshes while connected.
   sessionExtras: Record<string, SessionExtras>
 }
 
@@ -71,7 +71,7 @@ export interface LimitWindow {
 export interface StatuslineSnapshot {
   // When the status line last saved it (file mtime).
   capturedAt: number
-  // The session that refreshed the status line; effort and thinking belong to it.
+  // The session that refreshed the status line; text, effort and thinking belong to it.
   sessionId: string | null
   fiveHour: LimitWindow | null
   sevenDay: LimitWindow | null
@@ -83,6 +83,8 @@ export interface StatuslineSnapshot {
 
 // Per-session details only the status line knows; shown quietly in the session detail when known.
 export interface SessionExtras {
+  // What the status line printed for this session, without colors.
+  text: string | null
   effort: string | null
   thinking: boolean | null
 }
@@ -99,7 +101,7 @@ export const NOTIFY_AFTER_MIN = [1, 5, 15, 30] as const
 export type NotifyAfterMin = typeof NOTIFY_AFTER_MIN[number]
 // Overview line items: the app's own first, then ones that need the connected status line.
 export const OVERVIEW_APP_ITEMS = ['running', 'costToday', 'costWeek', 'sessionsToday'] as const
-export const OVERVIEW_STATUSLINE_ITEMS = ['limits', 'text'] as const
+export const OVERVIEW_STATUSLINE_ITEMS = ['limits'] as const
 export type OverviewItem = typeof OVERVIEW_APP_ITEMS[number] | typeof OVERVIEW_STATUSLINE_ITEMS[number]
 
 export interface Settings {

@@ -56,6 +56,7 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect, show
   // Only the status line knows these; shown when it has refreshed for this session while connected.
   const extras = useAppState().sessionExtras[r.id]
   const extrasText = extras && [
+    extras.text,
     extras.effort && `effort ${extras.effort}`,
     extras.thinking !== null && `thinking ${extras.thinking ? 'on' : 'off'}`,
   ].filter(Boolean).join(' · ')
@@ -151,9 +152,9 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect, show
       </div>
 
       {extrasText && (
-        <div aria-label="From your Claude Code status line" title="From your Claude Code status line" className="flex items-center gap-2 -mt-2 font-mono text-[11px] text-muted">
-          <span aria-hidden="true" className="px-1 rounded border border-line-strong text-[10px] text-faint">&gt;_</span>
-          {extrasText}
+        <div aria-label="From your Claude Code status line" title={`From your Claude Code status line: ${extrasText}`} className="flex items-center gap-2 min-w-0 -mt-2 font-mono text-[11px] text-muted">
+          <span aria-hidden="true" className="shrink-0 px-1 rounded border border-line-strong text-[10px] text-faint">&gt;_</span>
+          <span className="truncate">{extrasText}</span>
         </div>
       )}
 

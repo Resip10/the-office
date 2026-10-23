@@ -61,10 +61,10 @@ export async function readStatusline(dir: string): Promise<StatuslineSnapshot | 
   }
 }
 
-// Keeps the latest effort and thinking per session as status line refreshes come in.
+// Keeps the latest text, effort and thinking per session as status line refreshes come in.
 export function rememberExtras(prev: Record<string, SessionExtras>, s: StatuslineSnapshot | null): Record<string, SessionExtras> {
-  if (!s?.sessionId || (s.effort === null && s.thinking === null)) return prev
+  if (!s?.sessionId || (s.text === null && s.effort === null && s.thinking === null)) return prev
   const old = prev[s.sessionId]
-  if (old && old.effort === s.effort && old.thinking === s.thinking) return prev
-  return { ...prev, [s.sessionId]: { effort: s.effort, thinking: s.thinking } }
+  if (old && old.text === s.text && old.effort === s.effort && old.thinking === s.thinking) return prev
+  return { ...prev, [s.sessionId]: { text: s.text, effort: s.effort, thinking: s.thinking } }
 }

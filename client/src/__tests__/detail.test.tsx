@@ -122,11 +122,11 @@ describe('DetailPanel', () => {
     expect(screen.getByRole('button', { name: 'Continue in…' })).toBeDisabled()
   })
 
-  it('effort and thinking from the status line show quietly, marked as such', () => {
+  it("the session's status line text, effort and thinking show quietly, marked as such", () => {
     const r = rec()
-    window.sessionTray = mockApi(makePayload({ statuslineLinked: true, sessionExtras: { [r.id]: { effort: 'high', thinking: true } } }))
+    window.sessionTray = mockApi(makePayload({ statuslineLinked: true, sessionExtras: { [r.id]: { text: 'Opus 5.5 | main', effort: 'high', thinking: true } } }))
     render(<DetailPanel record={r} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
-    expect(screen.getByLabelText('From your Claude Code status line')).toHaveTextContent('effort high · thinking on')
+    expect(screen.getByLabelText('From your Claude Code status line')).toHaveTextContent('Opus 5.5 | main · effort high · thinking on')
   })
 
   it('no status line row when nothing is known for the session', () => {

@@ -64,15 +64,14 @@ describe('usageTooltip', () => {
 })
 
 describe('statuslineParts', () => {
-  it('follows the chosen items and their order; app items are skipped', () => {
-    expect(statuslineParts(usage(), ['text', 'running', 'limits'], NOW)).toEqual([
-      { label: null, text: 'app on main', warn: false },
+  it('plan limits only; app items are skipped', () => {
+    expect(statuslineParts(usage(), ['running', 'limits'], NOW)).toEqual([
       { label: '5h', text: '11% · resets 2h 14m', warn: false },
       { label: 'wk', text: '48% · resets Sat 14:00', warn: false },
     ])
   })
 
   it('missing values drop their item', () => {
-    expect(statuslineParts(usage({ text: null, fiveHour: null, sevenDay: null }), ['text', 'limits'], NOW)).toEqual([])
+    expect(statuslineParts(usage({ fiveHour: null, sevenDay: null }), ['limits'], NOW)).toEqual([])
   })
 })

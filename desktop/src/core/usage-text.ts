@@ -37,18 +37,9 @@ export function usageParts(s: StatuslineSnapshot, now: number): StatPart[] {
   return parts
 }
 
-function itemParts(s: StatuslineSnapshot, id: OverviewItem, now: number): StatPart[] {
-  const plain = (label: string | null, text: string): StatPart[] => [{ label, text, warn: false }]
-  switch (id) {
-    case 'limits': return usageParts(s, now)
-    case 'text': return s.text === null ? [] : plain(null, s.text)
-    default: return []
-  }
-}
-
-// Status line items in the user's order; the app's own items are skipped here.
+// The overview line's status line group: only account-wide plan limits (per-session data goes to the detail panel).
 export function statuslineParts(s: StatuslineSnapshot, items: OverviewItem[], now: number): StatPart[] {
-  return items.flatMap(id => itemParts(s, id, now))
+  return items.includes('limits') ? usageParts(s, now) : []
 }
 
 export function usageStale(s: StatuslineSnapshot, now: number): string | null {

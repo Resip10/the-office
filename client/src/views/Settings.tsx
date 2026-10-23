@@ -24,7 +24,6 @@ const OVERVIEW_LABELS: Record<OverviewItem, [string, string?]> = {
   costWeek: ['≈ Cost this week', 'API-price estimate of sessions active in the last 7 days.'],
   sessionsToday: ['Sessions today'],
   limits: ['Plan limits', '5-hour and weekly use, with reset times.'],
-  text: ['Status line text', 'Whatever your status line script prints.'],
 }
 
 const PICKABLE: ThemeId[] = ['carbon', 'graphite', 'midnight', 'ink', 'paper']
@@ -163,7 +162,7 @@ function OverviewSection() {
       <section className="flex flex-col gap-3">
         <span className="flex items-center gap-2"><Badge /><Label>From your Claude Code status line</Label></span>
         <Group>{OVERVIEW_STATUSLINE_ITEMS.map(id => row(id, !statuslineLinked))}</Group>
-        <p className="m-0 text-[12.5px] text-muted">While connected, each session's details also show its effort level and whether thinking is on.</p>
+        <p className="m-0 text-[12.5px] text-muted">While connected, each session's details also show its own status line text, effort level and whether thinking is on.</p>
       </section>
 
       <Group>

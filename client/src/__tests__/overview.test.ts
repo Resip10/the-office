@@ -27,6 +27,6 @@ describe('appOverviewParts', () => {
   })
 
   it('leaves out empty values and status line items', () => {
-    expect(appOverviewParts([rec()], ['running', 'costToday', 'limits', 'text'], NOW)).toEqual([])
+    expect(appOverviewParts([rec()], ['running', 'costToday', 'limits'], NOW)).toEqual([])
   })
 })
