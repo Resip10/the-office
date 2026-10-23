@@ -57,13 +57,19 @@ export async function loadAppState(path: string): Promise<AppState> {
 // Serialise updates per file so two quick changes can't overwrite each other.
 const queues = new Map<string, Promise<unknown>>()
 
+// A failed write resolves to the state on disk, so the UI shows what was actually saved.
 export function updateAppState(path: string, fn: (s: AppState) => AppState): Promise<AppState> {
   const run = (queues.get(path) ?? Promise.resolve()).catch(() => {}).then(async () => {
-    const next = fn(await loadAppState(path))
+    const current = await loadAppState(path)
+    const next = fn(current)
     const tmp = `${path}.tmp`
-    await writeFile(tmp, JSON.stringify(next, null, 2))
-    await rename(tmp, path)
-    return next
+    try {
+      await writeFile(tmp, JSON.stringify(next, null, 2))
+      await rename(tmp, path)
+      return next
+    } catch {
+      return current
+    }
   })
   queues.set(path, run)
   return run

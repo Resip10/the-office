@@ -156,6 +156,12 @@ export function effectiveTheme(settings: Pick<Settings, 'theme' | 'followSystem'
   return settings.followSystem && !systemDark ? 'paper' : settings.theme
 }
 
+// Main passes the theme in the window URL so the first paint is already in it.
+export function bootTheme(search: string): ThemeId {
+  const id = new URLSearchParams(search).get('theme')
+  return id && Object.prototype.hasOwnProperty.call(THEMES, id) ? (id as ThemeId) : 'carbon'
+}
+
 export function applyTheme(root: HTMLElement, id: ThemeId): void {
   const tokens = (THEMES[id] ?? THEMES.carbon).tokens
   for (const name of TOKEN_NAMES) root.style.setProperty(`--${name}`, tokens[name])

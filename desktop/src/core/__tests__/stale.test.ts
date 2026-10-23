@@ -32,6 +32,10 @@ describe('staleReasons', () => {
     expect(staleReasons(rec({ projectExists: false }), ctx())).toEqual([{ kind: 'folder-gone' }])
   })
 
+  it('no recorded folder is not "folder gone"', () => {
+    expect(staleReasons(rec({ projectPath: null, projectExists: false }), ctx())).toEqual([])
+  })
+
   it('each rule can be turned off', () => {
     const all = rec({ lastActivityAt: NOW - 40 * DAY, messageCount: 1, editCount: 0, projectExists: false })
     expect(staleReasons(all, ctx({ rules: { ...RULES, idleDays: null } })).map(r => r.kind)).toEqual(['trivial', 'folder-gone'])

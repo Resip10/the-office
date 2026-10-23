@@ -55,6 +55,21 @@ describe('Settings', () => {
     expect(screen.getByText(/claude --resume/)).toBeInTheDocument()
   })
 
+  it('terminal preview reflects whether Windows Terminal is installed', () => {
+    mockBridge({ hasWt: false })
+    const { unmount } = render(<Settings />)
+    fireEvent.click(screen.getByRole('button', { name: 'Terminal' }))
+    expect(screen.getByText(/^cmd\.exe/)).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Windows Terminal (not installed)' })).toBeInTheDocument()
+    unmount()
+
+    mockBridge({ hasWt: true })
+    render(<Settings />)
+    fireEvent.click(screen.getByRole('button', { name: 'Terminal' }))
+    expect(screen.getByText(/^wt\.exe/)).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Windows Terminal' })).toBeInTheDocument()
+  })
+
   it('offers five themes with Carbon as the default', () => {
     render(<Settings />)
     fireEvent.click(screen.getByRole('button', { name: 'Appearance' }))

@@ -9,5 +9,6 @@ export function useAppState() {
     names: payload?.names ?? {},
     archived: payload?.archived ?? [],
     keptAt: payload?.keptAt ?? {},
+    hasWt: payload?.hasWt ?? false,
   }
 }

@@ -47,6 +47,7 @@ export interface SessionsPayload {
   archived: string[]
   keptAt: Record<string, number>
   settings: Settings
+  hasWt: boolean
 }
 
 // What the window should show when it is opened from the popover.
