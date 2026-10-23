@@ -174,35 +174,49 @@ describe('Window', () => {
   })
 })
 
-describe('plan usage', () => {
+describe('stats line', () => {
   const HOUR = 3_600_000
-  const planUsage = {
+  const snapshot = {
+    capturedAt: Date.now(),
     fiveHour: { usedPct: 11, resetsAt: Date.now() + 2 * HOUR + 30 * 60_000 },
     sevenDay: { usedPct: 85, resetsAt: Date.now() + 3 * 24 * HOUR },
-    capturedAt: Date.now(),
+    linesAdded: null, linesRemoved: null, cacheHitPct: null, cacheColdAt: null,
+    effort: null, thinking: null, pr: null, text: null,
   }
+  const busy = { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null }
 
-  it('the popover shows both limits, amber at 80% or more', () => {
-    mockBridge({ records: [rec(A)], planUsage })
+  it('shows the app items, then status line items in their own marked group', () => {
+    mockBridge({ records: [rec(A, { live: busy })], statusline: snapshot, statuslineLinked: true })
     render(<Popover />)
-    const bar = screen.getByLabelText('Plan usage')
-    expect(within(bar).getByText(/^11% · resets 2h \d+m$/)).not.toHaveClass('text-run')
-    expect(within(bar).getByText(/^85% · resets/)).toHaveClass('text-run')
+    const stats = screen.getByLabelText('Stats')
+    expect(within(stats).getByText('1 running')).toBeInTheDocument()
+    const fromStatusline = within(stats).getByRole('group', { name: 'From your Claude Code status line' })
+    expect(within(fromStatusline).getByText(/^11% · resets 2h \d+m$/)).not.toHaveClass('text-run')
+    expect(within(fromStatusline).getByText(/^85% · resets/)).toHaveClass('text-run')
   })
 
-  it('the window header shows them too', () => {
-    mockBridge({ records: [rec(A)], planUsage })
-    render(<Window />)
-    expect(within(screen.getByLabelText('Plan usage')).getByText(/^11%/)).toBeInTheDocument()
+  it('the cog opens Settings on the Stats section', () => {
+    mockBridge({ records: [rec(A)] })
+    render(<Popover />)
+    fireEvent.click(screen.getByRole('button', { name: 'Edit stats' }))
+    expect(window.sessionTray.openSettings).toHaveBeenCalledWith('stats')
   })
 
-  it('old data says how old; not connected shows nothing', () => {
-    mockBridge({ records: [rec(A)], planUsage: { ...planUsage, capturedAt: Date.now() - 2 * HOUR } })
+  it('no status line group until one is connected; old data says how old', () => {
+    mockBridge({ records: [rec(A)], statusline: null })
     const { unmount } = render(<Popover />)
-    expect(screen.getByText('as of 2h ago')).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'From your Claude Code status line' })).toBeNull()
     unmount()
-    mockBridge({ records: [rec(A)], planUsage: null })
+    mockBridge({ records: [rec(A)], statusline: { ...snapshot, capturedAt: Date.now() - 2 * HOUR }, statuslineLinked: true })
     render(<Popover />)
-    expect(screen.queryByLabelText('Plan usage')).toBeNull()
+    expect(screen.getByText('as of 2h ago')).toBeInTheDocument()
+  })
+
+  it('the window header shows the stats line', () => {
+    mockBridge({ records: [rec(A, { costUSD: 2.5, lastActivityAt: Date.now() })], statusline: snapshot, statuslineLinked: true })
+    render(<Window />)
+    const stats = screen.getByLabelText('Stats')
+    expect(within(stats).getByText('≈ $2.50 this week')).toBeInTheDocument()
+    expect(within(stats).getByText(/^11%/)).toBeInTheDocument()
   })
 })

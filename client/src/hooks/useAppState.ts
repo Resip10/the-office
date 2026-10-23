@@ -10,6 +10,8 @@ export function useAppState() {
     archived: payload?.archived ?? [],
     keptAt: payload?.keptAt ?? {},
     hasWt: payload?.hasWt ?? false,
-    planUsage: payload?.planUsage ?? null,
+    statusline: payload?.statusline ?? null,
+    statuslineLinked: payload?.statuslineLinked ?? false,
+    canLinkStatusline: payload?.canLinkStatusline ?? false,
   }
 }

@@ -1,5 +1,5 @@
 import { readFile, rename, writeFile } from 'fs/promises'
-import { DEFAULT_SETTINGS, NOTIFY_AFTER_MIN, type AppState, type NotifyAfterMin, type Settings } from './types'
+import { APP_STATS, DEFAULT_SETTINGS, NOTIFY_AFTER_MIN, STATUSLINE_STATS, type AppState, type NotifyAfterMin, type Settings, type StatId, type StatusLink } from './types'
 
 type Rec = Record<string, unknown>
 
@@ -10,6 +10,19 @@ const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T)
 const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback)
 const threshold = (v: unknown, fallback: number | null) =>
   v === null ? null : Number.isInteger(v) && (v as number) > 0 ? (v as number) : fallback
+
+const STAT_IDS: readonly string[] = [...APP_STATS, ...STATUSLINE_STATS]
+
+function statIds(v: unknown, fallback: StatId[]): StatId[] {
+  if (!Array.isArray(v)) return fallback
+  return v.filter((x, i): x is StatId => typeof x === 'string' && STAT_IDS.includes(x) && v.indexOf(x) === i)
+}
+
+function statusLink(v: unknown): StatusLink | null {
+  if (!isRec(v) || typeof v.command !== 'string') return null
+  if (v.original !== null && !isRec(v.original)) return null
+  return { original: v.original as StatusLink['original'], command: v.command }
+}
 
 function record<T>(v: unknown, valid: (x: unknown) => x is T): Record<string, T> {
   if (!isRec(v)) return {}
@@ -30,6 +43,7 @@ export function settingsFrom(v: unknown): Settings {
     terminal: oneOf(s.terminal, ['auto', 'wt', 'powershell', 'terminal'], d.terminal),
     launchAtLogin: bool(s.launchAtLogin, d.launchAtLogin),
     notify: bool(s.notify, d.notify),
+    stats: statIds(s.stats, d.stats),
     notifyAfterMin: NOTIFY_AFTER_MIN.includes(s.notifyAfterMin as NotifyAfterMin) ? s.notifyAfterMin as NotifyAfterMin : d.notifyAfterMin,
     stale: {
       idleDays: threshold(stale.idleDays, d.stale.idleDays),
@@ -53,6 +67,7 @@ export async function loadAppState(path: string): Promise<AppState> {
     archived: strings(obj.archived),
     keptAt: record(obj.keptAt, (x): x is number => typeof x === 'number' && Number.isFinite(x)),
     notifyTipDone: bool(obj.notifyTipDone, false),
+    statusLink: statusLink(obj.statusLink),
     settings: settingsFrom(obj.settings),
   }
 }

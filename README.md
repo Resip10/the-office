@@ -9,7 +9,8 @@
 - **All sessions, one list.** Every Claude Code transcript in `~/.claude/projects`, from the CLI, IDE extensions and the desktop app, grouped into Running, Pinned and Recent.
 - **Live status without setup.** Running, idle and waiting sessions come from Claude Code's own `~/.claude/sessions` files. No hooks, no server, no settings changes.
 - **Waiting for input.** A session that needs you shows why ("waiting · input needed"), sorts to the top, and puts a dot on the tray icon (a count on macOS). Optional silent notifications after 1, 5, 15 or 30 minutes of waiting; off by default.
-- **Plan usage and context.** Running rows show how full their context is ("25% ctx"). Add one line to your status line script (Settings → General → Plan usage) and the popover, window and tray also show your 5-hour and weekly limits with their reset times ("5h 11% · resets 2h 14m"). Claude Code only passes those limits to the status line, so the line saves them to `~/.session-tray/statusline.json`; Session Tray only reads that file.
+- **Stats line and context.** Running rows show how full their context is ("25% ctx"). A stats line in the popover and window shows what you pick in Settings → Stats: running and waiting counts, ≈ cost today or this week, sessions today.
+- **Data from your Claude Code status line (optional).** Claude Code passes some things only to its status line: plan limits ("5h 11% · resets 2h 14m"), lines changed, prompt cache, effort, PR review state, and whatever your status line prints. Settings → Stats → **Connect status line** makes this available with one click; it's shown in its own group marked `>_`. Connect changes one setting in `~/.claude/settings.json`: your status line command also saves a copy of its data into Session Tray's folder. It keeps working and looks the same, nothing is sent anywhere, and **Disconnect** restores the original. On Windows it needs Git Bash.
 - **Useful rows.** Title (your rename, your `/rename`, Claude's auto-title, or the first prompt), project, git branch, last activity, message count.
 - **Session details.** In the window you get:
   - messages, context used, ≈ API cost and active time
@@ -85,16 +86,17 @@ Quit the installed Session Tray before `npm run dev`: only one copy can run at a
                                  React renderer: tray popover, window, settings
 ```
 
-The app only reads `~/.claude`. Its own data lives in the app's user-data folder and can be deleted at any time:
-- `app-state.json`: pins, names, archive and settings
+The app only reads `~/.claude`, except on an explicit click: removing the old The Office hooks, and Connect/Disconnect of the status line. Its own data lives in the app's user-data folder and can be deleted at any time:
+- `app-state.json`: pins, names, archive, settings, and the original status line while connected
 - `index-v2.json`: the scan cache
 - `handoffs/`: Continue prompt files
+- `statusline/`: what the connected status line last received and printed
 
 ## Roadmap
 
 - **v1 (done):** list, metadata, search and filters, copy and resume, pins
 - **P1 (done):** redesign and themes, handoff summary, Continue in…, stale-session cleanup and archive, message peek, rename, settings
-- **P2 (in progress):** waiting-for-input badge and notifications, plan usage and context (done); next: git hints, tags and notes
+- **P2 (in progress):** waiting-for-input badge and notifications, stats line with status line data and context % (done); next: git hints, tags and notes
 - **Ideas:** active subagents per session; a read-only snapshot of installed MCP servers and plugins
 - **Later:** Codex sessions, LLM summaries, global hotkey, full-text search
 

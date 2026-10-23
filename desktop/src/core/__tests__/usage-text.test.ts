@@ -1,15 +1,19 @@
-import { resetText, usageParts, usageStale, usageTooltip } from '../usage-text'
-import type { PlanUsage } from '../types'
+import { resetText, statuslineParts, usageParts, usageStale, usageTooltip } from '../usage-text'
+import type { StatuslineSnapshot } from '../types'
 
 const MIN = 60_000
 const HOUR = 60 * MIN
 const NOW = new Date(2026, 9, 23, 12, 0).getTime() // Fri Oct 23 2026, 12:00 local
 const SAT_14 = new Date(2026, 9, 24, 14, 0).getTime()
 
-const usage = (over: Partial<PlanUsage> = {}): PlanUsage => ({
+const usage = (over: Partial<StatuslineSnapshot> = {}): StatuslineSnapshot => ({
   fiveHour: { usedPct: 11, resetsAt: NOW + 2 * HOUR + 14 * MIN },
   sevenDay: { usedPct: 47.5, resetsAt: SAT_14 },
   capturedAt: NOW,
+  linesAdded: 4104, linesRemoved: 227, cacheHitPct: 97, cacheColdAt: NOW + 23 * MIN,
+  effort: 'medium', thinking: true,
+  pr: { number: 13, url: 'https://github.com/a/b/pull/13', reviewState: 'pending' },
+  text: 'app on main',
   ...over,
 })
 
@@ -57,5 +61,29 @@ describe('usageTooltip', () => {
   it('short form for the tray', () => {
     expect(usageTooltip(usage(), NOW)).toBe('5h 11% · wk 48%')
     expect(usageTooltip(usage({ fiveHour: null, sevenDay: null }), NOW)).toBe('')
+  })
+})
+
+describe('statuslineParts', () => {
+  it('follows the chosen items and their order', () => {
+    expect(statuslineParts(usage(), ['text', 'lines', 'cache', 'effort', 'pr'], NOW)).toEqual([
+      { label: null, text: 'app on main', warn: false },
+      { label: null, text: '+4104 −227', warn: false },
+      { label: 'cache', text: '97% · cold in 23m', warn: false },
+      { label: 'effort', text: 'medium · thinking', warn: false },
+      { label: 'PR', text: '#13 · pending', warn: false },
+    ])
+  })
+
+  it('limits expand to both windows; app items are skipped', () => {
+    expect(statuslineParts(usage(), ['running', 'limits'], NOW).map(p => p.label)).toEqual(['5h', 'wk'])
+  })
+
+  it('missing values drop their item; a cold cache shows only the hit rate', () => {
+    const s = usage({ linesAdded: null, pr: null, text: null, thinking: false, cacheColdAt: NOW - MIN })
+    expect(statuslineParts(s, ['lines', 'pr', 'text', 'effort', 'cache'], NOW)).toEqual([
+      { label: 'effort', text: 'medium', warn: false },
+      { label: 'cache', text: '97%', warn: false },
+    ])
   })
 })

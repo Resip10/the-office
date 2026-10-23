@@ -4,17 +4,12 @@ import { DetailPanel } from '../components/DetailPanel'
 import { FilterBar } from '../components/FilterBar'
 import { LegacyHooksBanner } from '../components/LegacyHooksBanner'
 import { NotifyTip } from '../components/NotifyTip'
-import { PlanUsageBar } from '../components/PlanUsageBar'
+import { StatsLine } from '../components/StatsLine'
 import { SessionList } from '../components/SessionList'
 import { Cleanup } from './Cleanup'
 
-const WEEK_MS = 7 * 86_400_000
-
 export function Window() {
   const s = useListState()
-  const weekCost = s.records
-    .filter(r => r.costUSD !== null && r.lastActivityAt >= s.now - WEEK_MS)
-    .reduce((sum, r) => sum + (r.costUSD as number), 0)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -35,9 +30,7 @@ export function Window() {
         >
           Clean up{s.stale.length > 0 ? ` · ${s.stale.length}` : ''}
         </button>
-        <span className="ml-auto" />
-        {s.planUsage && <PlanUsageBar usage={s.planUsage} now={s.now} />}
-        {weekCost > 0 && <span className="font-mono text-[11px] text-muted">≈ ${weekCost.toFixed(2)} this week</span>}
+        <StatsLine records={s.records} items={s.settings.stats} statusline={s.statusline} now={s.now} className="ml-auto justify-end" />
         <button
           aria-label="Settings"
           title="Settings"

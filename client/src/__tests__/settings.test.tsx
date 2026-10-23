@@ -13,7 +13,7 @@ describe('Settings', () => {
   it('has a sidebar with the P1 sections', () => {
     render(<Settings />)
     const nav = screen.getByRole('navigation', { name: 'Settings sections' })
-    for (const name of ['General', 'Appearance', 'Terminal', 'Cleanup']) {
+    for (const name of ['General', 'Appearance', 'Stats', 'Terminal', 'Cleanup']) {
       expect(within(nav).getByRole('button', { name })).toBeEnabled()
     }
   })
@@ -45,17 +45,45 @@ describe('Settings', () => {
     expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ notifyAfterMin: 15 })
   })
 
-  it('Plan usage: not connected, with a line to copy into the status line', () => {
+  it('Stats lists both groups; toggling an item saves the list', () => {
     render(<Settings />)
-    expect(screen.getByText('Not connected')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Copy line' }))
-    expect(window.sessionTray.copyText).toHaveBeenCalledWith(expect.stringContaining('~/.session-tray/statusline.json'))
+    fireEvent.click(screen.getByRole('button', { name: 'Stats' }))
+    const sw = screen.getByRole('switch', { name: '≈ Cost today' })
+    expect(sw).toHaveAttribute('aria-checked', 'false')
+    fireEvent.click(sw)
+    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ stats: ['running', 'costWeek', 'limits', 'costToday'] })
+    fireEvent.click(screen.getByRole('switch', { name: 'Running and waiting' }))
+    expect(window.sessionTray.setSettings).toHaveBeenLastCalledWith({ stats: ['costWeek', 'limits'] })
   })
 
-  it('Plan usage: connected shows when it last updated', () => {
-    mockBridge({ planUsage: { fiveHour: null, sevenDay: null, capturedAt: Date.now() - 5 * 60_000 } })
+  it('Stats: not connected explains Connect in plain words, greys status line items, and links the guide', async () => {
     render(<Settings />)
-    expect(screen.getByText('Updated 5m ago')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Stats' }))
+    expect(screen.getByText(/your status line keeps working and looks the same/i)).toBeInTheDocument()
+    expect(screen.getByText(/nothing is sent anywhere/i)).toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: 'Plan limits' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Status line guide' }))
+    expect(window.sessionTray.openUrl).toHaveBeenCalledWith('https://code.claude.com/docs/en/statusline')
+    fireEvent.click(screen.getByRole('button', { name: 'Connect status line' }))
+    expect(window.sessionTray.connectStatusLine).toHaveBeenCalled()
+  })
+
+  it('Stats: connected shows when it last updated and offers Disconnect', () => {
+    mockBridge({ statuslineLinked: true, statusline: { capturedAt: Date.now() - 5 * 60_000, fiveHour: null, sevenDay: null, linesAdded: null, linesRemoved: null, cacheHitPct: null, cacheColdAt: null, effort: null, thinking: null, pr: null, text: null } })
+    render(<Settings />)
+    fireEvent.click(screen.getByRole('button', { name: 'Stats' }))
+    expect(screen.getByText('Connected · updated 5m ago')).toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: 'Plan limits' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }))
+    expect(window.sessionTray.disconnectStatusLine).toHaveBeenCalled()
+  })
+
+  it('Stats: without Git Bash on Windows, Connect is unavailable and says why', () => {
+    mockBridge({ canLinkStatusline: false })
+    render(<Settings />)
+    fireEvent.click(screen.getByRole('button', { name: 'Stats' }))
+    expect(screen.getByRole('button', { name: 'Connect status line' })).toBeDisabled()
+    expect(screen.getByText(/needs Git Bash/i)).toBeInTheDocument()
   })
 
   it('pulse switch turns the pulse off', () => {

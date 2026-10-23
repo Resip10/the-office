@@ -23,7 +23,14 @@ contextBridge.exposeInMainWorld('sessionTray', {
   },
   removeLegacyHooks: () => ipcRenderer.send('app:remove-legacy-hooks'),
   setSettings: (patch: Partial<Settings>) => ipcRenderer.send('settings:set', patch),
-  openSettings: () => ipcRenderer.send('app:open-settings'),
+  openSettings: (section?: 'stats') => ipcRenderer.send('app:open-settings', section),
+  onSettingsSection(cb: (section: 'stats') => void): () => void {
+    const handler = (_e: IpcRendererEvent, section: 'stats') => cb(section)
+    ipcRenderer.on('settings:section', handler)
+    return () => { ipcRenderer.removeListener('settings:section', handler) }
+  },
+  connectStatusLine: (): Promise<{ ok: boolean; reason?: string }> => ipcRenderer.invoke('statusline:connect'),
+  disconnectStatusLine: (): Promise<string> => ipcRenderer.invoke('statusline:disconnect'),
   details: (id: string): Promise<SessionDetails | null> => ipcRenderer.invoke('session:details', id),
   copyText: (text: string) => ipcRenderer.send('session:copy-text', text),
   rename: (id: string, name: string | null) => ipcRenderer.send('session:rename', id, name),
