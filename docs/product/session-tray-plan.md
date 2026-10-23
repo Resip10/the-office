@@ -103,7 +103,7 @@ Every session shown in the app has these fields. Unknown values are shown as "�
 13. **Git awareness**: branch merged? worktree deleted? uncommitted changes? Shown as hints on stale detection.
 14. **Exact migration** via an external migration tool when installed; the button is hidden otherwise.
 15. Tags and personal notes.
-16. Token and context usage per session, plus totals. *(Done in 0.3.3: context % on running rows; an overview line with app totals; and, after a one-click Connect of the Claude Code status line, plan limits and other status line data in a marked group.)*
+16. Token and context usage per session, plus totals. *(Done in 0.3.3: context % on running rows; an overview line with app totals (running/waiting, ≈ cost today or this week, sessions today); and, after a one-click Connect of the Claude Code status line, account-wide plan limits in the overview line plus each session's own status line text, effort and thinking in its details, all marked `>_`. Token totals across sessions are left for later.)*
 
 ### P3 — Later / optional
 17. LLM-polished summaries (external CLI or local model), run on the extract rather than the raw transcript and cached.
