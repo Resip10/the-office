@@ -1,5 +1,6 @@
+import { DEFAULT_SETTINGS } from '../../../desktop/src/core/types'
 import type { SessionRecord } from '../../../desktop/src/core/types'
-import { buildSections, projectName, relativeTime, stateOf, type Filters } from '../lib/list'
+import { buildSections, projectName, relativeTime, stateOf, type Filters, staleList } from '../lib/list'
 
 const NOW = new Date(2026, 9, 19, 15, 0, 0).getTime() // local time, Oct 19 2026 15:00
 const MIN = 60_000
@@ -11,7 +12,7 @@ function rec(id: string, over: Partial<SessionRecord> = {}): SessionRecord {
     tool: 'claude', id, filePath: `/p/${id}.jsonl`, title: `Session ${id}`, titleSource: 'ai',
     projectPath: 'C:\\projects\\app', projectExists: true, gitBranch: 'main', entrypoint: 'cli', version: '2.1.302',
     createdAt: NOW - DAY, lastActivityAt: NOW - HOUR, messageCount: 10, fileSize: 1000, contextTokens: null,
-    model: null, costUSD: null, prUrls: [], lastPrompt: null, awaySummary: null, continuedInId: null,
+    model: null, costUSD: null, prUrls: [], lastPrompt: null, awaySummary: null, continuedInId: null, editCount: 0,
     subagentCount: 0, live: null, ...over,
   }
 }
@@ -137,5 +138,39 @@ describe('stateOf', () => {
     expect(stateOf(rec('a', { live: busy }))).toBe('running')
     expect(stateOf(rec('a', { live: idle }))).toBe('idle')
     expect(stateOf(rec('a'))).toBe('ended')
+  })
+})
+
+describe('app names', () => {
+  it('search matches a renamed session by its app name', () => {
+    const named = rec('a', { title: 'My export', titleSource: 'app' })
+    const s = buildSections([named, rec('b')], [], { ...ALL, query: 'my export' }, NOW)
+    expect(ids(s.recent)).toEqual(['a'])
+  })
+})
+
+describe('archive', () => {
+  it('archived sessions leave pinned and recent', () => {
+    const s = buildSections([rec('a'), rec('b')], ['a'], ALL, NOW, new Set(['a', 'b']))
+    expect(s.pinned).toEqual([])
+    expect(s.recent).toEqual([])
+  })
+
+  it('an archived session that is live again shows in Running', () => {
+    const s = buildSections([rec('a', { live: busy })], [], ALL, NOW, new Set(['a']))
+    expect(ids(s.running)).toEqual(['a'])
+  })
+})
+
+describe('staleList', () => {
+  const state = { pins: [] as string[], archived: [] as string[], keptAt: {}, settings: DEFAULT_SETTINGS }
+
+  it('lists stale sessions with their reasons, skipping pinned ones', () => {
+    const old = rec('old', { lastActivityAt: NOW - 40 * DAY })
+    const pinned = rec('pin', { lastActivityAt: NOW - 40 * DAY })
+    const fresh = rec('fresh')
+    const list = staleList([old, pinned, fresh], { ...state, pins: ['pin'] }, NOW)
+    expect(list.map(x => x.record.id)).toEqual(['old'])
+    expect(list[0].reasons).toEqual([{ kind: 'idle', days: 40 }])
   })
 })

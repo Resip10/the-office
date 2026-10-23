@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { SessionsPayload } from './core/types'
+import type { OpenWindowOptions, SessionDetails, SessionsPayload, Settings } from './core/types'
 
 contextBridge.exposeInMainWorld('sessionTray', {
   platform: process.platform,
@@ -15,6 +15,22 @@ contextBridge.exposeInMainWorld('sessionTray', {
   togglePin: (id: string) => ipcRenderer.send('session:pin', id),
   reveal: (id: string) => ipcRenderer.send('session:reveal', id),
   openUrl: (url: string) => ipcRenderer.send('app:open-url', url),
-  openWindow: () => ipcRenderer.send('app:open-window'),
+  openWindow: (opts?: OpenWindowOptions) => ipcRenderer.send('app:open-window', opts),
+  onOpen(cb: (opts: OpenWindowOptions) => void): () => void {
+    const handler = (_e: IpcRendererEvent, opts: OpenWindowOptions) => cb(opts)
+    ipcRenderer.on('window:open', handler)
+    return () => { ipcRenderer.removeListener('window:open', handler) }
+  },
   removeLegacyHooks: () => ipcRenderer.send('app:remove-legacy-hooks'),
+  setSettings: (patch: Partial<Settings>) => ipcRenderer.send('settings:set', patch),
+  openSettings: () => ipcRenderer.send('app:open-settings'),
+  details: (id: string): Promise<SessionDetails | null> => ipcRenderer.invoke('session:details', id),
+  copyText: (text: string) => ipcRenderer.send('session:copy-text', text),
+  rename: (id: string, name: string | null) => ipcRenderer.send('session:rename', id, name),
+  continueIn: (id: string, opts: { folder: string; prompt: string; target: 'claude' | 'clipboard' }) =>
+    ipcRenderer.send('session:continue', id, opts),
+  pickFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:pick-folder'),
+  archive: (ids: string[]) => ipcRenderer.send('session:archive', ids),
+  restore: (ids: string[]) => ipcRenderer.send('session:restore', ids),
+  keep: (ids: string[]) => ipcRenderer.send('session:keep', ids),
 })

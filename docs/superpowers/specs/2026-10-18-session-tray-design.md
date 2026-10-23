@@ -1,6 +1,6 @@
 # Session Tray — Design Spec
 **Date:** 2026-10-18
-**Status:** v1 implemented and released as v0.2.0 (2026-10-19; plan `docs/superpowers/plans/2026-10-18-session-tray-v1.md`). P1 not started.
+**Status:** v1 implemented and released as v0.2.0 (2026-10-19; plan `docs/superpowers/plans/2026-10-18-session-tray-v1.md`). P1 implemented per `2026-10-22-p1-design.md`.
 **Supersedes:** Phase 4 office view (`2026-05-14-phase4-office-view-design.md`) and the hook-driven observer direction of Phases 1–3.5
 **Product doc:** `docs/product/session-tray-plan.md` (the full product vision; this spec scopes and grounds it)
 

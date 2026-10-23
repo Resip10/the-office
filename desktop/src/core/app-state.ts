@@ -1,24 +1,101 @@
 import { readFile, rename, writeFile } from 'fs/promises'
+import { DEFAULT_SETTINGS, type AppState, type Settings } from './types'
 
-export interface AppState {
-  pins: string[]
+type Rec = Record<string, unknown>
+
+const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v)
+const strings = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
+const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T =>
+  options.includes(v as T) ? (v as T) : fallback
+const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback)
+const threshold = (v: unknown, fallback: number | null) =>
+  v === null ? null : Number.isInteger(v) && (v as number) > 0 ? (v as number) : fallback
+
+function record<T>(v: unknown, valid: (x: unknown) => x is T): Record<string, T> {
+  if (!isRec(v)) return {}
+  return Object.fromEntries(Object.entries(v).filter(([, x]) => valid(x))) as Record<string, T>
 }
 
-export async function loadAppState(path: string): Promise<AppState> {
-  try {
-    const obj = JSON.parse(await readFile(path, 'utf8')) as { pins?: unknown }
-    const pins = Array.isArray(obj?.pins) ? obj.pins.filter((p): p is string => typeof p === 'string') : []
-    return { pins }
-  } catch {
-    return { pins: [] }
+// Unknown or invalid fields fall back to the defaults, field by field.
+export function settingsFrom(v: unknown): Settings {
+  const s = isRec(v) ? v : {}
+  const d = DEFAULT_SETTINGS
+  const stale = isRec(s.stale) ? s.stale : {}
+  return {
+    theme: oneOf(s.theme, ['carbon', 'graphite', 'midnight', 'ink', 'paper'], d.theme),
+    followSystem: bool(s.followSystem, d.followSystem),
+    density: oneOf(s.density, ['comfortable', 'compact'], d.density),
+    pulse: bool(s.pulse, d.pulse),
+    peekTools: bool(s.peekTools, d.peekTools),
+    terminal: oneOf(s.terminal, ['auto', 'wt', 'powershell', 'terminal'], d.terminal),
+    launchAtLogin: bool(s.launchAtLogin, d.launchAtLogin),
+    stale: {
+      idleDays: threshold(stale.idleDays, d.stale.idleDays),
+      trivialMessages: threshold(stale.trivialMessages, d.stale.trivialMessages),
+      missingFolder: bool(stale.missingFolder, d.stale.missingFolder),
+    },
   }
 }
 
-export async function togglePin(path: string, id: string): Promise<AppState> {
-  const { pins } = await loadAppState(path)
-  const state: AppState = { pins: pins.includes(id) ? pins.filter(p => p !== id) : [...pins, id] }
-  const tmp = `${path}.tmp`
-  await writeFile(tmp, JSON.stringify(state, null, 2))
-  await rename(tmp, path)
-  return state
+export async function loadAppState(path: string): Promise<AppState> {
+  let obj: Rec = {}
+  try {
+    const parsed: unknown = JSON.parse(await readFile(path, 'utf8'))
+    if (isRec(parsed)) obj = parsed
+  } catch {
+    // missing or corrupt: defaults
+  }
+  return {
+    pins: strings(obj.pins),
+    names: record(obj.names, (x): x is string => typeof x === 'string'),
+    archived: strings(obj.archived),
+    keptAt: record(obj.keptAt, (x): x is number => typeof x === 'number' && Number.isFinite(x)),
+    settings: settingsFrom(obj.settings),
+  }
+}
+
+// Serialise updates per file so two quick changes can't overwrite each other.
+const queues = new Map<string, Promise<unknown>>()
+
+export function updateAppState(path: string, fn: (s: AppState) => AppState): Promise<AppState> {
+  const run = (queues.get(path) ?? Promise.resolve()).catch(() => {}).then(async () => {
+    const next = fn(await loadAppState(path))
+    const tmp = `${path}.tmp`
+    await writeFile(tmp, JSON.stringify(next, null, 2))
+    await rename(tmp, path)
+    return next
+  })
+  queues.set(path, run)
+  return run
+}
+
+export function togglePin(path: string, id: string): Promise<AppState> {
+  return updateAppState(path, s => ({
+    ...s,
+    pins: s.pins.includes(id) ? s.pins.filter(p => p !== id) : [...s.pins, id],
+  }))
+}
+
+const NAME_MAX = 200
+
+// App-owned display name; empty or null removes it.
+export function setName(state: AppState, id: string, name: string | null): AppState {
+  const names = { ...state.names }
+  const clean = (name ?? '').trim().slice(0, NAME_MAX)
+  if (clean) names[id] = clean
+  else delete names[id]
+  return { ...state, names }
+}
+
+export function archive(state: AppState, ids: string[]): AppState {
+  return { ...state, archived: [...state.archived, ...ids.filter((id, i) => !state.archived.includes(id) && ids.indexOf(id) === i)] }
+}
+
+export function restore(state: AppState, ids: string[]): AppState {
+  return { ...state, archived: state.archived.filter(id => !ids.includes(id)) }
+}
+
+// Marks sessions as reviewed in Cleanup; see stale.ts for how long that holds.
+export function keep(state: AppState, ids: string[], now: number): AppState {
+  return { ...state, keptAt: { ...state.keptAt, ...Object.fromEntries(ids.map(id => [id, now])) } }
 }

@@ -10,20 +10,22 @@ interface Props {
   totalCount: number | null // null while the first scan is running
   selectedId: string | null
   onSelect: (id: string) => void
-  wide?: boolean
+  variant?: 'popover' | 'window'
+  pulse?: boolean
+  compact?: boolean
 }
 
 const TITLES: Array<[keyof Sections, string]> = [['running', 'Running'], ['pinned', 'Pinned'], ['recent', 'Recent']]
 
-export function SessionList({ sections, pins, listedIds, now, totalCount, selectedId, onSelect, wide }: Props) {
+export function SessionList({ sections, pins, listedIds, now, totalCount, selectedId, onSelect, variant, pulse, compact }: Props) {
   if (totalCount === null) {
-    return <p className="p-4 text-sm text-text-muted">Scanning…</p>
+    return <p className="p-4 text-sm text-muted">Scanning…</p>
   }
   if (totalCount === 0) {
-    return <p className="p-4 text-sm text-text-muted">No Claude Code sessions found in ~/.claude/projects</p>
+    return <p className="p-4 text-sm text-muted">No Claude Code sessions found in ~/.claude/projects</p>
   }
   if (TITLES.every(([key]) => sections[key].length === 0)) {
-    return <p className="p-4 text-sm text-text-muted">No sessions match these filters.</p>
+    return <p className="p-4 text-sm text-muted">No sessions match these filters.</p>
   }
 
   const row = (r: SessionRecord) => (
@@ -35,16 +37,18 @@ export function SessionList({ sections, pins, listedIds, now, totalCount, select
       continuedListed={r.continuedInId !== null && listedIds.has(r.continuedInId)}
       selected={r.id === selectedId}
       onSelect={onSelect}
-      wide={wide}
+      variant={variant}
+      pulse={pulse}
+      compact={compact}
     />
   )
 
   return (
-    <div>
+    <div className="flex flex-col pb-1.5">
       {TITLES.filter(([key]) => sections[key].length > 0).map(([key, title]) => (
-        <section key={key}>
-          <h2 className="sticky top-0 z-10 px-3 py-1 bg-canvas border-b border-border text-[11px] uppercase tracking-wider text-text-muted">
-            {title} <span className="opacity-60">{sections[key].length}</span>
+        <section key={key} className="flex flex-col gap-0.5">
+          <h2 className="sticky top-0 z-10 flex justify-between px-[18px] pt-3 pb-1 bg-inherit font-mono font-normal text-[10.5px] uppercase tracking-[.08em] text-muted">
+            {title}<span className="tabular-nums">{sections[key].length}</span>
           </h2>
           {sections[key].map(row)}
         </section>

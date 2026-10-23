@@ -2,7 +2,7 @@ import { cpSync, mkdirSync, mkdtempSync, rmSync, statSync, utimesSync, writeFile
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { parseTranscript } from '../claude-transcript'
-import { scanClaude, attachLive, loadCache, saveCache, type IndexCache } from '../scanner'
+import { scanClaude, applyNames, attachLive, loadCache, saveCache, type IndexCache } from '../scanner'
 import type { LiveInfo, SessionRecord } from '../types'
 
 const FIXTURES = join(__dirname, 'fixtures', 'projects')
@@ -133,27 +133,39 @@ describe('attachLive', () => {
 describe('loadCache / saveCache', () => {
   it('round-trips and leaves no temp file', async () => {
     const { cache } = await scanClaude({ projectsDir, cache: null })
-    const path = join(root, 'index-v1.json')
+    const path = join(root, 'index-v2.json')
     await saveCache(path, cache)
     await saveCache(path, cache)
     expect(await loadCache(path)).toEqual(cache)
     expect(() => statSync(`${path}.tmp`)).toThrow()
   })
 
-  it('loadCache returns null for version 2 or garbage', async () => {
-    const v2 = join(root, 'v2.json')
-    writeFileSync(v2, JSON.stringify({ version: 2, entries: {} }))
+  it('loadCache returns null for version 1 or garbage', async () => {
+    const v1 = join(root, 'v1.json')
+    writeFileSync(v1, JSON.stringify({ version: 1, entries: {} }))
     const junk = join(root, 'junk.json')
     writeFileSync(junk, '{oops')
-    expect(await loadCache(v2)).toBeNull()
+    expect(await loadCache(v1)).toBeNull()
     expect(await loadCache(junk)).toBeNull()
     expect(await loadCache(join(root, 'missing.json'))).toBeNull()
   })
 
   it('accepts a valid empty cache', async () => {
     const path = join(root, 'empty.json')
-    const empty: IndexCache = { version: 1, entries: {} }
+    const empty: IndexCache = { version: 2, entries: {} }
     writeFileSync(path, JSON.stringify(empty))
     expect(await loadCache(path)).toEqual(empty)
+  })
+})
+
+describe('applyNames', () => {
+  it('overrides any title with the app name and marks it app', async () => {
+    const { records } = await scanClaude({ projectsDir, cache: null })
+    const target = records.find(r => r.titleSource === 'custom')!
+    const out = applyNames(records, { [target.id]: 'Renamed' })
+    const renamed = out.find(r => r.id === target.id)!
+    expect(renamed.title).toBe('Renamed')
+    expect(renamed.titleSource).toBe('app')
+    expect(out.filter(r => r.id !== target.id)).toEqual(records.filter(r => r.id !== target.id))
   })
 })

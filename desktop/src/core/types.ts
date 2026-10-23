@@ -17,6 +17,8 @@ export interface TranscriptMeta {
   lastPrompt: string | null
   awaySummary: string | null
   continuedInId: string | null
+  // Edit/Write/MultiEdit/NotebookEdit tool uses in the main thread.
+  editCount: number
 }
 
 export interface LiveInfo {
@@ -26,7 +28,8 @@ export interface LiveInfo {
   updatedAt: number
 }
 
-export interface SessionRecord extends Omit<TranscriptMeta, 'sessionId' | 'lastTimestamp'> {
+export interface SessionRecord extends Omit<TranscriptMeta, 'sessionId' | 'lastTimestamp' | 'titleSource'> {
+  titleSource: TranscriptMeta['titleSource'] | 'app'
   tool: 'claude'
   filePath: string
   projectExists: boolean
@@ -40,4 +43,75 @@ export interface SessionsPayload {
   records: SessionRecord[]
   pins: string[]
   legacyHooks: boolean
+  names: Record<string, string>
+  archived: string[]
+  keptAt: Record<string, number>
+  settings: Settings
+}
+
+// What the window should show when it is opened from the popover.
+export interface OpenWindowOptions {
+  id?: string
+  view?: 'cleanup'
+}
+
+export type ThemeId = 'carbon' | 'graphite' | 'midnight' | 'ink' | 'paper'
+export type TerminalChoice = 'auto' | 'wt' | 'powershell' | 'terminal'
+
+export interface Settings {
+  theme: ThemeId
+  followSystem: boolean
+  density: 'comfortable' | 'compact'
+  pulse: boolean
+  // Message peek also lists tool calls.
+  peekTools: boolean
+  terminal: TerminalChoice
+  launchAtLogin: boolean
+  // A threshold of null turns that rule off.
+  stale: { idleDays: number | null; trivialMessages: number | null; missingFolder: boolean }
+}
+
+export const DEFAULT_SETTINGS: Settings = {
+  theme: 'carbon',
+  followSystem: false,
+  density: 'comfortable',
+  pulse: true,
+  peekTools: false,
+  terminal: 'auto',
+  launchAtLogin: false,
+  stale: { idleDays: 30, trivialMessages: 3, missingFolder: true },
+}
+
+// App-owned state in userData/app-state.json.
+export interface AppState {
+  pins: string[]
+  names: Record<string, string>
+  archived: string[]
+  keptAt: Record<string, number>
+  settings: Settings
+}
+
+export interface Handoff {
+  source: 'compact' | 'recap' | 'extract'
+  summary: string | null
+  goal: string | null
+  lastAsk: string | null
+  files: string[]
+  branch: string | null
+  lastAnswer: string | null
+}
+
+export interface PeekItem {
+  role: 'user' | 'assistant' | 'tool'
+  text: string
+  ts: number | null
+}
+
+// Loaded on demand for one session (detail view, Continue in…).
+export interface SessionDetails {
+  handoff: Handoff
+  peek: PeekItem[]
+  // Last messages between the user and Claude only, without tool calls.
+  conversation: PeekItem[]
+  messageTotal: number
 }

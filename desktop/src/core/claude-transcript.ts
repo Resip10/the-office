@@ -4,7 +4,8 @@ import { createInterface } from 'readline'
 import type { TranscriptMeta } from './types'
 
 const TITLE_MAX = 120
-const NON_PROMPT_PREFIXES = ['<command-', '<local-command-', '<system-reminder>']
+export const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
+export const NON_PROMPT_PREFIXES = ['<command-', '<local-command-', '<system-reminder>']
 
 type Rec = Record<string, unknown>
 
@@ -43,6 +44,7 @@ export async function parseTranscript(filePath: string): Promise<TranscriptMeta>
     lastPrompt: null,
     awaySummary: null,
     continuedInId: null,
+    editCount: 0,
   }
   let customTitle: string | null = null
   let agentName: string | null = null
@@ -98,6 +100,12 @@ export async function parseTranscript(filePath: string): Promise<TranscriptMeta>
           if (obj.isCompactSummary !== true) firstPrompt ??= promptText(msg.content)
         } else {
           meta.model = str(msg.model) ?? meta.model
+          if (Array.isArray(msg.content)) {
+            for (const block of msg.content as unknown[]) {
+              const b = block as Rec | null
+              if (b?.type === 'tool_use' && EDIT_TOOLS.has(b.name as string)) meta.editCount++
+            }
+          }
           const usage = msg.usage as Rec | undefined
           if (usage && typeof usage.input_tokens === 'number') {
             meta.contextTokens = usage.input_tokens +

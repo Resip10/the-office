@@ -1,6 +1,7 @@
 import { vi } from 'vitest'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import type { SessionRecord, SessionsPayload } from '../../../desktop/src/core/types'
+import { mockApi, makePayload } from './bridge'
 import { Popover } from '../views/Popover'
 import { Window } from '../views/Window'
 
@@ -13,17 +14,13 @@ function rec(id: string, over: Partial<SessionRecord> = {}): SessionRecord {
     tool: 'claude', id, filePath: `C:\\x\\${id}.jsonl`, title: `Session ${id.slice(0, 4)}`, titleSource: 'ai',
     projectPath: 'C:\\projects\\app', projectExists: true, gitBranch: 'main', entrypoint: 'cli', version: '2.1.302',
     createdAt: NOW - 7_200_000, lastActivityAt: NOW - 3_600_000, messageCount: 5, fileSize: 2048, contextTokens: null,
-    model: null, costUSD: null, prUrls: [], lastPrompt: null, awaySummary: null, continuedInId: null,
+    model: null, costUSD: null, prUrls: [], lastPrompt: null, awaySummary: null, continuedInId: null, editCount: 0,
     subagentCount: 0, live: null, ...over,
   }
 }
 
-function mockBridge(payload: SessionsPayload) {
-  window.sessionTray = {
-    onUpdate: vi.fn(cb => { cb(payload); return () => {} }),
-    resume: vi.fn(), copy: vi.fn(), togglePin: vi.fn(), reveal: vi.fn(),
-    openUrl: vi.fn(), openWindow: vi.fn(), removeLegacyHooks: vi.fn(), platform: 'win32' as const,
-  }
+function mockBridge(payload: Partial<SessionsPayload>) {
+  window.sessionTray = mockApi(makePayload(payload))
 }
 
 describe('Popover', () => {
@@ -69,7 +66,54 @@ describe('Popover', () => {
   })
 })
 
+describe('Popover footer and headers', () => {
+  it('section headers show their count', () => {
+    mockBridge({ records: [rec(A, { live: { pid: 1, status: 'busy', name: null, updatedAt: NOW } })], pins: [], legacyHooks: false })
+    render(<Popover />)
+    const header = screen.getByText('Running', { selector: 'h2' })
+    expect(within(header).getByText('1')).toBeInTheDocument()
+  })
+
+  it('footer shows totals and opens the window', () => {
+    mockBridge({ records: [rec(A), rec(B)], pins: [], legacyHooks: false })
+    render(<Popover />)
+    expect(screen.getByText('2 sessions · 1 project')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Open window' }))
+    expect(window.sessionTray.openWindow).toHaveBeenCalledWith()
+  })
+})
+
+describe('Popover stale count', () => {
+  it('shows N stale and opens the Cleanup view', () => {
+    mockBridge({ records: [rec(A, { lastActivityAt: NOW - 40 * 86_400_000 }), rec(B, { lastActivityAt: NOW - 50 * 86_400_000 })] })
+    render(<Popover />)
+    fireEvent.click(screen.getByRole('button', { name: '2 stale' }))
+    expect(window.sessionTray.openWindow).toHaveBeenCalledWith({ view: 'cleanup' })
+  })
+
+  it('archived sessions are left out of the footer count', () => {
+    mockBridge({ records: [rec(A), rec(B)], archived: [B] })
+    render(<Popover />)
+    expect(screen.getByText('1 session · 1 project')).toBeInTheDocument()
+  })
+
+  it('hides the stale count when nothing is stale', () => {
+    mockBridge({ records: [rec(A)] })
+    render(<Popover />)
+    expect(screen.queryByRole('button', { name: /stale/ })).toBeNull()
+  })
+})
+
 describe('Window', () => {
+  it('selects the session main asks it to open', () => {
+    let opened: ((o: { id?: string }) => void) | undefined
+    mockBridge({ records: [rec(A, { title: 'Peeked' })], pins: [], legacyHooks: false })
+    window.sessionTray.onOpen = vi.fn(cb => { opened = cb; return () => {} })
+    render(<Window />)
+    act(() => opened?.({ id: A }))
+    expect(screen.getByRole('heading', { name: 'Peeked' })).toBeInTheDocument()
+  })
+
   it('selecting a row shows its details and resume command', () => {
     mockBridge({ records: [rec(A, { title: 'Pick me', prUrls: ['https://github.com/acme/app/pull/7'] })], pins: [], legacyHooks: false })
     render(<Window />)
@@ -95,7 +139,7 @@ describe('Window', () => {
     })
     render(<Window />)
     fireEvent.click(screen.getByText('First part'))
-    const detail = screen.getByRole('heading', { name: 'First part' }).parentElement?.parentElement as HTMLElement
+    const detail = screen.getByRole('region', { name: 'Session details' })
     fireEvent.click(within(detail).getByRole('button', { name: 'Continued in →' }))
     expect(screen.getByRole('heading', { name: 'Second part' })).toBeInTheDocument()
   })

@@ -39,22 +39,30 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/scanner.ts` | `scanClaude` + mtime/size cache, `attachLive` |
 | `desktop/src/core/live-status.ts` | `readLiveSessions` from `~/.claude/sessions` |
 | `desktop/src/core/commands.ts` | `copyCommand`, `resumeInvocation` (wt / powershell / osascript) |
-| `desktop/src/core/app-state.ts` | Pins in `userData/app-state.json` |
+| `desktop/src/core/details.ts` | `parseDetails` — handoff + message peek for one session, on demand |
+| `desktop/src/core/handoff-prompt.ts` | `handoffPrompt`, `continuePreview` (pure; used by the renderer too) |
+| `desktop/src/core/continue.ts` | `continueInvocation`, handoff files in `userData/handoffs/` (pruned after 7 days) |
+| `desktop/src/core/stale.ts` | `staleReasons` — idle / trivial / folder-gone rules (pure) |
+| `desktop/src/core/app-state.ts` | `userData/app-state.json`: pins, names, archived, keptAt, settings |
 | `desktop/src/core/legacy-hooks.ts` | Detect/remove the old `localhost:7777` hooks |
 | `desktop/src/core/types.ts` | `SessionRecord`, `LiveInfo`, `SessionsPayload` (shared with client) |
 | `client/src/lib/list.ts` | `buildSections`, filters, `relativeTime` |
-| `client/src/views/Popover.tsx`, `Window.tsx` | The two layouts |
+| `client/src/lib/themes.ts` | Theme tokens → CSS variables (Carbon default + Graphite, Midnight, Ink, Paper) |
+| `client/src/views/Popover.tsx`, `Window.tsx` | The two list layouts |
+| `client/src/views/Cleanup.tsx`, `Settings.tsx` | Stale review + archive; Settings window |
 
 ## Session state
 
 | Source | Shown as | Dot |
 |---|---|---|
-| live status `busy` | running | amber `#d29922` |
-| live status `idle` | idle | green `#3fb950` |
-| other live status | raw value | purple `#bc8cff` |
-| no live entry (pid gone) | ended | gray `#6e7681` |
+| live status `busy` | running | amber `#FFB340`, pulses |
+| live status `idle` | idle | green `#32D74B` |
+| other live status | raw value | purple `#BF8CFF` |
+| no live entry (pid gone) | ended | gray `#636369` |
 
-Sections: Running (any live session) > Pinned > Recent. The time filter applies to Recent only.
+Values are Carbon's; each theme in `client/src/lib/themes.ts` tunes them. The accent is never amber, green or purple.
+
+Sections: Running (any live session) > Pinned > Recent. The time filter applies to Recent only. Archived sessions are left out of Pinned and Recent but still show in Running when live.
 
 ## Tests
 
@@ -68,16 +76,18 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 ## Design decisions
 
 - **Read-only on `~/.claude`.** The only write is removing the old hooks, on an explicit click.
+- **Archive is hide-only, rename is app-only.** Both live in `app-state.json`; transcripts are never moved, deleted or renamed.
 - **No server, no port, no hooks.** Live status comes from `~/.claude/sessions/<pid>.json`.
 - **Fail soft.** Unknown records are ignored, unknown values show as "—"; `core/` never throws on bad input.
-- **Disposable cache.** `userData/index-v1.json`; deleting it costs one cold scan.
+- **Disposable cache.** `userData/index-v2.json`; deleting it costs one cold scan.
 - **Cost is an estimate.** `costUSD` is Claude Code's API-price figure, labelled "≈ API cost".
 - **Run actions through the CLI.** Resume = `claude --resume <id>` in the project folder; ids validated first.
+- **Continue in… passes the prompt by file.** Windows runs an encoded PowerShell script that reads the handoff file; npm installs run `cli.js` with node because `claude.cmd` cuts arguments at newlines.
 
 ## Roadmap
 
 - **v1 (done):** list, metadata, search/filters, copy + resume, pins, legacy-hook removal
-- **P1:** handoff summary, Continue in…, stale detection + archive, message peek, rename
+- **P1 (done):** Carbon redesign + themes, handoff summary, Continue in…, stale detection + archive, message peek, rename, Settings
 - **P2:** waiting-for-input badge, git hints, token/cost totals, tags and notes
 - **P3:** Codex adapter, LLM summaries, global hotkey, full-text search
 
