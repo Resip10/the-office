@@ -79,7 +79,8 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 
 - **Read-only on `~/.claude`.** The only write is removing the old hooks, on an explicit click.
 - **Archive is hide-only, rename is app-only.** Both live in `app-state.json`; transcripts are never moved, deleted or renamed.
-- **No server, no port, no hooks.** Live status comes from `~/.claude/sessions/<pid>.json`.
+- **No server, no port, no hooks.** Live status comes from `~/.claude/sessions/<pid>.json`, including `waiting` + `waitingFor` (Claude Code 2.1.303+).
+- **Notifications are opt-in.** Off by default, silent, one per waiting stretch after 1/5/15/30 min; a one-time tip offers them (`notifyTipDone`).
 - **Fail soft.** Unknown records are ignored, unknown values show as "—"; `core/` never throws on bad input.
 - **Disposable cache.** `userData/index-v2.json`; deleting it costs one cold scan.
 - **Cost is an estimate.** `costUSD` is Claude Code's API-price figure, labelled "≈ API cost".
@@ -90,7 +91,7 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 
 - **v1 (done):** list, metadata, search/filters, copy + resume, pins, legacy-hook removal
 - **P1 (done):** Carbon redesign + themes, handoff summary, Continue in…, stale detection + archive, message peek, rename, Settings
-- **P2:** waiting-for-input badge, git hints, token/cost totals, tags and notes
+- **P2 (in progress):** waiting-for-input badge + notifications (done), token/cost totals, git hints, tags and notes
 - **P3:** Codex adapter, LLM summaries, global hotkey, full-text search
 
 Spec: `docs/superpowers/specs/2026-10-18-session-tray-design.md`. Product vision: `docs/product/session-tray-plan.md`.
