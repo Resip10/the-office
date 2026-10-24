@@ -103,7 +103,7 @@ Every session shown in the app has these fields. Unknown values are shown as "�
 13. ~~**Git awareness**: branch merged? worktree deleted? uncommitted changes? Shown as hints on stale detection.~~ *(Dropped 2026-10-24: git state read by the app can be stale and outdated.)*
 14. **Exact migration** via an external migration tool when installed; the button is hidden otherwise. *(Parked: not in the CLAUDE.md roadmap; needs the owner's decision before any work.)*
 15. ~~Tags and personal notes.~~ *(Dropped 2026-10-24: the title (rename) is enough.)*
-16. Token and context usage per session, plus totals. *(Done in 0.3.3: context % on running rows; an overview line with app totals (running/waiting, ≈ cost today or this week, sessions today); and, after a one-click Connect of the Claude Code status line, account-wide plan limits in the overview line plus each session's own status line text, effort and thinking in its details, all marked `>_`. Token totals across sessions are left for later.)*
+16. Token and context usage per session, plus totals. *(Done in 0.3.3: context % on running rows; an overview line with app totals (running/waiting, ≈ cost today or this week, sessions today); and, after a one-click Connect of the Claude Code status line, account-wide plan limits in the overview line plus each session's own status line text, effort and thinking in its details, all marked `>_`. Token totals across sessions: dropped, see 23.)*
 
 ### P2b — From ideas (owner's order, 2026-10-24)
 Each gets its own brainstorm with the owner, then one branch and PR. Findings below come from reading Claude Code 2.1.310's files on Windows. Every source is read-only and fail-soft, like the rest of `core/`.
@@ -128,13 +128,7 @@ Each gets its own brainstorm with the owner, then one branch and PR. Findings be
     - *Where:* a Settings section and/or per-project in the detail panel (decide in the brainstorm).
     - *Caution:* `~/.claude.json` is large and Claude Code rewrites it often. Read it on demand (when opened), never poll it, and tolerate a half-written file.
 
-23. **Token totals across sessions** (parser change).
-    - *Source:* `message.usage` on assistant records: `input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`.
-    - *Trap:* one API message is written as several lines with the same `message.id` and identical `usage` (in one sample transcript: 583 lines, 208 ids). Totals must count each `message.id` once, or they come out about 3× too high.
-    - *Scope:* main-chain records only, as for `messageCount` today. Subagent transcripts have their own `usage`; including them is a brainstorm choice.
-    - *Buckets:* per session (in its details), and today / this week in the overview line next to ≈ cost. The day comes from each record's `timestamp`, in local time.
-    - *Cost:* `costUSD` stays Claude Code's own `cost-state` figure. Tokens are never priced by the app.
-    - *Risk:* this touches `parseTranscript`, which every row depends on. It needs new fixtures (a duplicated `message.id`, a missing `usage`, a compacted session) and a cache version bump (`index-v3.json`) so old entries get rescanned.
+23. ~~**Token totals across sessions.**~~ *(Dropped 2026-10-24: plan limits, context % and ≈ cost already cover it; not worth a parser change. One trap for anyone who revisits it: Claude Code writes one API message as several lines with the same `message.id` and identical `usage`, so count each id once.)*
 
 ### P3 — Later / optional
 17. LLM-polished summaries (external CLI or local model), run on the extract rather than the raw transcript and cached.
@@ -156,7 +150,7 @@ Dropped (2026-10-24, owner's call):
 
 P2 has nothing scheduled. **14 Exact migration** stays parked until the owner decides.
 
-Next (P2b), in the owner's order, each brainstormed first: **21 Active subagents** → **22 MCP + plugins snapshot** → **23 Token totals**.
+Next (P2b), in the owner's order, each brainstormed first: **21 Active subagents** → **22 MCP + plugins snapshot**. 23 Token totals dropped.
 
 Not yet checked by hand:
 - Waiting notification card and click-to-open in the **installed** Windows build (dev runs as "Electron": Windows files the notification without a card and drops clicks).
