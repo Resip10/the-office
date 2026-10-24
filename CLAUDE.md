@@ -38,6 +38,7 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/claude-transcript.ts` | `parseTranscript` — one JSONL → `TranscriptMeta` (streaming) |
 | `desktop/src/core/scanner.ts` | `scanClaude` + mtime/size cache, `attachLive` |
 | `desktop/src/core/live-status.ts` | `readLiveSessions` from `~/.claude/sessions` |
+| `desktop/src/core/subagents.ts` | `readSubagents` — a live session's agents from `subagents/agent-*.meta.json` (task, type, model, running) |
 | `desktop/src/core/commands.ts` | `copyCommand`, `resumeInvocation` (wt / powershell / osascript) |
 | `desktop/src/core/details.ts` | `parseDetails` — handoff + message peek for one session, on demand |
 | `desktop/src/core/handoff-prompt.ts` | `handoffPrompt`, `continuePreview` (pure; used by the renderer too) |
@@ -97,7 +98,7 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 - **v1 (done):** list, metadata, search/filters, copy + resume, pins, legacy-hook removal
 - **P1 (done):** Carbon redesign + themes, handoff summary, Continue in…, stale detection + archive, message peek, rename, Settings
 - **P2 (done):** waiting-for-input badge + notifications, overview line + status line data + context %; git hints and tags/notes dropped (2026-10-24)
-- **P2b (next, in order):** active subagents per session; read-only snapshot of installed MCP servers and plugins (never show secrets). Token totals dropped (2026-10-24)
+- **P2b (in progress):** active subagents per session (done); read-only snapshot of installed MCP servers and plugins (never show secrets). Token totals dropped (2026-10-24)
 - **P3:** Codex adapter, LLM summaries, global hotkey, full-text search
 
 Spec: `docs/superpowers/specs/2026-10-18-session-tray-design.md`. Product vision: `docs/product/session-tray-plan.md`.

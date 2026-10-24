@@ -108,7 +108,7 @@ Every session shown in the app has these fields. Unknown values are shown as "�
 ### P2b — From ideas (owner's order, 2026-10-24)
 Each gets its own brainstorm with the owner, then one branch and PR. Findings below come from reading Claude Code 2.1.310's files on Windows. Every source is read-only and fail-soft, like the rest of `core/`.
 
-21. **Active subagents per session.**
+21. **Active subagents per session.** *(Done in 0.3.4: option C, a dot per running agent by the status plus up to 3 task lines under the row, then "+N more"; an Agents section in the details. Running = not `finished` and transcript changed in the last 10 min. Finished agents show only in the details.)*
     - *Source:* `~/.claude/projects/<project>/<sessionId>/subagents/agent-<id>.jsonl` plus `agent-<id>.meta.json`. The scanner already globs these for `subagentCount`.
     - *Meta fields seen:* `agentType`, `description`, `model` (optional), `requestShape` (`background`), `spawnDepth`, `toolUseId`, and `finished: true` once the subagent is done. While it runs, `finished` is missing.
     - *"Active" rule (draft):* the parent session is live, `finished` is not `true`, and the `.jsonl` changed recently. That way a crashed agent that never wrote `finished` doesn't show as running forever. A real example of that: one meta file in `stock-upscaler` has no `finished` and no live parent.
@@ -143,6 +143,7 @@ Shipped:
 - **0.3.1** — P1 deferred minors (#11).
 - **0.3.2** — item 12: waiting state, tray badge, opt-in notifications (#12).
 - **0.3.3** — item 16: context % on running rows, overview line, optional one-click Connect of the Claude Code status line (#13).
+- **0.3.4** — item 21: running subagents per live session.
 
 Dropped (2026-10-24, owner's call):
 - **13 Git hints** — git state can be stale and outdated.
@@ -150,7 +151,7 @@ Dropped (2026-10-24, owner's call):
 
 P2 has nothing scheduled. **14 Exact migration** stays parked until the owner decides.
 
-Next (P2b), in the owner's order, each brainstormed first: **21 Active subagents** → **22 MCP + plugins snapshot**. 23 Token totals dropped.
+Next (P2b), in the owner's order, each brainstormed first: **22 MCP + plugins snapshot** (21 done in 0.3.4; 23 dropped).
 
 Not yet checked by hand:
 - Waiting notification card and click-to-open in the **installed** Windows build (dev runs as "Electron": Windows files the notification without a card and drops clicks).

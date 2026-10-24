@@ -13,7 +13,7 @@ function rec(over: Partial<SessionRecord> = {}): SessionRecord {
     projectPath: 'C:\\projects\\pavchman', projectExists: true, gitBranch: 'main', entrypoint: 'cli', version: '2.1.302',
     createdAt: NOW - 86_400_000, lastActivityAt: NOW - 2 * 3_600_000, messageCount: 42, fileSize: 1000,
     contextTokens: 157_000, model: 'claude-opus-5-5', costUSD: 1.25, prUrls: [], lastPrompt: null, awaySummary: null,
-    continuedInId: null, editCount: 0, subagentCount: 0, live: null, ...over,
+    continuedInId: null, editCount: 0, subagentCount: 0, live: null, agents: [], ...over,
   }
 }
 
@@ -28,6 +28,30 @@ const renderRow = (over: Partial<SessionRecord> = {}, props: Partial<Parameters<
   render(<SessionRow record={rec(over)} pinned={false} now={NOW} continuedListed={false} onSelect={vi.fn()} {...props} />)
 
 describe('SessionRow', () => {
+  const LIVE = { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null }
+  const agent = (id: string, over: Partial<SessionRecord['agents'][number]> = {}) =>
+    ({ id, description: `Task ${id}`, agentType: 'general-purpose', model: null, startedAt: NOW - 125_000, running: true, ...over })
+
+  it('lists running agents with task and time; finished ones stay out', () => {
+    renderRow({ live: LIVE, agents: [agent('a'), agent('b', { running: false })] })
+    expect(screen.getByLabelText('1 agents running')).toBeInTheDocument()
+    const list = screen.getByRole('list', { name: 'Running agents' })
+    expect(list).toHaveTextContent('Task a')
+    expect(list).toHaveTextContent('2m')
+    expect(list).not.toHaveTextContent('Task b')
+  })
+
+  it('shows at most three agents, then +N more', () => {
+    renderRow({ live: LIVE, agents: ['a', 'b', 'c', 'd', 'e'].map(id => agent(id)) })
+    expect(screen.getByRole('list', { name: 'Running agents' }).querySelectorAll('li')).toHaveLength(4)
+    expect(screen.getByText('+2 more')).toBeInTheDocument()
+  })
+
+  it('no agent list when none are running', () => {
+    renderRow({ live: LIVE, agents: [agent('a', { running: false })] })
+    expect(screen.queryByRole('list', { name: 'Running agents' })).toBeNull()
+  })
+
   it('renders title, project · branch and relative time', () => {
     renderRow()
     expect(screen.getByText('Leaderboards feature')).toBeInTheDocument()

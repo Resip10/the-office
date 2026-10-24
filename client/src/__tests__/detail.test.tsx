@@ -14,7 +14,7 @@ function rec(over: Partial<SessionRecord> = {}): SessionRecord {
     projectPath: 'C:\\projects\\app', projectExists: true, gitBranch: 'main', entrypoint: 'cli', version: '2.1.302',
     createdAt: NOW - 9_672_000, lastActivityAt: NOW - 12_000, messageCount: 12, fileSize: 2048, contextTokens: 118_000,
     model: 'claude-opus-5-5', costUSD: 4.82, prUrls: [], lastPrompt: null, awaySummary: null, continuedInId: null, editCount: 2,
-    subagentCount: 3, live: null, ...over,
+    subagentCount: 3, live: null, agents: [], ...over,
   }
 }
 
@@ -39,6 +39,19 @@ function setup(details: SessionDetails | null) {
 }
 
 describe('DetailPanel', () => {
+  it('lists agents of a live session, running first, finished as done', () => {
+    window.sessionTray = mockApi()
+    window.sessionTray.details = vi.fn(async () => null)
+    const live = { pid: 1, status: 'busy', name: null, updatedAt: 0, waitingFor: null, statusUpdatedAt: null }
+    render(<DetailPanel record={rec({ live, agents: [
+      { id: 'a', description: 'Code review', agentType: 'general-purpose', model: 'opus', startedAt: null, running: true },
+      { id: 'b', description: 'Find parser', agentType: 'Explore', model: null, startedAt: null, running: false },
+    ] })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+    expect(screen.getByText('Agents · 1 running · 1 done')).toBeInTheDocument()
+    expect(screen.getByText('opus')).toBeInTheDocument()
+    expect(screen.getByText('Explore · done')).toBeInTheDocument()
+  })
+
   it('shows the stat strip', () => {
     setup(DETAILS)
     for (const label of ['Messages', 'Context', '≈ API cost', 'Active']) expect(screen.getByText(label)).toBeInTheDocument()

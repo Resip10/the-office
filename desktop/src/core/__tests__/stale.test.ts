@@ -10,7 +10,7 @@ function rec(over: Partial<SessionRecord> = {}): SessionRecord {
     tool: 'claude', id: 'a', filePath: 'x', title: 't', titleSource: 'ai', projectPath: 'C:\\app', projectExists: true,
     gitBranch: null, entrypoint: null, version: null, createdAt: null, lastActivityAt: NOW - DAY, messageCount: 20,
     fileSize: 1, contextTokens: null, model: null, costUSD: null, prUrls: [], lastPrompt: null, awaySummary: null,
-    continuedInId: null, editCount: 1, subagentCount: 0, live: null, ...over,
+    continuedInId: null, editCount: 1, subagentCount: 0, live: null, agents: [], ...over,
   }
 }
 
