@@ -97,7 +97,7 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 - **v1 (done):** list, metadata, search/filters, copy + resume, pins, legacy-hook removal
 - **P1 (done):** Carbon redesign + themes, handoff summary, Continue in…, stale detection + archive, message peek, rename, Settings
 - **P2 (done):** waiting-for-input badge + notifications, overview line + status line data + context %; git hints and tags/notes dropped (2026-10-24)
-- **Ideas:** active subagents per session; token totals across sessions (parser change); read-only snapshot of installed MCP servers and plugins (never show secrets)
+- **P2b (next, in order):** active subagents per session; read-only snapshot of installed MCP servers and plugins (never show secrets); token totals across sessions (parser change)
 - **P3:** Codex adapter, LLM summaries, global hotkey, full-text search
 
 Spec: `docs/superpowers/specs/2026-10-18-session-tray-design.md`. Product vision: `docs/product/session-tray-plan.md`.

@@ -105,6 +105,37 @@ Every session shown in the app has these fields. Unknown values are shown as "�
 15. ~~Tags and personal notes.~~ *(Dropped 2026-10-24: the title (rename) is enough.)*
 16. Token and context usage per session, plus totals. *(Done in 0.3.3: context % on running rows; an overview line with app totals (running/waiting, ≈ cost today or this week, sessions today); and, after a one-click Connect of the Claude Code status line, account-wide plan limits in the overview line plus each session's own status line text, effort and thinking in its details, all marked `>_`. Token totals across sessions are left for later.)*
 
+### P2b — From ideas (owner's order, 2026-10-24)
+Each gets its own brainstorm with the owner, then one branch and PR. Findings below come from reading Claude Code 2.1.310's files on Windows. Every source is read-only and fail-soft, like the rest of `core/`.
+
+21. **Active subagents per session.**
+    - *Source:* `~/.claude/projects/<project>/<sessionId>/subagents/agent-<id>.jsonl` plus `agent-<id>.meta.json`. The scanner already globs these for `subagentCount`.
+    - *Meta fields seen:* `agentType`, `description`, `model` (optional), `requestShape` (`background`), `spawnDepth`, `toolUseId`, and `finished: true` once the subagent is done. While it runs, `finished` is missing.
+    - *"Active" rule (draft):* the parent session is live, `finished` is not `true`, and the `.jsonl` changed recently. That way a crashed agent that never wrote `finished` doesn't show as running forever. A real example of that: one meta file in `stock-upscaler` has no `finished` and no live parent.
+    - *Shown:* a count on the running row (for example "2 agents"); in the detail panel, each agent's `description`, `agentType`, model and how long it has been running.
+    - *Open for the brainstorm:* the recency window; whether finished agents of a live session are listed too; whether nested agents (`spawnDepth` > 1) are counted.
+    - *No hooks, no server.* Only the meta files are read; transcripts are not parsed beyond their mtime.
+
+22. **Read-only snapshot of installed MCP servers and plugins.**
+    - *Plugins:* `~/.claude/plugins/installed_plugins.json` (`version: 2`, `plugins: { "<name>@<marketplace>": [{ scope, version, installPath, installedAt, lastUpdated }] }`), plus `enabledPlugins` in `~/.claude/settings.json` (on/off).
+    - *MCP servers:*
+      - user scope: `mcpServers` in `~/.claude.json`;
+      - local scope: `projects["<path>"].mcpServers` in `~/.claude.json`;
+      - project scope: `.mcp.json` in the project folder;
+      - plugin servers: the plugin's own `.mcp.json` under its `installPath`.
+      - claude.ai connectors live online, not on disk (only `claudeAiMcpEverConnected` is local), so they are left out and the UI says so.
+    - *Secrets rule:* show only the server name, scope, `type` (stdio / http / sse) and, for stdio, the command's base name (for example `npx`, `node`). Never show `env`, `headers`, `args` or full URLs, because these can hold tokens. Don't keep the parsed values in the cache or send them over IPC.
+    - *Where:* a Settings section and/or per-project in the detail panel (decide in the brainstorm).
+    - *Caution:* `~/.claude.json` is large and Claude Code rewrites it often. Read it on demand (when opened), never poll it, and tolerate a half-written file.
+
+23. **Token totals across sessions** (parser change).
+    - *Source:* `message.usage` on assistant records: `input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`.
+    - *Trap:* one API message is written as several lines with the same `message.id` and identical `usage` (in one sample transcript: 583 lines, 208 ids). Totals must count each `message.id` once, or they come out about 3× too high.
+    - *Scope:* main-chain records only, as for `messageCount` today. Subagent transcripts have their own `usage`; including them is a brainstorm choice.
+    - *Buckets:* per session (in its details), and today / this week in the overview line next to ≈ cost. The day comes from each record's `timestamp`, in local time.
+    - *Cost:* `costUSD` stays Claude Code's own `cost-state` figure. Tokens are never priced by the app.
+    - *Risk:* this touches `parseTranscript`, which every row depends on. It needs new fixtures (a duplicated `message.id`, a missing `usage`, a compacted session) and a cache version bump (`index-v3.json`) so old entries get rescanned.
+
 ### P3 — Later / optional
 17. LLM-polished summaries (external CLI or local model), run on the extract rather than the raw transcript and cached.
 18. Global hotkey to open the popover with search focused.
@@ -125,7 +156,7 @@ Dropped (2026-10-24, owner's call):
 
 P2 has nothing scheduled. **14 Exact migration** stays parked until the owner decides.
 
-Ideas, not scheduled: active subagents per session; token totals across sessions (parser change); a read-only snapshot of installed MCP servers and plugins (never show secrets).
+Next (P2b), in the owner's order, each brainstormed first: **21 Active subagents** → **22 MCP + plugins snapshot** → **23 Token totals**.
 
 Not yet checked by hand:
 - Waiting notification card and click-to-open in the **installed** Windows build (dev runs as "Electron": Windows files the notification without a card and drops clicks).
