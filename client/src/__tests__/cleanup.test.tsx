@@ -13,7 +13,7 @@ function rec(id: string, over: Partial<SessionRecord> = {}): SessionRecord {
     projectPath: 'C:\\projects\\app', projectExists: true, gitBranch: 'main', entrypoint: 'cli', version: '2.1.302',
     createdAt: NOW - 50 * DAY, lastActivityAt: NOW - 40 * DAY, messageCount: 10, fileSize: 1024 * 1024, contextTokens: null,
     model: null, costUSD: null, prUrls: [], lastPrompt: null, awaySummary: null, continuedInId: null, editCount: 1,
-    subagentCount: 0, live: null, ...over,
+    subagentCount: 0, live: null, agents: [], ...over,
   }
 }
 

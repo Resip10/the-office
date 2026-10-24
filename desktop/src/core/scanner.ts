@@ -3,7 +3,7 @@ import { access, readFile, rename, stat, writeFile } from 'fs/promises'
 import { join } from 'path'
 import fg from 'fast-glob'
 import { parseTranscript } from './claude-transcript'
-import type { LiveInfo, SessionRecord, TranscriptMeta } from './types'
+import type { LiveInfo, SessionRecord, SubagentInfo, TranscriptMeta } from './types'
 
 const folderExists = (path: string) => access(path).then(() => true, () => false)
 
@@ -63,6 +63,7 @@ export async function scanClaude(opts: {
         fileSize: size,
         subagentCount: subagentCounts.get(meta.id) ?? 0,
         live: null,
+        agents: [],
       })
     } catch {
       // vanished or unreadable between glob and read — skip
@@ -77,6 +78,10 @@ export async function scanClaude(opts: {
 
 export function attachLive(records: SessionRecord[], live: Map<string, LiveInfo>): SessionRecord[] {
   return records.map(r => ({ ...r, live: live.get(r.id) ?? null }))
+}
+
+export function attachAgents(records: SessionRecord[], agents: Map<string, SubagentInfo[]>): SessionRecord[] {
+  return records.map(r => (r.live && agents.has(r.id) ? { ...r, agents: agents.get(r.id) as SubagentInfo[] } : r))
 }
 
 export function applyNames(records: SessionRecord[], names: Record<string, string>): SessionRecord[] {

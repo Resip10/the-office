@@ -40,6 +40,22 @@ export interface SessionRecord extends Omit<TranscriptMeta, 'sessionId' | 'lastT
   fileSize: number
   subagentCount: number
   live: LiveInfo | null
+  // Read only while the session is live; empty otherwise.
+  agents: SubagentInfo[]
+}
+
+// One subagent from its meta file (subagents/agent-<id>.meta.json).
+export interface SubagentInfo {
+  id: string
+  // The task Claude gave it, e.g. "Whole-branch code review".
+  description: string | null
+  agentType: string | null
+  // Only when launched with an explicit model.
+  model: string | null
+  // Transcript file creation time; null where the OS doesn't record it.
+  startedAt: number | null
+  // Not finished and its transcript changed in the last AGENT_QUIET_MS.
+  running: boolean
 }
 
 export interface SessionsPayload {

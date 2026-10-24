@@ -38,6 +38,7 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/claude-transcript.ts` | `parseTranscript` — one JSONL → `TranscriptMeta` (streaming) |
 | `desktop/src/core/scanner.ts` | `scanClaude` + mtime/size cache, `attachLive` |
 | `desktop/src/core/live-status.ts` | `readLiveSessions` from `~/.claude/sessions` |
+| `desktop/src/core/subagents.ts` | `readSubagents` — a live session's agents from `subagents/agent-*.meta.json` (task, type, model, running) |
 | `desktop/src/core/commands.ts` | `copyCommand`, `resumeInvocation` (wt / powershell / osascript) |
 | `desktop/src/core/details.ts` | `parseDetails` — handoff + message peek for one session, on demand |
 | `desktop/src/core/handoff-prompt.ts` | `handoffPrompt`, `continuePreview` (pure; used by the renderer too) |

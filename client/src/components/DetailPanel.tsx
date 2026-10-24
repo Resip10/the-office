@@ -178,6 +178,25 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect, show
         </div>
       )}
 
+      {r.agents.length > 0 && (
+        <section className="flex flex-col gap-1.5">
+          <h2 className="m-0 font-mono text-[10.5px] font-normal uppercase tracking-[.08em] text-muted">
+            Agents · {r.agents.filter(a => a.running).length} running · {r.agents.filter(a => !a.running).length} done
+          </h2>
+          <ul className="m-0 p-0 list-none font-mono text-[11.5px]">
+            {r.agents.map(a => (
+              <li key={a.id} className="flex gap-2 py-0.5">
+                <span className={a.running ? 'text-run' : 'text-faint'} aria-hidden="true">{a.running ? '●' : '○'}</span>
+                <span className={`flex-1 min-w-0 truncate ${a.running ? 'text-text' : 'text-muted'}`} title={a.description ?? undefined}>{a.description ?? 'Agent'}</span>
+                <span className="shrink-0 text-muted">
+                  {[a.model ?? a.agentType, a.running ? (a.startedAt !== null ? formatDuration(Date.now() - a.startedAt) : null) : 'done'].filter(Boolean).join(' · ')}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {r.prUrls.length > 0 && (
         <section className="flex flex-col gap-1.5">
           <h2 className="m-0 font-mono text-[10.5px] font-normal uppercase tracking-[.08em] text-muted">Pull requests</h2>

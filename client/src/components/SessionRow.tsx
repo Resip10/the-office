@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { SessionRecord } from '../../../desktop/src/core/types'
 import { projectName, relativeTime, stateOf } from '../lib/list'
-import { ctxPercent, formatCost, formatTokens } from '../lib/format'
+import { ctxPercent, formatCost, formatDuration, formatTokens } from '../lib/format'
 import { StateDot } from './StateDot'
 
 interface Props {
@@ -18,6 +18,9 @@ interface Props {
 
 const actionClass =
   'inline-flex items-center gap-1 h-6 px-2 rounded-md border border-line-strong bg-control text-[11.5px] font-medium text-text-2 hover:text-text disabled:opacity-40 disabled:hover:text-text-2 disabled:cursor-not-allowed'
+// Running agents listed under the row; the rest collapse into "+N more".
+const AGENT_LINES = 3
+
 const primaryClass =
   'inline-flex items-center h-6 px-2 rounded-md bg-accent text-on-accent text-[11.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
 
@@ -42,6 +45,7 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
   ].filter(Boolean).join(' · ')
   const when = !r.live ? relativeTime(r.lastActivityAt, now) : r.live.waitingFor ? `${state} · ${r.live.waitingFor}` : state
   const ctx = r.live ? ctxPercent(r.model, r.contextTokens) : null
+  const agents = r.agents.filter(a => a.running)
   const whenColor = running ? 'text-run' : state === 'idle' ? 'text-idle' : state === 'waiting' ? 'text-wait' : r.live ? 'text-other' : 'text-muted'
 
   function copy() {
@@ -60,7 +64,14 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <div className="flex items-baseline gap-2">
           <span className="flex-1 truncate text-[13.5px] font-medium text-text" title={r.title}>{r.title}</span>
-          <span className={`shrink-0 font-mono text-[11px] tabular-nums ${whenColor}`}>{when}</span>
+          <span className={`shrink-0 font-mono text-[11px] tabular-nums ${whenColor}`}>
+            {when}
+            {agents.length > 0 && (
+              <span className="inline-flex gap-0.5 ml-1 align-middle" aria-label={`${agents.length} agents running`}>
+                {agents.slice(0, 5).map(a => <i key={a.id} className="w-1 h-1 rounded-full bg-run" />)}
+              </span>
+            )}
+          </span>
         </div>
         <div className="flex items-center gap-2 font-mono text-[11px] text-muted">
           <span className="flex-1 truncate">{location}</span>
@@ -75,6 +86,18 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
             </button>
           )}
         </div>
+        {agents.length > 0 && (
+          <ul aria-label="Running agents" className="m-0 mt-1 px-2 py-1 list-none rounded-md border border-line font-mono text-[11px]">
+            {agents.slice(0, AGENT_LINES).map(a => (
+              <li key={a.id} className="flex gap-2 py-px">
+                <span className="text-run" aria-hidden="true">●</span>
+                <span className="flex-1 truncate text-text-2" title={a.description ?? undefined}>{a.description ?? a.agentType ?? 'Agent'}</span>
+                {a.startedAt !== null && <span className="shrink-0 tabular-nums text-muted">{formatDuration(now - a.startedAt)}</span>}
+              </li>
+            ))}
+            {agents.length > AGENT_LINES && <li className="py-px text-muted">+{agents.length - AGENT_LINES} more</li>}
+          </ul>
+        )}
         {variant === 'window' && extras && <div className="font-mono text-[11px] text-muted truncate">{extras}</div>}
         <div
           className={`${selected ? 'flex' : 'hidden'} group-hover:flex group-focus-within:flex gap-1.5 pt-1.5`}

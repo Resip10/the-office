@@ -5,7 +5,8 @@ import { existsSync } from 'fs'
 import { mkdir, stat } from 'fs/promises'
 import { homedir } from 'os'
 import { join } from 'path'
-import { applyNames, attachLive, loadCache, saveCache, scanClaude, type IndexCache } from './core/scanner'
+import { applyNames, attachAgents, attachLive, loadCache, saveCache, scanClaude, type IndexCache } from './core/scanner'
+import { readSubagents } from './core/subagents'
 import { createPidChecker, pidIsAlive, readLiveSessions } from './core/live-status'
 import { copyCommand, resumeInvocation } from './core/commands'
 import { parseDetails } from './core/details'
@@ -18,7 +19,7 @@ import { usageTooltip } from './core/usage-text'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
-import { DEFAULT_SETTINGS, type AppState, type SessionExtras, type StatuslineSnapshot, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload } from './core/types'
+import { DEFAULT_SETTINGS, type AppState, type SessionExtras, type StatuslineSnapshot, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload, type SubagentInfo } from './core/types'
 
 const CLAUDE_DIR = join(homedir(), '.claude')
 const PROJECTS_DIR = join(CLAUDE_DIR, 'projects')
@@ -59,6 +60,8 @@ let sessionExtras: Record<string, SessionExtras> = {}
 // Windows needs Git Bash for the connected status line; macOS and Linux always have a POSIX shell.
 let canLinkStatusline = process.platform !== 'win32'
 let waitingStretches = new Map<string, Stretch>()
+// Subagents of live sessions, read each live poll.
+let agents = new Map<string, SubagentInfo[]>()
 // Held so the click handler isn't garbage-collected while the notification is on screen.
 let lastNotification: Notification | null = null
 let trayWaiting = false
@@ -85,7 +88,7 @@ const openWindows = () => [popover, mainWindow, settingsWindow].filter((w): w is
 
 function payload(): SessionsPayload {
   const { pins, names, archived, keptAt, notifyTipDone, settings } = state
-  return { records: applyNames(attachLive(records, live), names), pins, legacyHooks, names, archived, keptAt, notifyTipDone, settings, hasWt, statusline, statuslineLinked, canLinkStatusline, sessionExtras: statuslineLinked ? sessionExtras : {} }
+  return { records: applyNames(attachAgents(attachLive(records, live), agents), names), pins, legacyHooks, names, archived, keptAt, notifyTipDone, settings, hasWt, statusline, statuslineLinked, canLinkStatusline, sessionExtras: statuslineLinked ? sessionExtras : {} }
 }
 
 function broadcast(): void {
@@ -149,6 +152,8 @@ async function rescan(): Promise<void> {
 
 async function pollLive(): Promise<void> {
   live = await readLiveSessions(SESSIONS_DIR, isSessionAlive)
+  const now = Date.now()
+  agents = new Map(await Promise.all(records.filter(r => live.has(r.id)).map(async r => [r.id, await readSubagents(r.filePath, now)] as const)))
   statusline = await readStatusline(statuslineDir())
   legacyHooks = hasLegacyHooks(SETTINGS_PATH)
   statuslineLinked = state.statusLink !== null && isLinked(SETTINGS_PATH, state.statusLink)
