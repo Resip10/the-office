@@ -129,7 +129,7 @@ describe('DetailPanel header', () => {
   })
 
   it('a deep path and long branch truncate and carry the full text in title', async () => {
-    const path = `C:\${'deep\'.repeat(40)}app`
+    const path = 'C:\\' + Array(40).fill('deep').join('\\') + '\\app'
     const branch = `feat/${'x'.repeat(200)}`
     await show(rec({ projectPath: path, gitBranch: branch }))
     for (const text of [path, branch]) {
