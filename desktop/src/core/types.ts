@@ -226,5 +226,7 @@ export interface SessionDetails {
   peek: PeekItem[]
   // Last messages between the user and Claude only, without tool calls.
   conversation: PeekItem[]
+  // The latest message the user typed; shown above the peek when it has scrolled out of it.
+  lastUser: PeekItem | null
   messageTotal: number
 }

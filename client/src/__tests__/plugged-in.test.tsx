@@ -1,7 +1,11 @@
 import { vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import type { PluggedIn } from '../../../desktop/src/core/types'
-import { PluggedInCard } from '../components/PluggedInCard'
+import { useState } from 'react'
+import { act, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import type { PluggedIn, SessionRecord } from '../../../desktop/src/core/types'
+import { DetailPanel } from '../components/DetailPanel'
+import type { DetailTab } from '../components/details/types'
+import { TooltipProvider } from '../components/ui/tooltip'
 import { mockApi } from './bridge'
 
 const DATA: PluggedIn = {
@@ -17,34 +21,63 @@ const DATA: PluggedIn = {
   ],
 }
 
-function setup(data: PluggedIn | null) {
-  window.sessionTray = mockApi()
-  window.sessionTray.pluggedIn = vi.fn(async () => data)
-  render(<PluggedInCard id="s1" />)
+const ID = '11111111-1111-4111-8111-111111111111'
+const REC: SessionRecord = {
+  tool: 'claude', id: ID, filePath: `C:\\x\\${ID}.jsonl`, title: 'Plugged', titleSource: 'ai',
+  projectPath: 'C:\\projects\\app', projectExists: true, gitBranch: 'main', entrypoint: 'cli', version: '2.1.302',
+  createdAt: Date.now() - 60_000, lastActivityAt: Date.now(), messageCount: 1, fileSize: 10, contextTokens: null,
+  model: null, costUSD: null, prUrls: [], lastPrompt: null, awaySummary: null, continuedInId: null, editCount: 0,
+  subagentCount: 0, live: null, agents: [],
 }
 
-describe('PluggedInCard', () => {
+function Harness() {
+  const [tab, setTab] = useState<DetailTab>('messages')
+  return <DetailPanel record={REC} pinned={false} continuedListed={false} onSelect={vi.fn()} tab={tab} onTabChange={setTab} />
+}
+
+async function setup(data: PluggedIn | null) {
+  window.sessionTray = mockApi()
+  window.sessionTray.pluggedIn = vi.fn(async () => data)
+  render(<TooltipProvider><Harness /></TooltipProvider>)
+  await act(async () => {})
+}
+
+async function openTab() {
+  await userEvent.setup().click(screen.getByRole('tab', { name: /^Plugged in/ }))
+  return screen.getByRole('tabpanel')
+}
+
+describe('Plugged in tab', () => {
+  it('counts servers and plugins on the tab', async () => {
+    await setup(DATA)
+    expect(screen.getByRole('tab', { name: 'Plugged in 5' })).toBeInTheDocument()
+    expect(window.sessionTray.pluggedIn).toHaveBeenCalledWith(ID)
+  })
+
   it('lists servers with scope and status, plugins with scope, and the not-live note', async () => {
-    setup(DATA)
-    const section = await screen.findByRole('region', { name: 'Plugged in' })
-    expect(section).toHaveTextContent('Linear')
-    expect(section).toHaveTextContent('needs auth')
-    expect(section).toHaveTextContent('plugin · tools')
-    expect(section).toHaveTextContent('not loaded')
-    expect(section).toHaveTextContent('superpowers 7.0.0')
-    expect(section).toHaveTextContent('plugin · off')
-    expect(section).toHaveTextContent('Not live: status as loaded when this session started (5m ago)')
+    await setup(DATA)
+    const panel = await openTab()
+    expect(panel).toHaveTextContent('Linear')
+    expect(panel).toHaveTextContent('needs auth')
+    expect(panel).toHaveTextContent('plugin · tools')
+    expect(panel).toHaveTextContent('not loaded')
+    expect(panel).toHaveTextContent('superpowers 7.0.0')
+    expect(panel).toHaveTextContent('plugin · off')
+    expect(panel).toHaveTextContent('Not live: status as loaded when this session started (5m ago)')
   })
 
   it('says when there is no status record', async () => {
-    setup({ ...DATA, loadedAt: null, servers: DATA.servers.map(s => ({ ...s, status: null })) })
-    expect(await screen.findByText(/No status: this session has no record/)).toBeInTheDocument()
-    expect(screen.queryByText('connected')).toBeNull()
+    await setup({ ...DATA, loadedAt: null, servers: DATA.servers.map(s => ({ ...s, status: null })) })
+    const panel = await openTab()
+    expect(panel).toHaveTextContent(/No status: this session has no record/)
+    expect(panel).not.toHaveTextContent('connected')
   })
 
-  it('renders nothing when empty or unavailable', async () => {
-    setup(null)
-    await Promise.resolve()
-    expect(screen.queryByRole('region', { name: 'Plugged in' })).toBeNull()
+  it.each([
+    ['unavailable', null],
+    ['empty', { loadedAt: null, servers: [], plugins: [] }],
+  ])('no tab when %s', async (_, data) => {
+    await setup(data)
+    expect(screen.queryByRole('tab', { name: /^Plugged in/ })).toBeNull()
   })
 })

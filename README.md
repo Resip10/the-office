@@ -15,10 +15,10 @@
 - **Data from your Claude Code status line (optional).** Claude Code passes some things only to its status line: plan limits ("5h 11% · resets 2h 14m"), and per session: effort, thinking and whatever your status line prints. Settings → Overview → **Connect status line** makes this available with one click. Plan limits (account-wide) show in the overview line, in their own group marked `>_`; each session's own status line text, effort and thinking show quietly in its details, with the same mark. Connect changes one setting in `~/.claude/settings.json`: your status line command also saves a copy of its data into Session Tray's folder. It keeps working and looks the same, nothing is sent anywhere, and **Disconnect** restores the original. On Windows it needs Git Bash.
 - **Useful rows.** Title (your rename, your `/rename`, Claude's auto-title, or the first prompt), project, git branch, last activity, message count.
 - **Session details.** In the window you get:
-  - messages, context used, ≈ API cost and active time
-  - a **handoff summary** (Claude Code's compaction summary or recap when there is one, otherwise the goal, last request, files touched, branch and last answer)
-  - a **peek** at the last messages, with tool calls hidden unless you switch them on
-  - PR links
+  - a header with **Resume**, **Continue in…** and a **⋯** menu (Pin, Reveal file, Open transcript, Archive), plus the session ID and resume command, each with a copy button
+  - a **summary** card first (Claude Code's compaction summary or recap when there is one, otherwise the goal, last request, files touched, branch and last answer), with **Copy as prompt**
+  - four figures: messages, context used, ≈ API cost and active time
+  - tabs for **Messages** (the last messages, tool calls hidden unless you switch them on; if Claude's replies pushed your last message out, it stays on top), **Agents**, **Pull requests**, **Plugged in** and **Info**
 - **One click back to work.**
   - **Resume** opens a terminal in the project folder running `claude --resume <id>`.
   - **Copy** puts that command on the clipboard.
@@ -100,6 +100,7 @@ The app only reads `~/.claude` (plus, for Plugged in, `~/.claude.json` and a pro
 - **P1 (done):** redesign and themes, handoff summary, Continue in…, stale-session cleanup and archive, message peek, rename, settings
 - **P2 (done):** waiting-for-input badge and notifications, overview line with status line data and context %
 - **P2b (done):** running subagents per session, plugged-in MCP servers and plugins per session
+- **1.0 (done):** UI polish — details with summary first and tabs, one copy control, no native controls
 - **Later:** Codex sessions, LLM summaries, global hotkey, full-text search
 
 Design: [v1 spec](docs/superpowers/specs/2026-10-18-session-tray-design.md) · [P1 spec](docs/superpowers/specs/2026-10-22-p1-design.md)

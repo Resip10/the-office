@@ -1,0 +1,9 @@
+{"type": "user", "timestamp": "2026-10-25T10:00:00.000Z", "message": {"role": "user", "content": "Start the build and report back"}}
+{"type": "assistant", "timestamp": "2026-10-25T10:01:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Progress update 1"}]}}
+{"type": "assistant", "timestamp": "2026-10-25T10:02:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Progress update 2"}]}}
+{"type": "assistant", "timestamp": "2026-10-25T10:03:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Progress update 3"}]}}
+{"type": "assistant", "timestamp": "2026-10-25T10:04:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Progress update 4"}]}}
+{"type": "assistant", "timestamp": "2026-10-25T10:05:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Progress update 5"}]}}
+{"type": "assistant", "timestamp": "2026-10-25T10:06:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Progress update 6"}]}}
+{"type": "assistant", "timestamp": "2026-10-25T10:07:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Progress update 7"}]}}
+{"type": "assistant", "timestamp": "2026-10-25T10:08:00.000Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Progress update 8"}]}}

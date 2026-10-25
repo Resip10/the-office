@@ -14,6 +14,7 @@ const NO_DETAILS: SessionDetails = {
   handoff: { source: 'extract', summary: null, goal: null, lastAsk: null, files: [], branch: null, lastAnswer: null },
   peek: [],
   conversation: [],
+  lastUser: null,
   messageTotal: 0,
 }
 
@@ -22,8 +23,8 @@ const TARGETS: Array<[Target, string, string]> = [
   ['clipboard', 'Clipboard only', 'paste anywhere'],
 ]
 
-const button = 'inline-flex items-center h-8 px-3.5 rounded-[7px] border border-line-strong bg-control text-[12.5px] font-medium text-text-2 hover:text-text'
-const primary = 'inline-flex items-center h-8 px-3.5 rounded-[7px] bg-accent text-on-accent text-[12.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
+const button = 'focus-ring inline-flex items-center h-8 px-3.5 rounded-[7px] border border-line-strong bg-control text-[12.5px] font-medium text-text-2 hover:text-text'
+const primary = 'focus-ring inline-flex items-center h-8 px-3.5 rounded-[7px] bg-accent text-on-accent text-[12.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
 
 export function ContinueSheet({ record: r, details, onClose }: Props) {
   const [target, setTarget] = useState<Target>('claude')
@@ -62,7 +63,7 @@ export function ContinueSheet({ record: r, details, onClose }: Props) {
                 role="radio"
                 aria-checked={target === id}
                 onClick={() => setTarget(id)}
-                className={`flex flex-col gap-1 px-3.5 py-3 rounded-[9px] border text-left ${target === id ? 'border-accent ring-1 ring-inset ring-accent bg-selected' : 'border-line bg-surface'}`}
+                className={`focus-ring flex flex-col gap-1 px-3.5 py-3 rounded-[9px] border text-left ${target === id ? 'border-accent ring-1 ring-inset ring-accent bg-selected' : 'border-line bg-surface'}`}
               >
                 <span className="text-[13px] font-medium text-text">{name}</span>
                 <span className="font-mono text-[11px] text-muted">{hint}</span>
@@ -72,7 +73,7 @@ export function ContinueSheet({ record: r, details, onClose }: Props) {
 
           {target === 'claude' && (
             <div className="flex items-center gap-2.5">
-              <span className="w-14 font-mono text-[10.5px] uppercase tracking-[.08em] text-muted">Folder</span>
+              <span className="w-14 text-[12px] text-muted">Folder</span>
               <span className={`flex-1 min-w-0 truncate font-mono text-xs px-2.5 py-[7px] rounded-[7px] border border-line bg-sunken ${folder ? 'text-text' : 'text-run'}`}>
                 {folder ?? 'Project folder is gone. Pick a folder.'}
               </span>
@@ -82,7 +83,7 @@ export function ContinueSheet({ record: r, details, onClose }: Props) {
 
           <div className="flex-1 min-h-[220px] flex flex-col gap-2">
             <div className="flex items-baseline gap-2">
-              <label htmlFor="continue-prompt" className="font-mono text-[10.5px] uppercase tracking-[.08em] text-muted">First message</label>
+              <label htmlFor="continue-prompt" className="text-[12px] text-muted">First message</label>
               <span className="ml-auto font-mono text-[11px] text-muted">~{Math.round(prompt.length / 4)} tokens</span>
             </div>
             <textarea

@@ -1,8 +1,8 @@
-import { useState } from 'react'
 import type { SessionRecord } from '../../../desktop/src/core/types'
-import { projectName, relativeTime, stateOf } from '../lib/list'
+import { displayTitle, isUntitled, projectName, relativeTime, stateOf } from '../lib/list'
 import { ctxPercent, formatCost, formatDuration, formatTokens } from '../lib/format'
 import { StateDot } from './StateDot'
+import { CopyButton } from './ui/copy-button'
 
 interface Props {
   record: SessionRecord
@@ -17,12 +17,12 @@ interface Props {
 }
 
 const actionClass =
-  'inline-flex items-center gap-1 h-6 px-2 rounded-md border border-line-strong bg-control text-[11.5px] font-medium text-text-2 hover:text-text disabled:opacity-40 disabled:hover:text-text-2 disabled:cursor-not-allowed'
+  'focus-ring inline-flex items-center gap-1 h-6 px-2 rounded-md border border-line-strong bg-control text-[11.5px] font-medium text-text-2 hover:text-text disabled:opacity-40 disabled:hover:text-text-2 disabled:cursor-not-allowed'
 // Running agents listed under the row; the rest collapse into "+N more".
 const AGENT_LINES = 3
 
 const primaryClass =
-  'inline-flex items-center h-6 px-2 rounded-md bg-accent text-on-accent text-[11.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
+  'focus-ring inline-flex items-center h-6 px-2 rounded-md bg-accent text-on-accent text-[11.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
 
 function PinIcon({ filled }: { filled: boolean }) {
   return (
@@ -33,7 +33,6 @@ function PinIcon({ filled }: { filled: boolean }) {
 }
 
 export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, selected = false, variant = 'popover', pulse = true, compact = false }: Props) {
-  const [copied, setCopied] = useState(false)
   const state = stateOf(r)
   const running = state === 'running'
   const continued = continuedListed && r.continuedInId !== null
@@ -48,12 +47,6 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
   const agents = r.agents.filter(a => a.running)
   const whenColor = running ? 'text-run' : state === 'idle' ? 'text-idle' : state === 'waiting' ? 'text-wait' : r.live ? 'text-other' : 'text-muted'
 
-  function copy() {
-    window.sessionTray.copy(r.id)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
-
   return (
     <div
       data-session-id={r.id}
@@ -63,7 +56,7 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
       <span className="pt-1.5"><StateDot state={state} pulse={pulse} /></span>
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <div className="flex items-baseline gap-2">
-          <span className="flex-1 truncate text-[13.5px] font-medium text-text" title={r.title}>{r.title}</span>
+          <span className={`flex-1 truncate text-[13.5px] font-medium ${isUntitled(r) ? 'text-muted' : 'text-text'}`} title={displayTitle(r)}>{displayTitle(r)}</span>
           <span className={`shrink-0 font-mono text-[11px] tabular-nums ${whenColor}`}>
             {when}
             {agents.length > 0 && (
@@ -79,7 +72,7 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
           {!compact && <span className="shrink-0 tabular-nums">{r.messageCount} msg</span>}
           {continued && (
             <button
-              className="shrink-0 text-accent-text hover:underline"
+              className="focus-ring shrink-0 text-accent-text hover:underline"
               onClick={e => { e.stopPropagation(); onSelect(r.continuedInId as string) }}
             >
               Continued in →
@@ -111,7 +104,7 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
           >
             {running ? 'Open another' : 'Resume'}
           </button>
-          <button className={actionClass} onClick={copy} aria-label="Copy">{copied ? 'Copied' : 'Copy'}</button>
+          <CopyButton label="Copy resume command" onCopy={() => window.sessionTray.copy(r.id)} />
           {variant === 'popover' && (
             <button className={actionClass} onClick={() => window.sessionTray.openWindow({ id: r.id })}>Peek</button>
           )}

@@ -1,7 +1,7 @@
-import { contextWindow, ctxPercent, formatBytes, formatCost, formatDuration, formatTokens } from '../lib/format'
+import { contextWindow, ctxPercent, formatBytes, formatCost, formatDuration, formatTokens, prLabel } from '../lib/format'
 
 describe('formatTokens', () => {
-  it.each([[0, '0'], [950, '950'], [1_000, '1k'], [157_721, '158k'], [1_250_000, '1.3M']])('%d → %s', (n, s) => {
+  it.each([[0, '0'], [950, '950'], [1_000, '1k'], [157_721, '158k'], [1_000_000, '1M'], [1_250_000, '1.3M']])('%d → %s', (n, s) => {
     expect(formatTokens(n)).toBe(s)
   })
 })
@@ -47,5 +47,16 @@ describe('ctxPercent', () => {
     expect(ctxPercent('claude-sonnet-4-5', 180_000)).toBe(90)
     expect(ctxPercent(null, 5_000)).toBeNull()
     expect(ctxPercent('claude-opus-5-5', null)).toBeNull()
+  })
+})
+
+describe('prLabel', () => {
+  it.each([
+    ['https://github.com/o/r/pull/15', 'o/r #15'],
+    ['https://github.com/acme/app/pull/7/files', 'acme/app #7'],
+    ['https://gitlab.com/o/r/-/merge_requests/3', 'https://gitlab.com/o/r/-/merge_requests/3'],
+    ['https://github.com/o/r/issues/4', 'https://github.com/o/r/issues/4'],
+  ])('%s → %s', (url, label) => {
+    expect(prLabel(url)).toBe(label)
   })
 })

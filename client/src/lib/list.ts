@@ -20,6 +20,16 @@ const MIN = 60_000
 const HOUR = 60 * MIN
 const DAY = 24 * HOUR
 
+export const UNTITLED = 'Untitled session'
+
+export function isUntitled(r: Pick<SessionRecord, 'titleSource'>): boolean {
+  return r.titleSource === 'none'
+}
+
+export function displayTitle(r: Pick<SessionRecord, 'titleSource' | 'title'>): string {
+  return isUntitled(r) ? UNTITLED : r.title
+}
+
 export function projectName(path: string | null): string {
   if (!path) return '—'
   return path.replace(/[\\/]+$/, '').split(/[\\/]/).pop() || '—'

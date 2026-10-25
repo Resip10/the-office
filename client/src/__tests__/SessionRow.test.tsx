@@ -1,5 +1,6 @@
 import { vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
+import { TooltipProvider } from '../components/ui/tooltip'
 import type { SessionRecord } from '../../../desktop/src/core/types'
 import { SessionRow } from '../components/SessionRow'
 import { mockApi } from './bridge'
@@ -25,9 +26,15 @@ beforeEach(() => {
 })
 
 const renderRow = (over: Partial<SessionRecord> = {}, props: Partial<Parameters<typeof SessionRow>[0]> = {}) =>
-  render(<SessionRow record={rec(over)} pinned={false} now={NOW} continuedListed={false} onSelect={vi.fn()} {...props} />)
+  render(<TooltipProvider><SessionRow record={rec(over)} pinned={false} now={NOW} continuedListed={false} onSelect={vi.fn()} {...props} /></TooltipProvider>)
 
 describe('SessionRow', () => {
+  it('shows untitled sessions as muted "Untitled session", never a dash', () => {
+    renderRow({ titleSource: 'none', title: '—' })
+    expect(screen.getByText('Untitled session')).toHaveClass('text-muted')
+    expect(screen.queryByText('—')).not.toBeInTheDocument()
+  })
+
   const LIVE = { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null }
   const agent = (id: string, over: Partial<SessionRecord['agents'][number]> = {}) =>
     ({ id, description: `Task ${id}`, agentType: 'general-purpose', model: null, startedAt: NOW - 125_000, lastActivityAt: NOW, running: true, ...over })
@@ -75,7 +82,7 @@ describe('SessionRow', () => {
   it('Resume, Copy and Pin call the bridge with the session id', () => {
     renderRow()
     fireEvent.click(screen.getByRole('button', { name: 'Resume' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Copy' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Copy resume command' }))
     fireEvent.click(screen.getByRole('button', { name: 'Pin' }))
     expect(api.resume).toHaveBeenCalledWith(ID)
     expect(api.copy).toHaveBeenCalledWith(ID)
@@ -148,7 +155,7 @@ describe('SessionRow', () => {
   it('a running dot pulses only when pulse is on', () => {
     const { container, rerender } = renderRow({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } })
     expect(container.querySelector('[title="running"]')).toHaveClass('pulse')
-    rerender(<SessionRow record={rec({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } })} pinned={false} now={NOW} continuedListed={false} onSelect={vi.fn()} pulse={false} />)
+    rerender(<TooltipProvider><SessionRow record={rec({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } })} pinned={false} now={NOW} continuedListed={false} onSelect={vi.fn()} pulse={false} /></TooltipProvider>)
     expect(container.querySelector('[title="running"]')).not.toHaveClass('pulse')
   })
 })

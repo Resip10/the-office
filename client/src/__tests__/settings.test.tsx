@@ -1,3 +1,4 @@
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import type { SessionsPayload } from '../../../desktop/src/core/types'
 import { mockApi, makePayload } from './bridge'
@@ -21,9 +22,9 @@ describe('Settings', () => {
   it('Cleanup edits the idle threshold and turns rules off', () => {
     render(<Settings />)
     fireEvent.click(screen.getByRole('button', { name: 'Cleanup' }))
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Idle days' }), { target: { value: '45' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Idle days' }), { target: { value: '45' } })
     expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ stale: { idleDays: 45, trivialMessages: 3, missingFolder: true } })
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Idle days' }), { target: { value: '' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Idle days' }), { target: { value: '' } })
     expect(window.sessionTray.setSettings).toHaveBeenLastCalledWith({ stale: { idleDays: null, trivialMessages: 3, missingFolder: true } })
   })
 
@@ -33,15 +34,17 @@ describe('Settings', () => {
     expect(sw).toHaveAttribute('aria-checked', 'false')
     const picker = screen.getByRole('combobox', { name: 'Notify after' })
     expect(picker).toBeDisabled()
-    expect(within(picker).getAllByRole('option').map(o => o.textContent)).toEqual(['1 min', '5 min', '15 min', '30 min'])
     fireEvent.click(sw)
     expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ notify: true })
   })
 
-  it('the delay picker saves minutes as a number', () => {
+  it('the delay picker offers 1, 5, 15 and 30 minutes and saves minutes as a number', async () => {
+    const user = userEvent.setup()
     mockBridge({ settings: { ...makePayload().settings, notify: true } })
     render(<Settings />)
-    fireEvent.change(screen.getByRole('combobox', { name: 'Notify after' }), { target: { value: '15' } })
+    await user.click(screen.getByRole('combobox', { name: 'Notify after' }))
+    expect(screen.getAllByRole('option').map(o => o.textContent)).toEqual(['1 min', '5 min', '15 min', '30 min'])
+    await user.click(screen.getByRole('option', { name: '15 min' }))
     expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ notifyAfterMin: 15 })
   })
 
@@ -106,19 +109,23 @@ describe('Settings', () => {
     expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ launchAtLogin: true })
   })
 
-  it('terminal choice shows the command it will run', () => {
+  it('terminal choice shows the command it will run', async () => {
+    const user = userEvent.setup()
     render(<Settings />)
     fireEvent.click(screen.getByRole('button', { name: 'Terminal' }))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Open sessions in' }), { target: { value: 'powershell' } })
+    await user.click(screen.getByRole('combobox', { name: 'Open sessions in' }))
+    await user.click(screen.getByRole('option', { name: /PowerShell/i }))
     expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ terminal: 'powershell' })
     expect(screen.getByText(/claude --resume/)).toBeInTheDocument()
   })
 
-  it('terminal preview reflects whether Windows Terminal is installed', () => {
+  it('terminal preview reflects whether Windows Terminal is installed', async () => {
+    const user = userEvent.setup()
     mockBridge({ hasWt: false })
     const { unmount } = render(<Settings />)
     fireEvent.click(screen.getByRole('button', { name: 'Terminal' }))
     expect(screen.getByText(/^cmd\.exe/)).toBeInTheDocument()
+    await user.click(screen.getByRole('combobox', { name: 'Open sessions in' }))
     expect(screen.getByRole('option', { name: 'Windows Terminal (not installed)' })).toBeInTheDocument()
     unmount()
 
@@ -126,6 +133,7 @@ describe('Settings', () => {
     render(<Settings />)
     fireEvent.click(screen.getByRole('button', { name: 'Terminal' }))
     expect(screen.getByText(/^wt\.exe/)).toBeInTheDocument()
+    await user.click(screen.getByRole('combobox', { name: 'Open sessions in' }))
     expect(screen.getByRole('option', { name: 'Windows Terminal' })).toBeInTheDocument()
   })
 

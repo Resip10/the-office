@@ -47,7 +47,7 @@ export function SessionList({ sections, pins, listedIds, now, totalCount, select
     <div className="flex flex-col pb-1.5">
       {TITLES.filter(([key]) => sections[key].length > 0).map(([key, title]) => (
         <section key={key} className="flex flex-col gap-0.5">
-          <h2 className="sticky top-0 z-10 flex justify-between px-[18px] pt-3 pb-1 bg-inherit font-mono font-normal text-[10.5px] uppercase tracking-[.08em] text-muted">
+          <h2 className="sticky top-0 z-10 flex justify-between px-[18px] pt-3 pb-1 bg-inherit font-normal text-[12px] text-muted">
             {title}<span className="tabular-nums">{sections[key].length}</span>
           </h2>
           {sections[key].map(row)}

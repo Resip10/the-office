@@ -1,7 +1,7 @@
 export function formatTokens(n: number): string {
   if (n < 1_000) return String(n)
   if (n < 1_000_000) return `${Math.round(n / 1_000)}k`
-  return `${(n / 1_000_000).toFixed(1)}M`
+  return `${Number((n / 1_000_000).toFixed(1))}M`
 }
 
 // Claude Code's own estimate at API prices — not what a subscription plan pays.
@@ -22,6 +22,12 @@ export function formatDuration(ms: number): string {
   if (h > 0) return `${h}h ${m}m`
   if (m > 0) return `${m}m`
   return `${s}s`
+}
+
+// A GitHub pull request URL as `owner/repo #N`; any other URL as it is.
+export function prLabel(url: string): string {
+  const m = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)(?:[/?#].*)?$/.exec(url)
+  return m ? `${m[1]}/${m[2]} #${m[3]}` : url
 }
 
 const LARGE_WINDOW = 1_000_000

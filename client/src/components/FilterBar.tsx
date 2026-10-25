@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
 import type { Filters, TimeRange } from '../lib/list'
 import { projectName } from '../lib/list'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+
+const ALL = '__all__'
 
 interface Props {
   filters: Filters
@@ -11,7 +14,7 @@ interface Props {
 const RANGES: Array<[TimeRange, string]> = [['today', 'Today'], ['7d', '7d'], ['30d', '30d'], ['all', 'All']]
 
 const segment = (active: boolean) =>
-  `px-2.5 py-1 rounded-[5px] text-[11.5px] font-medium ${active ? 'bg-line-strong text-text shadow-sm' : 'text-muted hover:text-text'}`
+  `focus-ring px-2.5 py-1 rounded-[5px] text-[11.5px] font-medium ${active ? 'bg-line-strong text-text shadow-sm' : 'text-muted hover:text-text'}`
 
 export function FilterBar({ filters, onChange, projects }: Props) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch })
@@ -49,20 +52,20 @@ export function FilterBar({ filters, onChange, projects }: Props) {
         </div>
         <button
           aria-pressed={filters.runningOnly}
-          className={`shrink-0 px-2.5 h-7 rounded-md border text-[11.5px] font-medium ${filters.runningOnly ? 'border-run-chip-border bg-run-chip-fill text-run' : 'border-line-strong bg-control text-text-2 hover:text-text'}`}
+          className={`focus-ring shrink-0 px-2.5 h-7 rounded-md border text-[11.5px] font-medium ${filters.runningOnly ? 'border-run-chip-border bg-run-chip-fill text-run' : 'border-line-strong bg-control text-text-2 hover:text-text'}`}
           onClick={() => set({ runningOnly: !filters.runningOnly })}
         >
           Running
         </button>
-        <select
-          aria-label="Project"
-          value={filters.project ?? ''}
-          onChange={e => set({ project: e.target.value || null })}
-          className="ml-auto min-w-0 flex-1 max-w-[160px] h-7 px-2 rounded-md bg-control border border-line-strong text-[11.5px] text-text-2"
-        >
-          <option value="">All projects</option>
-          {projects.map(p => <option key={p} value={p}>{projectName(p)}</option>)}
-        </select>
+        <Select value={filters.project ?? ALL} onValueChange={v => set({ project: v === ALL ? null : v })}>
+          <SelectTrigger aria-label="Project" className="ml-auto min-w-0 flex-1 max-w-[180px] text-[11.5px] text-text-2">
+            <span className="min-w-0 truncate"><SelectValue /></span>
+          </SelectTrigger>
+          <SelectContent position="popper" collisionPadding={8} className="max-h-[min(320px,var(--radix-select-content-available-height))]">
+            <SelectItem value={ALL}>All projects</SelectItem>
+            {projects.map(p => <SelectItem key={p} value={p}>{projectName(p)}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   )

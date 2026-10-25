@@ -55,6 +55,8 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/types.ts` | `SessionRecord`, `LiveInfo`, `SessionsPayload` (shared with client) |
 | `client/src/lib/list.ts` | `buildSections`, filters, `relativeTime` |
 | `client/src/lib/themes.ts` | Theme tokens → CSS variables (Carbon default + Graphite, Midnight, Ink, Paper) |
+| `client/src/components/ui/` | Radix primitives restyled with theme tokens: Select, Checkbox, Stepper, Tabs, DropdownMenu, Tooltip, CopyButton. No native selects, number inputs or checkboxes |
+| `client/src/components/details/` | The details pane: header, summary card, figures, and the Messages / Agents / Pull requests / Plugged in / Info tabs |
 | `client/src/views/Popover.tsx`, `Window.tsx` | The two list layouts |
 | `client/src/views/Cleanup.tsx`, `Settings.tsx` | Stale review + archive; Settings window |
 
@@ -100,6 +102,7 @@ All tests must pass before committing. Parser changes need a fixture under `desk
 - **P1 (done):** Carbon redesign + themes, handoff summary, Continue in…, stale detection + archive, message peek, rename, Settings
 - **P2 (done):** waiting-for-input badge + notifications, overview line + status line data + context %; git hints and tags/notes dropped (2026-10-24)
 - **P2b (done):** active subagents per session; Plugged in: MCP servers + plugins per session with scope and status (never show secrets). Token totals dropped (2026-10-24)
+- **1.0 (done):** UI polish — details summary-first + tabs, one copy control, Radix primitives instead of native controls (`client/src/components/ui/`)
 - **P3:** Codex adapter, LLM summaries, global hotkey, full-text search
 
 Spec: `docs/superpowers/specs/2026-10-18-session-tray-design.md`. Product vision: `docs/product/session-tray-plan.md`.

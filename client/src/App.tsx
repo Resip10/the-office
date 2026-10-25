@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAppState } from './hooks/useAppState'
 import { applyTheme, effectiveTheme } from './lib/themes'
+import { TooltipProvider } from './components/ui/tooltip'
 import { Popover } from './views/Popover'
 import { Settings } from './views/Settings'
 import { Window } from './views/Window'
@@ -30,6 +31,6 @@ export default function App() {
   const theme = effectiveTheme(settings, systemDark)
   useEffect(() => applyTheme(document.documentElement, theme), [theme])
 
-  if (view === 'settings') return <Settings />
-  return view === 'window' ? <Window /> : <Popover />
+  const content = view === 'settings' ? <Settings /> : view === 'window' ? <Window /> : <Popover />
+  return <TooltipProvider>{content}</TooltipProvider>
 }

@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { DEFAULT_SETTINGS, type Settings } from '../../../desktop/src/core/types'
 import { reasonLabel, type StaleReason } from '../../../desktop/src/core/stale'
+import { Checkbox } from '../components/ui/checkbox'
 import { useListState } from '../hooks/useListState'
 import { formatBytes } from '../lib/format'
-import { projectName, relativeTime } from '../lib/list'
+import { displayTitle, isUntitled, projectName, relativeTime } from '../lib/list'
 
 type Tab = 'stale' | 'archive'
 type Rules = Settings['stale']
 
-const label = 'font-mono text-[10.5px] uppercase tracking-[.08em] text-muted'
-const button = 'inline-flex items-center h-[30px] px-3 rounded-[7px] border border-line-strong bg-control text-[12.5px] font-medium text-text-2 hover:text-text disabled:opacity-40'
-const primary = 'inline-flex items-center h-[30px] px-3 rounded-[7px] bg-accent text-on-accent text-[12.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
+const label = 'text-[12px] text-muted'
+const button = 'focus-ring inline-flex items-center h-[30px] px-3 rounded-[7px] border border-line-strong bg-control text-[12.5px] font-medium text-text-2 hover:text-text disabled:opacity-40'
+const primary = 'focus-ring inline-flex items-center h-[30px] px-3 rounded-[7px] bg-accent text-on-accent text-[12.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 
@@ -69,7 +70,7 @@ export function Cleanup() {
               aria-label={t === 'stale' ? 'Stale' : 'Archive'}
               aria-selected={tab === t}
               onClick={() => setTab(t)}
-              className={`px-2.5 py-1 rounded-[5px] text-xs font-medium ${tab === t ? 'bg-line-strong text-text' : 'text-muted hover:text-text'}`}
+              className={`focus-ring px-2.5 py-1 rounded-[5px] text-xs font-medium ${tab === t ? 'bg-line-strong text-text' : 'text-muted hover:text-text'}`}
             >
               {t === 'stale' ? 'Stale' : `Archive${archivedRecords.length ? ` · ${archivedRecords.length}` : ''}`}
             </button>
@@ -81,11 +82,9 @@ export function Cleanup() {
             <div role="group" aria-label="Rules" className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-2.5">
               {ruleCards(s.settings.stale).map(rule => (
                 <label key={rule.kind} className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-[9px] border text-[13px] ${rule.on ? 'border-line-strong bg-selected' : 'border-line bg-surface'}`}>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={rule.on}
-                    onChange={() => window.sessionTray.setSettings({ stale: rule.toggle() })}
-                    className="accent-[var(--accent)] w-3.5 h-3.5 m-0"
+                    onCheckedChange={() => window.sessionTray.setSettings({ stale: rule.toggle() })}
                   />
                   <span className="flex-1">{rule.text}</span>
                   <span className="font-mono text-muted tabular-nums">{s.stale.filter(item => item.reasons.some(r => r.kind === rule.kind)).length}</span>
@@ -111,15 +110,13 @@ export function Cleanup() {
                     {s.stale.map(({ record: r, reasons }) => (
                       <tr key={r.id} className="hover:bg-hover [&>td]:px-3 [&>td]:py-2.5 [&>td]:border-b [&>td]:border-line [&>td]:whitespace-nowrap">
                         <td>
-                          <input
-                            type="checkbox"
-                            aria-label={`Select ${r.title}`}
+                          <Checkbox
+                            aria-label={`Select ${displayTitle(r)}`}
                             checked={!unchecked.has(r.id)}
-                            onChange={() => toggleRow(r.id)}
-                            className="accent-[var(--accent)] w-3.5 h-3.5 m-0"
+                            onCheckedChange={() => toggleRow(r.id)}
                           />
                         </td>
-                        <td className="max-w-[360px] truncate" title={r.title}>{r.title}</td>
+                        <td className={`max-w-[360px] truncate ${isUntitled(r) ? 'text-muted' : ''}`} title={displayTitle(r)}>{displayTitle(r)}</td>
                         <td className="font-mono text-xs text-muted">{projectName(r.projectPath)}</td>
                         <td className="flex gap-1">
                           {reasons.map(reason => (
@@ -145,7 +142,7 @@ export function Cleanup() {
               <ul className="m-0 p-0 list-none rounded-[10px] border border-line bg-sunken">
                 {archivedRecords.map(r => (
                   <li key={r.id} className="flex items-center gap-3 px-3.5 py-2.5 border-t border-line first:border-t-0">
-                    <span className="flex-1 min-w-0 truncate text-[13px]">{r.title}</span>
+                    <span className={`flex-1 min-w-0 truncate text-[13px] ${isUntitled(r) ? 'text-muted' : ''}`}>{displayTitle(r)}</span>
                     <span className="font-mono text-xs text-muted">{projectName(r.projectPath)} · {relativeTime(r.lastActivityAt, s.now)}</span>
                     <button className={button} onClick={() => window.sessionTray.restore([r.id])}>Restore</button>
                   </li>

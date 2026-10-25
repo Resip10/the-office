@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
-import type { McpServerInfo, PluggedIn } from '../../../desktop/src/core/types'
-import { relativeTime } from '../lib/list'
+import type { McpServerInfo, PluggedIn } from '../../../../desktop/src/core/types'
+import { relativeTime } from '../../lib/list'
 
 const STATUS: Record<NonNullable<McpServerInfo['status']>, { label: string; color: string }> = {
   connected: { label: 'connected', color: 'text-idle' },
@@ -11,31 +10,15 @@ const STATUS: Record<NonNullable<McpServerInfo['status']>, { label: string; colo
 }
 
 const chip = 'shrink-0 px-1.5 rounded-full border border-line-strong text-[10px] text-text-2'
-const heading = 'm-0 font-mono text-[10.5px] font-normal uppercase tracking-[.08em] text-muted'
 
 function scopeLabel(s: McpServerInfo): string {
   return s.scope === 'plugin' && s.source ? `plugin · ${s.source}` : s.scope
 }
 
-// MCP servers and plugins the session's project has access to; read when the details open.
-export function PluggedInCard({ id }: { id: string }) {
-  const [loaded, setLoaded] = useState<{ id: string; data: PluggedIn | null } | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    window.sessionTray.pluggedIn(id).then(
-      data => { if (!cancelled) setLoaded({ id, data }) },
-      () => { if (!cancelled) setLoaded({ id, data: null }) },
-    )
-    return () => { cancelled = true }
-  }, [id])
-
-  const data = loaded?.id === id ? loaded.data : null
-  if (!data || (data.servers.length === 0 && data.plugins.length === 0)) return null
-
+// MCP servers and plugins the session's project has access to; DetailPanel reads them when the details open.
+export function PluggedInTab({ data }: { data: PluggedIn }) {
   return (
-    <section aria-label="Plugged in" className="flex flex-col gap-1.5">
-      <h2 className={heading}>Plugged in</h2>
+    <div className="flex flex-col gap-1.5">
       <ul className="m-0 p-0 list-none font-mono text-[11.5px]">
         {data.servers.map(s => {
           const st = s.status ? STATUS[s.status] : null
@@ -67,6 +50,6 @@ export function PluggedInCard({ id }: { id: string }) {
           : 'No status: this session has no record of the tools it loaded. '}
         List as configured now.
       </p>
-    </section>
+    </div>
   )
 }

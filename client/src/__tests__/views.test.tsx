@@ -1,13 +1,20 @@
 import { vi } from 'vitest'
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render as rtlRender, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import type { ReactElement } from 'react'
+import { TooltipProvider } from '../components/ui/tooltip'
 import type { SessionRecord, SessionsPayload } from '../../../desktop/src/core/types'
 import { mockApi, makePayload } from './bridge'
 import { Popover } from '../views/Popover'
 import { Window } from '../views/Window'
+import { Settings } from '../views/Settings'
+
+const render = (ui: ReactElement) => rtlRender(<TooltipProvider>{ui}</TooltipProvider>)
 
 const NOW = Date.now()
 const A = '11111111-1111-4111-8111-111111111111'
 const B = '22222222-2222-4222-8222-222222222222'
+const C = '33333333-3333-4333-8333-333333333333'
 
 function rec(id: string, over: Partial<SessionRecord> = {}): SessionRecord {
   return {
@@ -34,6 +41,17 @@ describe('Popover', () => {
     const recent = screen.getByText('Recent', { selector: 'h2' }).closest('section') as HTMLElement
     expect(within(running).getByText('Live one')).toBeInTheDocument()
     expect(within(recent).getByText('Old one')).toBeInTheDocument()
+  })
+
+  it('section headers are sentence case, not uppercase', () => {
+    mockBridge({
+      records: [rec(A, { live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } }), rec(B), rec(C)],
+      pins: [B],
+    })
+    render(<Popover />)
+    for (const name of ['Running', 'Pinned', 'Recent']) {
+      expect(screen.getByText(name, { selector: 'h2' })).not.toHaveClass('uppercase')
+    }
   })
 
   it('a waiting session shows the notifications tip; Turn on enables them', () => {
@@ -134,42 +152,43 @@ describe('Popover stale count', () => {
 })
 
 describe('Window', () => {
-  it('selects the session main asks it to open', () => {
+  it('selects the session main asks it to open', async () => {
     let opened: ((o: { id?: string }) => void) | undefined
     mockBridge({ records: [rec(A, { title: 'Peeked' })], pins: [], legacyHooks: false })
     window.sessionTray.onOpen = vi.fn(cb => { opened = cb; return () => {} })
     render(<Window />)
-    act(() => opened?.({ id: A }))
+    await act(async () => opened?.({ id: A }))
     expect(screen.getByRole('heading', { name: 'Peeked' })).toBeInTheDocument()
   })
 
-  it('selecting a row shows its details and resume command', () => {
+  it('selecting a row shows its details, resume command and pull requests', async () => {
     mockBridge({ records: [rec(A, { title: 'Pick me', prUrls: ['https://github.com/acme/app/pull/7'] })], pins: [], legacyHooks: false })
     render(<Window />)
     expect(screen.getByText('Select a session to see details')).toBeInTheDocument()
-    fireEvent.click(screen.getByText('Pick me'))
+    await act(async () => fireEvent.click(screen.getByText('Pick me')))
     expect(screen.getByRole('heading', { name: 'Pick me' })).toBeInTheDocument()
     expect(screen.getByText(`cd 'C:\\projects\\app'; claude --resume ${A}`)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'https://github.com/acme/app/pull/7' }))
+    await userEvent.setup().click(screen.getByRole('tab', { name: 'Pull requests 1' }))
+    fireEvent.click(screen.getByRole('button', { name: 'acme/app #7' }))
     expect(window.sessionTray.openUrl).toHaveBeenCalledWith('https://github.com/acme/app/pull/7')
   })
 
-  it("resume command uses the bridge platform's quoting (PowerShell doubles ')", () => {
+  it("resume command uses the bridge platform's quoting (PowerShell doubles ')", async () => {
     mockBridge({ records: [rec(A, { title: 'Quote', projectPath: "C:\\Bob's app" })], pins: [], legacyHooks: false })
     render(<Window />)
-    fireEvent.click(screen.getByText('Quote'))
+    await act(async () => fireEvent.click(screen.getByText('Quote')))
     expect(screen.getByText(`cd 'C:\\Bob''s app'; claude --resume ${A}`)).toBeInTheDocument()
   })
 
-  it("'Continued in →' selects the successor, even outside the time range", () => {
+  it("'Continued in' selects the successor, even outside the time range", async () => {
     mockBridge({
       records: [rec(A, { title: 'First part', continuedInId: B }), rec(B, { title: 'Second part', lastActivityAt: NOW - 40 * 86_400_000 })],
       pins: [], legacyHooks: false,
     })
     render(<Window />)
-    fireEvent.click(screen.getByText('First part'))
+    await act(async () => fireEvent.click(screen.getByText('First part')))
     const detail = screen.getByRole('region', { name: 'Session details' })
-    fireEvent.click(within(detail).getByRole('button', { name: 'Continued in →' }))
+    await act(async () => fireEvent.click(within(detail).getByRole('button', { name: 'Continued in' })))
     expect(screen.getByRole('heading', { name: 'Second part' })).toBeInTheDocument()
   })
 })
@@ -217,5 +236,40 @@ describe('overview line', () => {
     const stats = screen.getByLabelText('Overview')
     expect(within(stats).getByText('≈ $2.50 this week')).toBeInTheDocument()
     expect(within(stats).getByText(/^11%/)).toBeInTheDocument()
+  })
+})
+
+describe('Window details', () => {
+  it('Copied does not carry over when another session is selected', async () => {
+    mockBridge({ records: [rec(A, { title: 'First one' }), rec(B, { title: 'Second one' })], pins: [], legacyHooks: false })
+    render(<Window />)
+    await act(async () => fireEvent.click(screen.getByText('First one')))
+    fireEvent.click(screen.getByRole('button', { name: 'Copy session ID' }))
+    expect(screen.getAllByText('Copied').length).toBeGreaterThan(0)
+    await act(async () => fireEvent.click(screen.getByText('Second one')))
+    expect(screen.queryByText('Copied')).toBeNull()
+  })
+})
+
+describe('keyboard focus', () => {
+  const FOCUSABLE = 'button, [role="tab"], [role="combobox"], [role="checkbox"]'
+  const missing = (root: HTMLElement) =>
+    Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE))
+      .filter(el => !el.classList.contains('focus-ring'))
+      .map(el => el.outerHTML.slice(0, 120))
+
+  it('every button, tab, select and checkbox in the Window details has the focus ring', async () => {
+    mockBridge({ records: [rec(A, { title: 'Pick me', prUrls: ['https://github.com/acme/app/pull/7'] })], pins: [], legacyHooks: false })
+    const { container } = render(<Window />)
+    await act(async () => fireEvent.click(screen.getByText('Pick me')))
+    expect(container.querySelectorAll(FOCUSABLE).length).toBeGreaterThan(5)
+    expect(missing(container)).toEqual([])
+  })
+
+  it('every button, tab, select and checkbox in Settings has the focus ring', () => {
+    mockBridge({ records: [] })
+    const { container } = render(<Settings />)
+    expect(container.querySelectorAll(FOCUSABLE).length).toBeGreaterThan(5)
+    expect(missing(container)).toEqual([])
   })
 })

@@ -41,6 +41,11 @@ describe('Cleanup', () => {
     expect(within(table).getByText('trivial')).toBeInTheDocument()
   })
 
+  it('an untitled row checkbox is labelled with the displayed title', () => {
+    setup({ records: [rec(ids[0], { titleSource: 'none' })] })
+    expect(screen.getAllByRole('checkbox', { name: 'Select Untitled session' }).length).toBeGreaterThan(0)
+  })
+
   it('all rows start checked; unchecking one updates the Archive button', () => {
     setup()
     expect(screen.getByRole('button', { name: 'Archive 2' })).toBeInTheDocument()

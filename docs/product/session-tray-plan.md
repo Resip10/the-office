@@ -139,6 +139,7 @@ Shipped:
 - **0.3.3** — item 16: context % on running rows, overview line, optional one-click Connect of the Claude Code status line (#13).
 - **0.3.4** — item 21: running subagents per live session (#15).
 - **0.4.0** — item 22: Plugged in (MCP servers and plugins per session, with scope and status); finished agents leave the details list after 10 min. P2b complete.
+- **1.0.0** — UI polish: details pane with summary first and tabs (your last message stays visible above Claude's replies), one copy control, Radix-based selects/checkboxes/stepper instead of native controls, sentence-case labels (design: docs/superpowers/specs/2026-10-25-ui-polish-design.md).
 
 Dropped (2026-10-24, owner's call):
 - **13 Git hints** — git state can be stale and outdated.
