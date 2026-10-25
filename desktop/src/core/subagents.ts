@@ -30,6 +30,7 @@ export async function readSubagents(transcriptPath: string, now: number): Promis
         agentType: str(meta.agentType),
         model: str(meta.model),
         startedAt: file && file.birthtimeMs > 0 ? file.birthtimeMs : null,
+        lastActivityAt: file?.mtimeMs ?? null,
         running: meta.finished !== true && file !== null && now - file.mtimeMs < AGENT_QUIET_MS,
       })
     } catch {

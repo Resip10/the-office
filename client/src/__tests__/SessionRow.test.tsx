@@ -30,7 +30,7 @@ const renderRow = (over: Partial<SessionRecord> = {}, props: Partial<Parameters<
 describe('SessionRow', () => {
   const LIVE = { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null }
   const agent = (id: string, over: Partial<SessionRecord['agents'][number]> = {}) =>
-    ({ id, description: `Task ${id}`, agentType: 'general-purpose', model: null, startedAt: NOW - 125_000, running: true, ...over })
+    ({ id, description: `Task ${id}`, agentType: 'general-purpose', model: null, startedAt: NOW - 125_000, lastActivityAt: NOW, running: true, ...over })
 
   it('lists running agents with task and time; finished ones stay out', () => {
     renderRow({ live: LIVE, agents: [agent('a'), agent('b', { running: false })] })

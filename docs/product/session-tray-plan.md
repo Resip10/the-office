@@ -108,7 +108,7 @@ Every session shown in the app has these fields. Unknown values are shown as "�
 ### P2b — From ideas (owner's order, 2026-10-24)
 Each gets its own brainstorm with the owner, then one branch and PR. Findings below come from reading Claude Code 2.1.310's files on Windows. Every source is read-only and fail-soft, like the rest of `core/`.
 
-21. **Active subagents per session.** *(Done in 0.3.4: option C, a dot per running agent by the status plus up to 3 task lines under the row, then "+N more"; an Agents section in the details. Running = not `finished` and transcript changed in the last 10 min. Finished agents show only in the details.)*
+21. **Active subagents per session.** *(Done in 0.3.4: option C, a dot per running agent by the status plus up to 3 task lines under the row, then "+N more"; an Agents section in the details. Running = not `finished` and transcript changed in the last 10 min. Finished agents show only in the details, for 10 min after they finish; older ones are only counted as "done earlier".)*
     - *Source:* `~/.claude/projects/<project>/<sessionId>/subagents/agent-<id>.jsonl` plus `agent-<id>.meta.json`. The scanner already globs these for `subagentCount`.
     - *Meta fields seen:* `agentType`, `description`, `model` (optional), `requestShape` (`background`), `spawnDepth`, `toolUseId`, and `finished: true` once the subagent is done. While it runs, `finished` is missing.
     - *"Active" rule (draft):* the parent session is live, `finished` is not `true`, and the `.jsonl` changed recently. That way a crashed agent that never wrote `finished` doesn't show as running forever. A real example of that: one meta file in `stock-upscaler` has no `finished` and no live parent.
@@ -116,17 +116,11 @@ Each gets its own brainstorm with the owner, then one branch and PR. Findings be
     - *Open for the brainstorm:* the recency window; whether finished agents of a live session are listed too; whether nested agents (`spawnDepth` > 1) are counted.
     - *No hooks, no server.* Only the meta files are read; transcripts are not parsed beyond their mtime.
 
-22. **Read-only snapshot of installed MCP servers and plugins.**
-    - *Plugins:* `~/.claude/plugins/installed_plugins.json` (`version: 2`, `plugins: { "<name>@<marketplace>": [{ scope, version, installPath, installedAt, lastUpdated }] }`), plus `enabledPlugins` in `~/.claude/settings.json` (on/off).
-    - *MCP servers:*
-      - user scope: `mcpServers` in `~/.claude.json`;
-      - local scope: `projects["<path>"].mcpServers` in `~/.claude.json`;
-      - project scope: `.mcp.json` in the project folder;
-      - plugin servers: the plugin's own `.mcp.json` under its `installPath`.
-      - claude.ai connectors live online, not on disk (only `claudeAiMcpEverConnected` is local), so they are left out and the UI says so.
-    - *Secrets rule:* show only the server name, scope, `type` (stdio / http / sse) and, for stdio, the command's base name (for example `npx`, `node`). Never show `env`, `headers`, `args` or full URLs, because these can hold tokens. Don't keep the parsed values in the cache or send them over IPC.
-    - *Where:* a Settings section and/or per-project in the detail panel (decide in the brainstorm).
-    - *Caution:* `~/.claude.json` is large and Claude Code rewrites it often. Read it on demand (when opened), never poll it, and tolerate a half-written file.
+22. **Plugged in: MCP servers and plugins per session.** *(Done in 0.4.0. Owner's call: per session, not a global list, and no usage counts.)*
+    - *Where:* a "Plugged in" section in the session's details, read on demand.
+    - *Listed:* what the session's project has access to, as configured now. MCP servers from `~/.claude.json` (**global**; per-project entry = **local**), the repo's `.mcp.json` (**project**), enabled plugins' `.mcp.json` (**plugin · name**), and claude.ai connectors from the session's own records (**claude.ai**). Plugins from `installed_plugins.json`: global plus this project's, on/off from `enabledPlugins` merged user < project < local.
+    - *Status:* from the session's `deferred_tools_delta` records: connected / needs auth (every tool is an auth tool) / failed / pending / not loaded; none when the session has no such record. `deferred_tools_record` only lists fetched schemas and is skipped. A note says it is not live, from the session's start.
+    - *Secrets:* only name, scope, type and a stdio command's base name leave `core/`; never args, env, headers or URLs. Nothing runs `claude mcp`.
 
 23. ~~**Token totals across sessions.**~~ *(Dropped 2026-10-24: plan limits, context % and ≈ cost already cover it; not worth a parser change. One trap for anyone who revisits it: Claude Code writes one API message as several lines with the same `message.id` and identical `usage`, so count each id once.)*
 
@@ -136,14 +130,15 @@ Each gets its own brainstorm with the owner, then one branch and PR. Findings be
 19. Full-text transcript search with an index.
 20. The same core exposed as a CLI and a Claude Code `/sessions` command.
 
-## 7a. Progress (updated 2026-10-24)
+## 7a. Progress (updated 2026-10-25)
 
 Shipped:
 - **0.3.0** — P1 (#9), README (#10).
 - **0.3.1** — P1 deferred minors (#11).
 - **0.3.2** — item 12: waiting state, tray badge, opt-in notifications (#12).
 - **0.3.3** — item 16: context % on running rows, overview line, optional one-click Connect of the Claude Code status line (#13).
-- **0.3.4** — item 21: running subagents per live session.
+- **0.3.4** — item 21: running subagents per live session (#15).
+- **0.4.0** — item 22: Plugged in (MCP servers and plugins per session, with scope and status); finished agents leave the details list after 10 min. P2b complete.
 
 Dropped (2026-10-24, owner's call):
 - **13 Git hints** — git state can be stale and outdated.
@@ -151,7 +146,7 @@ Dropped (2026-10-24, owner's call):
 
 P2 has nothing scheduled. **14 Exact migration** stays parked until the owner decides.
 
-Next (P2b), in the owner's order, each brainstormed first: **22 MCP + plugins snapshot** (21 done in 0.3.4; 23 dropped).
+P2b is complete (21 and 22 done, 23 dropped). Nothing is scheduled next; P3 (§P3) and the hand checks below are open.
 
 Not yet checked by hand:
 - Waiting notification card and click-to-open in the **installed** Windows build (dev runs as "Electron": Windows files the notification without a card and drops clicks).

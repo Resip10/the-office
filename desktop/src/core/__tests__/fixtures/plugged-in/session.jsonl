@@ -1,0 +1,5 @@
+{"type": "user", "timestamp": "2026-10-24T09:00:00.000Z", "message": {"role": "user", "content": "hi"}}
+{"type": "attachment", "timestamp": "2026-10-24T09:00:01.000Z", "attachment": {"type": "deferred_tools_delta", "addedNames": ["Monitor", "mcp__claude_ai_Linear__list_issues", "mcp__claude_ai_Linear__save_issue", "mcp__claude_ai_Google_Drive__authenticate", "mcp__claude_ai_Google_Drive__complete_authentication", "mcp__my-db__query", "mcp__plugin_tools_search__find", "mcp__old__gone"], "removedNames": [], "pendingMcpServers": [], "failedMcpServers": ["broken"]}}
+{"type": "attachment", "timestamp": "2026-10-24T09:01:00.000Z", "attachment": {"type": "deferred_tools_record", "entries": []}}
+not json
+{"type": "attachment", "timestamp": "2026-10-24T09:05:00.000Z", "attachment": {"type": "deferred_tools_delta", "addedNames": [], "removedNames": ["mcp__old__gone"], "pendingMcpServers": [{"name": "slow"}], "failedMcpServers": ["broken"]}}

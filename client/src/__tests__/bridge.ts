@@ -14,7 +14,7 @@ export function mockApi(payload?: SessionsPayload): Window['sessionTray'] {
     resume: vi.fn(), copy: vi.fn(), togglePin: vi.fn(), reveal: vi.fn(), openUrl: vi.fn(), openWindow: vi.fn(),
     removeLegacyHooks: vi.fn(), setSettings: vi.fn(), openSettings: vi.fn(), onSettingsSection: vi.fn(() => () => {}),
     connectStatusLine: vi.fn(async () => ({ ok: true })), disconnectStatusLine: vi.fn(async () => 'restored'),
-    details: vi.fn(async () => null), copyText: vi.fn(), rename: vi.fn(),
+    details: vi.fn(async () => null), pluggedIn: vi.fn(async () => null), copyText: vi.fn(), rename: vi.fn(),
     continueIn: vi.fn(), pickFolder: vi.fn(async () => null),
     archive: vi.fn(), restore: vi.fn(), keep: vi.fn(), dismissNotifyTip: vi.fn(),
   }

@@ -44,11 +44,12 @@ describe('readSubagents', () => {
     agent('new', { description: 'Busy' }, NOW - AGENT_QUIET_MS + 60_000)
     const agents = await readSubagents(transcript, NOW)
     expect(agents.map(a => [a.id, a.running])).toEqual([['new', true], ['old', false]])
+    expect(agents[1].lastActivityAt).toBeCloseTo(NOW - AGENT_QUIET_MS - 1000, -3)
   })
 
   it('is not running without a transcript', async () => {
     agent('x', { description: 'Starting' }, null)
-    expect((await readSubagents(transcript, NOW))[0]).toMatchObject({ running: false, startedAt: null })
+    expect((await readSubagents(transcript, NOW))[0]).toMatchObject({ running: false, startedAt: null, lastActivityAt: null })
   })
 
   it('fails soft: no folder, bad JSON, odd values, other files', async () => {
@@ -63,7 +64,7 @@ describe('readSubagents', () => {
 
 describe('attachAgents', () => {
   const base = { id: 's1', live: null, agents: [] } as unknown as SessionRecord
-  const list: SubagentInfo[] = [{ id: 'a', description: 'T', agentType: null, model: null, startedAt: null, running: true }]
+  const list: SubagentInfo[] = [{ id: 'a', description: 'T', agentType: null, model: null, startedAt: null, lastActivityAt: null, running: true }]
 
   it('attaches to live records only', () => {
     const live = { ...base, live: { pid: 1 } } as unknown as SessionRecord

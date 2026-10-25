@@ -54,6 +54,8 @@ export interface SubagentInfo {
   model: string | null
   // Transcript file creation time; null where the OS doesn't record it.
   startedAt: number | null
+  // Transcript file mtime; null without a transcript.
+  lastActivityAt: number | null
   // Not finished and its transcript changed in the last AGENT_QUIET_MS.
   running: boolean
 }
@@ -186,6 +188,36 @@ export interface PeekItem {
   role: 'user' | 'assistant' | 'tool'
   text: string
   ts: number | null
+}
+
+// What a session's project has access to, read on demand (core/plugged-in.ts). Never holds args, env, headers or URLs.
+export interface PluggedIn {
+  // When the session first recorded its loaded tools; null when it never did (no status then).
+  loadedAt: number | null
+  servers: McpServerInfo[]
+  plugins: PluginInfo[]
+}
+
+export interface McpServerInfo {
+  name: string
+  // global: ~/.claude.json; local: its per-project entry; project: the repo's .mcp.json.
+  scope: 'global' | 'local' | 'project' | 'plugin' | 'claude.ai' | 'session'
+  // Plugin name for scope 'plugin'.
+  source: string | null
+  type: string | null
+  // Base name of a stdio command, e.g. "npx".
+  command: string | null
+  // From the session's start; null when the session has no record of loaded tools.
+  status: 'connected' | 'needs-auth' | 'failed' | 'pending' | 'not-loaded' | null
+}
+
+export interface PluginInfo {
+  id: string
+  name: string
+  marketplace: string | null
+  version: string | null
+  scope: 'global' | 'project' | 'local'
+  enabled: boolean
 }
 
 // Loaded on demand for one session (detail view, Continue in…).

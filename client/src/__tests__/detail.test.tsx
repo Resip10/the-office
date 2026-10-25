@@ -39,15 +39,27 @@ function setup(details: SessionDetails | null) {
 }
 
 describe('DetailPanel', () => {
+  it('hides the agents section when only old finished agents are left', () => {
+    window.sessionTray = mockApi()
+    window.sessionTray.details = vi.fn(async () => null)
+    const live = { pid: 1, status: 'idle', name: null, updatedAt: 0, waitingFor: null, statusUpdatedAt: null }
+    render(<DetailPanel record={rec({ live, agents: [
+      { id: 'c', description: 'Yesterday', agentType: null, model: 'haiku', startedAt: null, lastActivityAt: Date.now() - 86_400_000, running: false },
+    ] })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+    expect(screen.queryByText(/^Agents/)).toBeNull()
+  })
+
   it('lists agents of a live session, running first, finished as done', () => {
     window.sessionTray = mockApi()
     window.sessionTray.details = vi.fn(async () => null)
     const live = { pid: 1, status: 'busy', name: null, updatedAt: 0, waitingFor: null, statusUpdatedAt: null }
     render(<DetailPanel record={rec({ live, agents: [
-      { id: 'a', description: 'Code review', agentType: 'general-purpose', model: 'opus', startedAt: null, running: true },
-      { id: 'b', description: 'Find parser', agentType: 'Explore', model: null, startedAt: null, running: false },
+      { id: 'a', description: 'Code review', agentType: 'general-purpose', model: 'opus', startedAt: null, lastActivityAt: Date.now(), running: true },
+      { id: 'b', description: 'Find parser', agentType: 'Explore', model: null, startedAt: null, lastActivityAt: Date.now() - 60_000, running: false },
+      { id: 'c', description: 'Yesterday', agentType: 'Explore', model: null, startedAt: null, lastActivityAt: Date.now() - 86_400_000, running: false },
     ] })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
-    expect(screen.getByText('Agents · 1 running · 1 done')).toBeInTheDocument()
+    expect(screen.getByText('Agents · 1 running · 1 done · 1 done earlier')).toBeInTheDocument()
+    expect(screen.queryByText('Yesterday')).toBeNull()
     expect(screen.getByText('opus')).toBeInTheDocument()
     expect(screen.getByText('Explore · done')).toBeInTheDocument()
   })
