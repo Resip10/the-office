@@ -128,11 +128,3 @@ For multi-step tasks, state a brief plan with verifiable outcomes before startin
 ```
 
 "Fix the bug" → write a test that reproduces it, then make it pass. Tests must pass before and after any refactor.
-
-### Versioning
-
-Bump `desktop/package.json` in the PR that ships the change, then tag the merge commit `vX.Y.Z` on `main` (the tag starts the Release workflow):
-
-- **Fix** → patch (`0.4.0` → `0.4.1`)
-- **Feature** → minor (`0.4.1` → `0.5.0`)
-- **A finished plan or iteration** (e.g. all of P3) → major (`0.5.0` → `1.0.0`)
