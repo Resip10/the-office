@@ -7,6 +7,7 @@ import type { SessionRecord, SessionsPayload } from '../../../desktop/src/core/t
 import { mockApi, makePayload } from './bridge'
 import { Popover } from '../views/Popover'
 import { Window } from '../views/Window'
+import { Settings } from '../views/Settings'
 
 const render = (ui: ReactElement) => rtlRender(<TooltipProvider>{ui}</TooltipProvider>)
 
@@ -235,5 +236,28 @@ describe('overview line', () => {
     const stats = screen.getByLabelText('Overview')
     expect(within(stats).getByText('≈ $2.50 this week')).toBeInTheDocument()
     expect(within(stats).getByText(/^11%/)).toBeInTheDocument()
+  })
+})
+
+describe('keyboard focus', () => {
+  const FOCUSABLE = 'button, [role="tab"], [role="combobox"], [role="checkbox"]'
+  const missing = (root: HTMLElement) =>
+    Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE))
+      .filter(el => !el.classList.contains('focus-ring'))
+      .map(el => el.outerHTML.slice(0, 120))
+
+  it('every button, tab, select and checkbox in the Window details has the focus ring', async () => {
+    mockBridge({ records: [rec(A, { title: 'Pick me', prUrls: ['https://github.com/acme/app/pull/7'] })], pins: [], legacyHooks: false })
+    const { container } = render(<Window />)
+    await act(async () => fireEvent.click(screen.getByText('Pick me')))
+    expect(container.querySelectorAll(FOCUSABLE).length).toBeGreaterThan(5)
+    expect(missing(container)).toEqual([])
+  })
+
+  it('every button, tab, select and checkbox in Settings has the focus ring', () => {
+    mockBridge({ records: [] })
+    const { container } = render(<Settings />)
+    expect(container.querySelectorAll(FOCUSABLE).length).toBeGreaterThan(5)
+    expect(missing(container)).toEqual([])
   })
 })

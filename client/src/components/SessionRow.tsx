@@ -17,12 +17,12 @@ interface Props {
 }
 
 const actionClass =
-  'inline-flex items-center gap-1 h-6 px-2 rounded-md border border-line-strong bg-control text-[11.5px] font-medium text-text-2 hover:text-text disabled:opacity-40 disabled:hover:text-text-2 disabled:cursor-not-allowed'
+  'focus-ring inline-flex items-center gap-1 h-6 px-2 rounded-md border border-line-strong bg-control text-[11.5px] font-medium text-text-2 hover:text-text disabled:opacity-40 disabled:hover:text-text-2 disabled:cursor-not-allowed'
 // Running agents listed under the row; the rest collapse into "+N more".
 const AGENT_LINES = 3
 
 const primaryClass =
-  'inline-flex items-center h-6 px-2 rounded-md bg-accent text-on-accent text-[11.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
+  'focus-ring inline-flex items-center h-6 px-2 rounded-md bg-accent text-on-accent text-[11.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
 
 function PinIcon({ filled }: { filled: boolean }) {
   return (
@@ -72,7 +72,7 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
           {!compact && <span className="shrink-0 tabular-nums">{r.messageCount} msg</span>}
           {continued && (
             <button
-              className="shrink-0 text-accent-text hover:underline"
+              className="focus-ring shrink-0 text-accent-text hover:underline"
               onClick={e => { e.stopPropagation(); onSelect(r.continuedInId as string) }}
             >
               Continued in →

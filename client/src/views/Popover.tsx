@@ -34,11 +34,11 @@ export function Popover() {
       <div className="flex items-center gap-2.5 px-3.5 py-2 border-t border-line bg-surface font-mono text-[11px] text-muted">
         {!s.loading && <span>{plural(listed, 'session')} · {plural(s.projects.length, 'project')}</span>}
         {s.stale.length > 0 && (
-          <button className="text-accent-text hover:underline" onClick={() => window.sessionTray.openWindow({ view: 'cleanup' })}>
+          <button className="focus-ring text-accent-text hover:underline" onClick={() => window.sessionTray.openWindow({ view: 'cleanup' })}>
             {s.stale.length} stale
           </button>
         )}
-        <button className="ml-auto text-text-2 hover:text-text" onClick={() => window.sessionTray.openWindow()}>
+        <button className="focus-ring ml-auto text-text-2 hover:text-text" onClick={() => window.sessionTray.openWindow()}>
           Open window
         </button>
       </div>

@@ -22,8 +22,8 @@ const TARGETS: Array<[Target, string, string]> = [
   ['clipboard', 'Clipboard only', 'paste anywhere'],
 ]
 
-const button = 'inline-flex items-center h-8 px-3.5 rounded-[7px] border border-line-strong bg-control text-[12.5px] font-medium text-text-2 hover:text-text'
-const primary = 'inline-flex items-center h-8 px-3.5 rounded-[7px] bg-accent text-on-accent text-[12.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
+const button = 'focus-ring inline-flex items-center h-8 px-3.5 rounded-[7px] border border-line-strong bg-control text-[12.5px] font-medium text-text-2 hover:text-text'
+const primary = 'focus-ring inline-flex items-center h-8 px-3.5 rounded-[7px] bg-accent text-on-accent text-[12.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
 
 export function ContinueSheet({ record: r, details, onClose }: Props) {
   const [target, setTarget] = useState<Target>('claude')
@@ -62,7 +62,7 @@ export function ContinueSheet({ record: r, details, onClose }: Props) {
                 role="radio"
                 aria-checked={target === id}
                 onClick={() => setTarget(id)}
-                className={`flex flex-col gap-1 px-3.5 py-3 rounded-[9px] border text-left ${target === id ? 'border-accent ring-1 ring-inset ring-accent bg-selected' : 'border-line bg-surface'}`}
+                className={`focus-ring flex flex-col gap-1 px-3.5 py-3 rounded-[9px] border text-left ${target === id ? 'border-accent ring-1 ring-inset ring-accent bg-selected' : 'border-line bg-surface'}`}
               >
                 <span className="text-[13px] font-medium text-text">{name}</span>
                 <span className="font-mono text-[11px] text-muted">{hint}</span>

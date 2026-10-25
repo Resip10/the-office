@@ -10,8 +10,8 @@ type Tab = 'stale' | 'archive'
 type Rules = Settings['stale']
 
 const label = 'text-[12px] text-muted'
-const button = 'inline-flex items-center h-[30px] px-3 rounded-[7px] border border-line-strong bg-control text-[12.5px] font-medium text-text-2 hover:text-text disabled:opacity-40'
-const primary = 'inline-flex items-center h-[30px] px-3 rounded-[7px] bg-accent text-on-accent text-[12.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
+const button = 'focus-ring inline-flex items-center h-[30px] px-3 rounded-[7px] border border-line-strong bg-control text-[12.5px] font-medium text-text-2 hover:text-text disabled:opacity-40'
+const primary = 'focus-ring inline-flex items-center h-[30px] px-3 rounded-[7px] bg-accent text-on-accent text-[12.5px] font-medium disabled:opacity-40 disabled:cursor-not-allowed'
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 
@@ -70,7 +70,7 @@ export function Cleanup() {
               aria-label={t === 'stale' ? 'Stale' : 'Archive'}
               aria-selected={tab === t}
               onClick={() => setTab(t)}
-              className={`px-2.5 py-1 rounded-[5px] text-xs font-medium ${tab === t ? 'bg-line-strong text-text' : 'text-muted hover:text-text'}`}
+              className={`focus-ring px-2.5 py-1 rounded-[5px] text-xs font-medium ${tab === t ? 'bg-line-strong text-text' : 'text-muted hover:text-text'}`}
             >
               {t === 'stale' ? 'Stale' : `Archive${archivedRecords.length ? ` · ${archivedRecords.length}` : ''}`}
             </button>

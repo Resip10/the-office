@@ -42,7 +42,7 @@ function Switch({ label, checked, onChange, disabled = false }: { label: string;
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`flex w-9 h-5 p-0.5 rounded-full shrink-0 disabled:opacity-40 ${checked ? 'bg-accent justify-end' : 'bg-line-strong justify-start'}`}
+      className={`focus-ring flex w-9 h-5 p-0.5 rounded-full shrink-0 disabled:opacity-40 ${checked ? 'bg-accent justify-end' : 'bg-line-strong justify-start'}`}
     >
       <span className={`w-4 h-4 rounded-full ${checked ? 'bg-on-accent' : 'bg-muted'}`} />
     </button>
@@ -77,7 +77,7 @@ function ThemeCard({ id, selected }: { id: ThemeId; selected: boolean }) {
       aria-checked={selected}
       aria-label={name}
       onClick={() => set({ theme: id })}
-      className={`flex flex-col gap-2.5 p-2.5 rounded-xl border bg-surface text-left ${selected ? 'border-accent ring-1 ring-inset ring-accent' : 'border-line'}`}
+      className={`focus-ring flex flex-col gap-2.5 p-2.5 rounded-xl border bg-surface text-left ${selected ? 'border-accent ring-1 ring-inset ring-accent' : 'border-line'}`}
     >
       <div className="h-[84px] rounded-lg p-2.5 flex flex-col gap-[7px]" style={{ background: t.raised, border: `1px solid ${t.line}` }}>
         <div className="h-[9px] rounded-[3px]" style={{ background: t.canvas, border: `1px solid ${t.line}` }} />
@@ -97,7 +97,7 @@ const Badge = () => (
   <span aria-hidden="true" className="px-1 rounded border border-line-strong font-mono text-[10px] text-faint">&gt;_</span>
 )
 
-const button = 'h-[30px] px-3 rounded-[7px] border border-line-strong bg-control text-[12.5px] text-text hover:border-muted disabled:opacity-40 disabled:hover:border-line-strong'
+const button = 'focus-ring h-[30px] px-3 rounded-[7px] border border-line-strong bg-control text-[12.5px] text-text hover:border-muted disabled:opacity-40 disabled:hover:border-line-strong'
 
 function OverviewSection() {
   const { settings, statusline, statuslineLinked, canLinkStatusline } = useAppState()
@@ -181,7 +181,7 @@ function OverviewSection() {
 
       <p className="m-0 text-[12.5px] text-muted">
         Tip: a status line can show anything, like git status, a clock or the weather. Once connected, its text can show here too.{' '}
-        <button className="text-accent-text hover:underline" onClick={() => window.sessionTray.openUrl(STATUSLINE_GUIDE)}>Status line guide</button>
+        <button className="focus-ring text-accent-text hover:underline" onClick={() => window.sessionTray.openUrl(STATUSLINE_GUIDE)}>Status line guide</button>
       </p>
     </>
   )
@@ -208,7 +208,7 @@ export function Settings() {
             disabled={!enabled}
             aria-current={section === id ? 'page' : undefined}
             onClick={() => setSection(id)}
-            className={`flex items-center h-8 px-2.5 rounded-[7px] text-[13px] text-left disabled:opacity-40 ${section === id ? 'bg-selected text-text ring-1 ring-inset ring-line-strong' : 'text-text-2 hover:bg-hover'}`}
+            className={`focus-ring flex items-center h-8 px-2.5 rounded-[7px] text-[13px] text-left disabled:opacity-40 ${section === id ? 'bg-selected text-text ring-1 ring-inset ring-line-strong' : 'text-text-2 hover:bg-hover'}`}
           >
             {label}
           </button>
@@ -265,7 +265,7 @@ export function Settings() {
                       key={d}
                       aria-pressed={settings.density === d}
                       onClick={() => set({ density: d })}
-                      className={`px-2.5 py-1 rounded-[5px] text-xs font-medium capitalize ${settings.density === d ? 'bg-line-strong text-text' : 'text-muted'}`}
+                      className={`focus-ring px-2.5 py-1 rounded-[5px] text-xs font-medium capitalize ${settings.density === d ? 'bg-line-strong text-text' : 'text-muted'}`}
                     >
                       {d === 'comfortable' ? 'Comfortable' : 'Compact'}
                     </button>

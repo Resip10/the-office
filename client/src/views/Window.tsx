@@ -28,7 +28,7 @@ export function Window() {
         <button
           aria-pressed={s.mode === 'cleanup'}
           onClick={() => s.setMode(s.mode === 'cleanup' ? 'sessions' : 'cleanup')}
-          className={`h-7 px-2.5 rounded-md text-xs font-medium ${s.mode === 'cleanup' ? 'bg-selected text-text ring-1 ring-inset ring-line-strong' : 'text-muted hover:text-text hover:bg-hover'}`}
+          className={`focus-ring h-7 px-2.5 rounded-md text-xs font-medium ${s.mode === 'cleanup' ? 'bg-selected text-text ring-1 ring-inset ring-line-strong' : 'text-muted hover:text-text hover:bg-hover'}`}
         >
           Clean up{s.stale.length > 0 ? ` · ${s.stale.length}` : ''}
         </button>
@@ -37,7 +37,7 @@ export function Window() {
           aria-label="Settings"
           title="Settings"
           onClick={() => window.sessionTray.openSettings()}
-          className={`flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-text hover:bg-hover`}
+          className={`focus-ring flex items-center justify-center w-7 h-7 rounded-md text-muted hover:text-text hover:bg-hover`}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />

@@ -14,7 +14,7 @@ interface Props {
 const RANGES: Array<[TimeRange, string]> = [['today', 'Today'], ['7d', '7d'], ['30d', '30d'], ['all', 'All']]
 
 const segment = (active: boolean) =>
-  `px-2.5 py-1 rounded-[5px] text-[11.5px] font-medium ${active ? 'bg-line-strong text-text shadow-sm' : 'text-muted hover:text-text'}`
+  `focus-ring px-2.5 py-1 rounded-[5px] text-[11.5px] font-medium ${active ? 'bg-line-strong text-text shadow-sm' : 'text-muted hover:text-text'}`
 
 export function FilterBar({ filters, onChange, projects }: Props) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch })
@@ -52,7 +52,7 @@ export function FilterBar({ filters, onChange, projects }: Props) {
         </div>
         <button
           aria-pressed={filters.runningOnly}
-          className={`shrink-0 px-2.5 h-7 rounded-md border text-[11.5px] font-medium ${filters.runningOnly ? 'border-run-chip-border bg-run-chip-fill text-run' : 'border-line-strong bg-control text-text-2 hover:text-text'}`}
+          className={`focus-ring shrink-0 px-2.5 h-7 rounded-md border text-[11.5px] font-medium ${filters.runningOnly ? 'border-run-chip-border bg-run-chip-fill text-run' : 'border-line-strong bg-control text-text-2 hover:text-text'}`}
           onClick={() => set({ runningOnly: !filters.runningOnly })}
         >
           Running

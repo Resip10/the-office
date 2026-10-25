@@ -5,7 +5,7 @@ export function NotifyTip() {
       <span className="inline-block w-[7px] h-[7px] rounded-full shrink-0 bg-wait" aria-hidden="true" />
       <span className="flex-1">A session is waiting for input. Get a notification next time?</span>
       <button
-        className="h-6 px-2 rounded-md border border-line-strong bg-control text-text hover:border-muted"
+        className="focus-ring h-6 px-2 rounded-md border border-line-strong bg-control text-text hover:border-muted"
         onClick={() => window.sessionTray.setSettings({ notify: true })}
       >
         Turn on
@@ -13,7 +13,7 @@ export function NotifyTip() {
       <button
         aria-label="Dismiss tip"
         title="Don't show again"
-        className="flex items-center justify-center w-6 h-6 rounded-md text-muted hover:text-text hover:bg-hover"
+        className="focus-ring flex items-center justify-center w-6 h-6 rounded-md text-muted hover:text-text hover:bg-hover"
         onClick={() => window.sessionTray.dismissNotifyTip()}
       >
         ×

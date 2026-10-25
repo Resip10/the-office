@@ -48,7 +48,7 @@ export function OverviewLine({ records, items, statusline, now, showEdit = false
           aria-label="Edit overview"
           title="Choose what shows here"
           onClick={() => window.sessionTray.openSettings('overview')}
-          className="ml-auto shrink-0 flex items-center justify-center w-5 h-5 rounded text-faint hover:text-text hover:bg-hover"
+          className="focus-ring ml-auto shrink-0 flex items-center justify-center w-5 h-5 rounded text-faint hover:text-text hover:bg-hover"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />

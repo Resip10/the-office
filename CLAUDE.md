@@ -55,6 +55,8 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/types.ts` | `SessionRecord`, `LiveInfo`, `SessionsPayload` (shared with client) |
 | `client/src/lib/list.ts` | `buildSections`, filters, `relativeTime` |
 | `client/src/lib/themes.ts` | Theme tokens → CSS variables (Carbon default + Graphite, Midnight, Ink, Paper) |
+| `client/src/components/ui/` | Radix primitives restyled with theme tokens: Select, Checkbox, Stepper, Tabs, DropdownMenu, Tooltip, CopyButton. No native selects, number inputs or checkboxes |
+| `client/src/components/details/` | The details pane: header, summary card, figures, and the Messages / Agents / Pull requests / Plugged in / Info tabs |
 | `client/src/views/Popover.tsx`, `Window.tsx` | The two list layouts |
 | `client/src/views/Cleanup.tsx`, `Settings.tsx` | Stale review + archive; Settings window |
 
