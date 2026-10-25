@@ -108,7 +108,7 @@ Every session shown in the app has these fields. Unknown values are shown as "â€
 ### P2b â€” From ideas (owner's order, 2026-10-24)
 Each gets its own brainstorm with the owner, then one branch and PR. Findings below come from reading Claude Code 2.1.310's files on Windows. Every source is read-only and fail-soft, like the rest of `core/`.
 
-21. **Active subagents per session.** *(Done in 0.3.4: option C, a dot per running agent by the status plus up to 3 task lines under the row, then "+N more"; an Agents section in the details. Running = not `finished` and transcript changed in the last 10 min. Finished agents show only in the details.)*
+21. **Active subagents per session.** *(Done in 0.3.4: option C, a dot per running agent by the status plus up to 3 task lines under the row, then "+N more"; an Agents section in the details. Running = not `finished` and transcript changed in the last 10 min. Finished agents show only in the details, for 10 min after they finish; older ones are only counted as "done earlier".)*
     - *Source:* `~/.claude/projects/<project>/<sessionId>/subagents/agent-<id>.jsonl` plus `agent-<id>.meta.json`. The scanner already globs these for `subagentCount`.
     - *Meta fields seen:* `agentType`, `description`, `model` (optional), `requestShape` (`background`), `spawnDepth`, `toolUseId`, and `finished: true` once the subagent is done. While it runs, `finished` is missing.
     - *"Active" rule (draft):* the parent session is live, `finished` is not `true`, and the `.jsonl` changed recently. That way a crashed agent that never wrote `finished` doesn't show as running forever. A real example of that: one meta file in `stock-upscaler` has no `finished` and no live parent.

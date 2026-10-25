@@ -11,6 +11,8 @@ import { PeekCard } from './PeekCard'
 import { ContinueSheet } from './ContinueSheet'
 import { PluggedInCard } from './PluggedInCard'
 
+const RECENT_DONE_MS = 10 * 60_000
+
 interface Props {
   record: SessionRecord
   pinned: boolean
@@ -54,6 +56,10 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect, show
   const state = stateOf(r)
   const command = copyCommand(r, window.sessionTray.platform)
   const window_ = contextWindow(r.model, r.contextTokens ?? 0)
+  // Finished agents stay listed briefly, then only counted, so long sessions don't pile up.
+  const now = Date.now()
+  const agents = r.agents.filter(a => a.running || (a.lastActivityAt !== null && now - a.lastActivityAt < RECENT_DONE_MS))
+  const doneEarlier = r.agents.length - agents.length
   // Only the status line knows these; shown when it has refreshed for this session while connected.
   const extras = useAppState().sessionExtras[r.id]
   const extrasText = extras && [
@@ -179,13 +185,14 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect, show
         </div>
       )}
 
-      {r.agents.length > 0 && (
+      {agents.length > 0 && (
         <section className="flex flex-col gap-1.5">
           <h2 className="m-0 font-mono text-[10.5px] font-normal uppercase tracking-[.08em] text-muted">
-            Agents · {r.agents.filter(a => a.running).length} running · {r.agents.filter(a => !a.running).length} done
+            Agents · {agents.filter(a => a.running).length} running · {agents.filter(a => !a.running).length} done
+            {doneEarlier > 0 && ` · ${doneEarlier} done earlier`}
           </h2>
           <ul className="m-0 p-0 list-none font-mono text-[11.5px]">
-            {r.agents.map(a => (
+            {agents.map(a => (
               <li key={a.id} className="flex gap-2 py-0.5">
                 <span className={a.running ? 'text-run' : 'text-faint'} aria-hidden="true">{a.running ? '●' : '○'}</span>
                 <span className={`flex-1 min-w-0 truncate ${a.running ? 'text-text' : 'text-muted'}`} title={a.description ?? undefined}>{a.description ?? 'Agent'}</span>

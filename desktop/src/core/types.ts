@@ -54,6 +54,8 @@ export interface SubagentInfo {
   model: string | null
   // Transcript file creation time; null where the OS doesn't record it.
   startedAt: number | null
+  // Transcript file mtime; null without a transcript.
+  lastActivityAt: number | null
   // Not finished and its transcript changed in the last AGENT_QUIET_MS.
   running: boolean
 }
