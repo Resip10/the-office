@@ -18,7 +18,7 @@
   - a header with **Resume**, **Continue in…** and a **⋯** menu (Pin, Reveal file, Open transcript, Archive), plus the session ID and resume command, each with a copy button
   - a **summary** card first (Claude Code's compaction summary or recap when there is one, otherwise the goal, last request, files touched, branch and last answer), with **Copy as prompt**
   - four figures: messages, context used, ≈ API cost and active time
-  - tabs for **Messages** (the last messages, tool calls hidden unless you switch them on), **Agents**, **Pull requests**, **Plugged in** and **Info**
+  - tabs for **Messages** (the last messages, tool calls hidden unless you switch them on; if Claude's replies pushed your last message out, it stays on top), **Agents**, **Pull requests**, **Plugged in** and **Info**
 - **One click back to work.**
   - **Resume** opens a terminal in the project folder running `claude --resume <id>`.
   - **Copy** puts that command on the clipboard.
@@ -100,6 +100,7 @@ The app only reads `~/.claude` (plus, for Plugged in, `~/.claude.json` and a pro
 - **P1 (done):** redesign and themes, handoff summary, Continue in…, stale-session cleanup and archive, message peek, rename, settings
 - **P2 (done):** waiting-for-input badge and notifications, overview line with status line data and context %
 - **P2b (done):** running subagents per session, plugged-in MCP servers and plugins per session
+- **1.0 (done):** UI polish — details with summary first and tabs, one copy control, no native controls
 - **Later:** Codex sessions, LLM summaries, global hotkey, full-text search
 
 Design: [v1 spec](docs/superpowers/specs/2026-10-18-session-tray-design.md) · [P1 spec](docs/superpowers/specs/2026-10-22-p1-design.md)
