@@ -1,4 +1,4 @@
-import type { OpenWindowOptions, SessionDetails, SessionsPayload, Settings } from '../../desktop/src/core/types'
+import type { OpenWindowOptions, PluggedIn, SessionDetails, SessionsPayload, Settings } from '../../desktop/src/core/types'
 
 // Bridge exposed by desktop/src/preload.ts.
 declare global {
@@ -20,6 +20,7 @@ declare global {
       connectStatusLine(): Promise<{ ok: boolean; reason?: string }>
       disconnectStatusLine(): Promise<string>
       details(id: string): Promise<SessionDetails | null>
+      pluggedIn(id: string): Promise<PluggedIn | null>
       copyText(text: string): void
       rename(id: string, name: string | null): void
       continueIn(id: string, opts: { folder: string; prompt: string; target: 'claude' | 'clipboard' }): void

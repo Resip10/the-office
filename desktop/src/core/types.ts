@@ -188,6 +188,36 @@ export interface PeekItem {
   ts: number | null
 }
 
+// What a session's project has access to, read on demand (core/plugged-in.ts). Never holds args, env, headers or URLs.
+export interface PluggedIn {
+  // When the session first recorded its loaded tools; null when it never did (no status then).
+  loadedAt: number | null
+  servers: McpServerInfo[]
+  plugins: PluginInfo[]
+}
+
+export interface McpServerInfo {
+  name: string
+  // global: ~/.claude.json; local: its per-project entry; project: the repo's .mcp.json.
+  scope: 'global' | 'local' | 'project' | 'plugin' | 'claude.ai' | 'session'
+  // Plugin name for scope 'plugin'.
+  source: string | null
+  type: string | null
+  // Base name of a stdio command, e.g. "npx".
+  command: string | null
+  // From the session's start; null when the session has no record of loaded tools.
+  status: 'connected' | 'needs-auth' | 'failed' | 'pending' | 'not-loaded' | null
+}
+
+export interface PluginInfo {
+  id: string
+  name: string
+  marketplace: string | null
+  version: string | null
+  scope: 'global' | 'project' | 'local'
+  enabled: boolean
+}
+
 // Loaded on demand for one session (detail view, Continue in…).
 export interface SessionDetails {
   handoff: Handoff

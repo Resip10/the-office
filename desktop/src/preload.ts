@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { OpenWindowOptions, SessionDetails, SessionsPayload, Settings } from './core/types'
+import type { OpenWindowOptions, PluggedIn, SessionDetails, SessionsPayload, Settings } from './core/types'
 
 contextBridge.exposeInMainWorld('sessionTray', {
   platform: process.platform,
@@ -32,6 +32,7 @@ contextBridge.exposeInMainWorld('sessionTray', {
   connectStatusLine: (): Promise<{ ok: boolean; reason?: string }> => ipcRenderer.invoke('statusline:connect'),
   disconnectStatusLine: (): Promise<string> => ipcRenderer.invoke('statusline:disconnect'),
   details: (id: string): Promise<SessionDetails | null> => ipcRenderer.invoke('session:details', id),
+  pluggedIn: (id: string): Promise<PluggedIn | null> => ipcRenderer.invoke('session:plugged-in', id),
   copyText: (text: string) => ipcRenderer.send('session:copy-text', text),
   rename: (id: string, name: string | null) => ipcRenderer.send('session:rename', id, name),
   continueIn: (id: string, opts: { folder: string; prompt: string; target: 'claude' | 'clipboard' }) =>

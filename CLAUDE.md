@@ -39,6 +39,7 @@ npm run package    # build + electron-builder (installer in desktop/dist-electro
 | `desktop/src/core/scanner.ts` | `scanClaude` + mtime/size cache, `attachLive` |
 | `desktop/src/core/live-status.ts` | `readLiveSessions` from `~/.claude/sessions` |
 | `desktop/src/core/subagents.ts` | `readSubagents` — a live session's agents from `subagents/agent-*.meta.json` (task, type, model, running) |
+| `desktop/src/core/plugged-in.ts` | `readPluggedIn` — MCP servers + plugins a session's project has access to (scope), status from the session's `deferred_tools_delta` records; never args/env/headers/URLs |
 | `desktop/src/core/commands.ts` | `copyCommand`, `resumeInvocation` (wt / powershell / osascript) |
 | `desktop/src/core/details.ts` | `parseDetails` — handoff + message peek for one session, on demand |
 | `desktop/src/core/handoff-prompt.ts` | `handoffPrompt`, `continuePreview` (pure; used by the renderer too) |

@@ -10,6 +10,7 @@ import { readSubagents } from './core/subagents'
 import { createPidChecker, pidIsAlive, readLiveSessions } from './core/live-status'
 import { copyCommand, resumeInvocation } from './core/commands'
 import { parseDetails } from './core/details'
+import { readPluggedIn } from './core/plugged-in'
 import { claudeLaunchFrom, continueInvocation, pruneHandoffs, writeHandoff, type ClaudeLaunch } from './core/continue'
 import { applySettings, archive, dismissNotifyTip, keep, loadAppState, restore, setName, togglePin, updateAppState } from './core/app-state'
 import { notificationText, trackWaiting, type Stretch } from './core/notify'
@@ -19,7 +20,7 @@ import { usageTooltip } from './core/usage-text'
 import { hasLegacyHooks, uninstallHooks } from './core/legacy-hooks'
 import { popoverPosition } from './core/popover'
 import { scanDue, unknownLiveIds } from './core/refresh'
-import { DEFAULT_SETTINGS, type AppState, type SessionExtras, type StatuslineSnapshot, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload, type SubagentInfo } from './core/types'
+import { DEFAULT_SETTINGS, type AppState, type SessionExtras, type StatuslineSnapshot, type LiveInfo, type OpenWindowOptions, type SessionDetails, type SessionRecord, type SessionsPayload, type SubagentInfo, type PluggedIn } from './core/types'
 
 const CLAUDE_DIR = join(homedir(), '.claude')
 const PROJECTS_DIR = join(CLAUDE_DIR, 'projects')
@@ -323,6 +324,13 @@ ipcMain.handle('session:details', async (_e, id: unknown): Promise<SessionDetail
   detailsCache.set(r.id, { key, details })
   if (detailsCache.size > DETAILS_CACHE_MAX) detailsCache.delete(detailsCache.keys().next().value as string)
   return details
+})
+
+// Read fresh each time: config files change independently of the transcript.
+ipcMain.handle('session:plugged-in', async (_e, id: unknown): Promise<PluggedIn | null> => {
+  const r = typeof id === 'string' && SESSION_ID.test(id) ? findRecord(id) : undefined
+  if (!r) return null
+  return readPluggedIn({ claudeDir: CLAUDE_DIR, claudeJson: join(homedir(), '.claude.json'), projectPath: r.projectPath, transcriptPath: r.filePath })
 })
 
 ipcMain.on('session:copy-text', (_e, text: unknown) => {

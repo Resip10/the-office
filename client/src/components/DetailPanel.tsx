@@ -9,6 +9,7 @@ import { useDetails } from '../hooks/useDetails'
 import { HandoffCard } from './HandoffCard'
 import { PeekCard } from './PeekCard'
 import { ContinueSheet } from './ContinueSheet'
+import { PluggedInCard } from './PluggedInCard'
 
 interface Props {
   record: SessionRecord
@@ -209,6 +210,8 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect, show
           </ul>
         </section>
       )}
+
+      <PluggedInCard id={r.id} />
 
       <dl className="m-0 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-x-6 gap-y-2 pt-1.5 border-t border-line font-mono text-[11.5px]">
         <Meta label="Surface">{r.entrypoint}</Meta>
