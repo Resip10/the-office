@@ -177,7 +177,7 @@ describe('Window', () => {
     expect(screen.getByText(`cd 'C:\\Bob''s app'; claude --resume ${A}`)).toBeInTheDocument()
   })
 
-  it("'Continued in →' selects the successor, even outside the time range", () => {
+  it("'Continued in' selects the successor, even outside the time range", () => {
     mockBridge({
       records: [rec(A, { title: 'First part', continuedInId: B }), rec(B, { title: 'Second part', lastActivityAt: NOW - 40 * 86_400_000 })],
       pins: [], legacyHooks: false,
@@ -185,7 +185,7 @@ describe('Window', () => {
     render(<Window />)
     fireEvent.click(screen.getByText('First part'))
     const detail = screen.getByRole('region', { name: 'Session details' })
-    fireEvent.click(within(detail).getByRole('button', { name: 'Continued in →' }))
+    fireEvent.click(within(detail).getByRole('button', { name: 'Continued in' }))
     expect(screen.getByRole('heading', { name: 'Second part' })).toBeInTheDocument()
   })
 })

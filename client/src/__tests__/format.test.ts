@@ -1,7 +1,7 @@
 import { contextWindow, ctxPercent, formatBytes, formatCost, formatDuration, formatTokens } from '../lib/format'
 
 describe('formatTokens', () => {
-  it.each([[0, '0'], [950, '950'], [1_000, '1k'], [157_721, '158k'], [1_250_000, '1.3M']])('%d → %s', (n, s) => {
+  it.each([[0, '0'], [950, '950'], [1_000, '1k'], [157_721, '158k'], [1_000_000, '1M'], [1_250_000, '1.3M']])('%d → %s', (n, s) => {
     expect(formatTokens(n)).toBe(s)
   })
 })

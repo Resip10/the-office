@@ -4,6 +4,8 @@ import { Tooltip } from './tooltip'
 
 export function CopyButton({ label = 'Copy', onCopy, className = '' }: { label?: string; onCopy: () => void; className?: string }) {
   const [copied, setCopied] = useState(false)
+  // Always controlled: hover/focus opens it, and it stays open while showing Copied.
+  const [open, setOpen] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>()
   useEffect(() => () => clearTimeout(timer.current), [])
 
@@ -15,7 +17,7 @@ export function CopyButton({ label = 'Copy', onCopy, className = '' }: { label?:
   }
 
   return (
-    <Tooltip content={copied ? 'Copied' : label} open={copied ? true : undefined}>
+    <Tooltip content={copied ? 'Copied' : label} open={copied || open} onOpenChange={setOpen}>
       <button
         type="button"
         aria-label={label}

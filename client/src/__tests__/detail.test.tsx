@@ -1,12 +1,16 @@
 import { vi } from 'vitest'
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import type { SessionDetails, SessionRecord } from '../../../desktop/src/core/types'
+import { act, fireEvent, render as rtlRender, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import type { Handoff, SessionDetails, SessionRecord } from '../../../desktop/src/core/types'
 import { handoffPrompt } from '../../../desktop/src/core/handoff-prompt'
 import { DetailPanel } from '../components/DetailPanel'
+import { TooltipProvider } from '../components/ui/tooltip'
 import { makePayload, mockApi } from './bridge'
 
 const NOW = Date.now()
 const A = '11111111-1111-4111-8111-111111111111'
+const B = '22222222-2222-4222-8222-222222222222'
+const LIVE = { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null }
 
 function rec(over: Partial<SessionRecord> = {}): SessionRecord {
   return {
@@ -32,91 +36,113 @@ const DETAILS: SessionDetails = {
   messageTotal: 12,
 }
 
-function setup(details: SessionDetails | null) {
-  window.sessionTray = mockApi()
+const withHandoff = (h: Partial<Handoff>): SessionDetails => ({ ...DETAILS, handoff: { ...DETAILS.handoff, ...h } })
+
+type Extra = { pinned?: boolean; continuedListed?: boolean; onSelect?: (id: string) => void; showTools?: boolean }
+
+const panel = (r: SessionRecord, x: Extra = {}) => (
+  <TooltipProvider>
+    <DetailPanel
+      record={r}
+      pinned={x.pinned ?? false}
+      continuedListed={x.continuedListed ?? false}
+      onSelect={x.onSelect ?? vi.fn()}
+      showTools={x.showTools}
+      tab="messages"
+      onTabChange={vi.fn()}
+    />
+  </TooltipProvider>
+)
+
+// Renders and lets the details / plugged-in loads settle, so no update lands outside act().
+async function show(r: SessionRecord = rec(), details: SessionDetails | null = DETAILS, x: Extra = {}, api = mockApi()) {
+  window.sessionTray = api
   window.sessionTray.details = vi.fn(async () => details)
-  render(<DetailPanel record={rec()} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+  const view = rtlRender(panel(r, x))
+  await act(async () => {})
+  return view
 }
 
-describe('DetailPanel', () => {
-  it('hides the agents section when only old finished agents are left', () => {
-    window.sessionTray = mockApi()
-    window.sessionTray.details = vi.fn(async () => null)
-    const live = { pid: 1, status: 'idle', name: null, updatedAt: 0, waitingFor: null, statusUpdatedAt: null }
-    render(<DetailPanel record={rec({ live, agents: [
-      { id: 'c', description: 'Yesterday', agentType: null, model: 'haiku', startedAt: null, lastActivityAt: Date.now() - 86_400_000, running: false },
-    ] })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
-    expect(screen.queryByText(/^Agents/)).toBeNull()
+describe('DetailPanel header', () => {
+  it('shows the title, Resume and Continue in…', async () => {
+    await show()
+    expect(screen.getByRole('heading', { name: 'Export feature' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Resume' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Continue in…' })).toBeEnabled()
   })
 
-  it('lists agents of a live session, running first, finished as done', () => {
-    window.sessionTray = mockApi()
-    window.sessionTray.details = vi.fn(async () => null)
-    const live = { pid: 1, status: 'busy', name: null, updatedAt: 0, waitingFor: null, statusUpdatedAt: null }
-    render(<DetailPanel record={rec({ live, agents: [
-      { id: 'a', description: 'Code review', agentType: 'general-purpose', model: 'opus', startedAt: null, lastActivityAt: Date.now(), running: true },
-      { id: 'b', description: 'Find parser', agentType: 'Explore', model: null, startedAt: null, lastActivityAt: Date.now() - 60_000, running: false },
-      { id: 'c', description: 'Yesterday', agentType: 'Explore', model: null, startedAt: null, lastActivityAt: Date.now() - 86_400_000, running: false },
-    ] })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
-    expect(screen.getByText('Agents · 1 running · 1 done · 1 done earlier')).toBeInTheDocument()
-    expect(screen.queryByText('Yesterday')).toBeNull()
-    expect(screen.getByText('opus')).toBeInTheDocument()
-    expect(screen.getByText('Explore · done')).toBeInTheDocument()
+  it('reads Open another while running, with the state as a word', async () => {
+    await show(rec({ live: LIVE }))
+    expect(screen.getByRole('button', { name: 'Open another' })).toBeInTheDocument()
+    expect(screen.getByText('Running')).toBeInTheDocument()
+    expect(screen.queryByText(/pid/)).toBeNull()
   })
 
-  it('shows the stat strip', () => {
-    setup(DETAILS)
-    for (const label of ['Messages', 'Context', '≈ API cost', 'Active']) expect(screen.getByText(label)).toBeInTheDocument()
-    expect(screen.getByText('2h 41m')).toBeInTheDocument()
-    expect(screen.getByText('3 subagents')).toBeInTheDocument()
+  it('an untitled session shows Untitled session, muted', async () => {
+    await show(rec({ titleSource: 'none', title: 'abc' }))
+    expect(screen.getByRole('heading', { name: 'Untitled session' })).toHaveClass('text-muted')
   })
 
-  it('shows the handoff and message peek once details load', async () => {
-    setup(DETAILS)
-    const handoff = await screen.findByRole('region', { name: 'Handoff' })
-    expect(within(handoff).getByText('extracted')).toBeInTheDocument()
-    expect(within(handoff).getByText('Build the export feature')).toBeInTheDocument()
-    const peek = screen.getByRole('region', { name: 'Messages' })
-    expect(within(peek).getByText('last 2 of 12')).toBeInTheDocument()
-    expect(within(peek).queryByText('Edit src\\a.ts')).toBeNull()
+  it('a very long title truncates', async () => {
+    const title = 'x'.repeat(300)
+    await show(rec({ title }))
+    expect(screen.getByRole('heading', { name: title })).toHaveClass('truncate')
   })
 
-  it('Show tools adds tool calls to the peek and is remembered in settings', async () => {
-    window.sessionTray = mockApi()
-    window.sessionTray.details = vi.fn(async () => DETAILS)
-    const { rerender } = render(<DetailPanel record={rec()} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
-    const peek = await screen.findByRole('region', { name: 'Messages' })
-    fireEvent.click(within(peek).getByRole('switch', { name: 'Show tools' }))
-    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ peekTools: true })
-    rerender(<DetailPanel record={rec()} pinned={false} continuedListed={false} onSelect={vi.fn()} showTools />)
-    expect(within(screen.getByRole('region', { name: 'Messages' })).getByText('Edit src\\a.ts')).toBeInTheDocument()
-    expect(screen.getByText('last 3 of 12')).toBeInTheDocument()
+  it('More actions opens Pin, Reveal file, Open transcript, Archive', async () => {
+    const user = userEvent.setup()
+    await show()
+    await user.click(screen.getByRole('button', { name: 'More actions' }))
+    const items = screen.getAllByRole('menuitem').map(i => i.textContent)
+    expect(items).toEqual(['Pin', 'Reveal file', 'Open transcript', 'Archive'])
+    await user.click(screen.getByRole('menuitem', { name: 'Archive' }))
+    expect(window.sessionTray.archive).toHaveBeenCalledWith([A])
   })
 
-  it('Copy as prompt copies the handoff prompt', async () => {
-    setup(DETAILS)
-    fireEvent.click(await screen.findByRole('button', { name: 'Copy as prompt' }))
-    expect(window.sessionTray.copyText).toHaveBeenCalledWith(handoffPrompt({ title: 'Export feature', id: A }, DETAILS))
+  it('menu items act: Unpin toggles, Reveal file and Open transcript reveal', async () => {
+    const user = userEvent.setup()
+    await show(rec(), DETAILS, { pinned: true })
+    await user.click(screen.getByRole('button', { name: 'More actions' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Unpin' }))
+    expect(window.sessionTray.togglePin).toHaveBeenCalledWith(A)
+    await user.click(screen.getByRole('button', { name: 'More actions' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Reveal file' }))
+    await user.click(screen.getByRole('button', { name: 'More actions' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Open transcript' }))
+    expect(window.sessionTray.reveal).toHaveBeenCalledTimes(2)
+    expect(window.sessionTray.reveal).toHaveBeenCalledWith(A)
   })
 
-  it('without details it still shows stats and the command, but no cards', async () => {
-    setup(null)
-    await waitFor(() => expect(window.sessionTray.details).toHaveBeenCalledWith(A))
-    expect(screen.getByText('Messages')).toBeInTheDocument()
-    expect(screen.getByText(`cd 'C:\\projects\\app'; claude --resume ${A}`)).toBeInTheDocument()
-    expect(screen.queryByRole('region', { name: 'Handoff' })).toBeNull()
-    expect(screen.queryByRole('region', { name: 'Messages' })).toBeNull()
+  it('Archive is disabled for a live session', async () => {
+    const user = userEvent.setup()
+    await show(rec({ live: LIVE }))
+    await user.click(screen.getByRole('button', { name: 'More actions' }))
+    expect(screen.getByRole('menuitem', { name: 'Archive' })).toHaveAttribute('aria-disabled', 'true')
   })
 
-  it('keeps Resume, Reveal file and Pin', () => {
-    setup(DETAILS)
-    expect(screen.getByRole('button', { name: 'Resume' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reveal file' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Pin' })).toBeInTheDocument()
+  it('subline: project path copy, branch, started and last active', async () => {
+    await show(rec({ projectPath: 'C:\\projects\\pavchman', gitBranch: 'feat/export' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Copy project path' }))
+    expect(window.sessionTray.copyText).toHaveBeenCalledWith('C:\\projects\\pavchman')
+    expect(screen.getByText('feat/export')).toBeInTheDocument()
+    expect(screen.getByText(/^Started .+, last active just now$/)).toBeInTheDocument()
   })
 
-  it('rename: pencil opens an input; Enter saves, Esc cancels', () => {
-    setup(DETAILS)
+  it('marks a missing project folder', async () => {
+    await show(rec({ projectExists: false }))
+    expect(screen.getByText('(missing)')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Resume' })).toBeDisabled()
+  })
+
+  it('Continued in, in the subline, selects the successor', async () => {
+    const onSelect = vi.fn()
+    await show(rec({ continuedInId: B }), DETAILS, { continuedListed: true, onSelect })
+    fireEvent.click(screen.getByRole('button', { name: 'Continued in' }))
+    expect(onSelect).toHaveBeenCalledWith(B)
+  })
+
+  it('rename: pencil opens an input; Enter saves, Esc cancels', async () => {
+    await show()
     fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
     const input = screen.getByRole('textbox', { name: 'Session name' })
     expect(input).toHaveValue('Export feature')
@@ -129,40 +155,158 @@ describe('DetailPanel', () => {
     expect(window.sessionTray.rename).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('textbox', { name: 'Session name' })).toBeNull()
   })
+})
 
-  it('Archive archives one session and is disabled while it runs', () => {
-    setup(DETAILS)
-    fireEvent.click(screen.getByRole('button', { name: 'Archive' }))
-    expect(window.sessionTray.archive).toHaveBeenCalledWith([A])
+describe('DetailPanel id and command', () => {
+  it('copies the session id and the resume command', async () => {
+    await show()
+    fireEvent.click(screen.getByRole('button', { name: 'Copy session ID' }))
+    expect(window.sessionTray.copyText).toHaveBeenCalledWith(A)
+    fireEvent.click(screen.getByRole('button', { name: 'Copy resume command' }))
+    expect(window.sessionTray.copy).toHaveBeenCalledWith(A)
+  })
+
+  it('a long command truncates and carries the full text in its tooltip', async () => {
+    const path = `C:\\${'deep\\'.repeat(40)}app`
+    await show(rec({ projectPath: path }))
+    const command = `cd '${path}'; claude --resume ${A}`
+    const el = screen.getByText(command)
+    expect(el).toHaveClass('truncate')
+    await act(async () => { el.focus() })
+    expect((await screen.findAllByText(command)).length).toBeGreaterThan(1)
+  })
+})
+
+describe('DetailPanel summary', () => {
+  it('Copy as prompt copies the handoff prompt and reads Copied', async () => {
+    await show()
+    fireEvent.click(screen.getByRole('button', { name: 'Copy as prompt' }))
+    expect(window.sessionTray.copyText).toHaveBeenCalledWith(handoffPrompt({ title: 'Export feature', id: A }, DETAILS))
+    expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument()
+  })
+
+  it.each([
+    ['compact', 'from the compaction summary'],
+    ['recap', "from Claude's recap"],
+    ['extract', 'extracted from the conversation'],
+  ] as const)('source %s → %s', async (source, note) => {
+    await show(rec(), withHandoff({ source, summary: source === 'extract' ? null : 'We built it.' }))
+    expect(within(screen.getByRole('region', { name: 'Summary' })).getByText(note)).toBeInTheDocument()
+  })
+
+  it('shows Goal, Last ask and Last answer for an extract', async () => {
+    await show()
+    const summary = screen.getByRole('region', { name: 'Summary' })
+    expect(within(summary).getByText('Build the export feature')).toBeInTheDocument()
+    expect(within(summary).getByText('Last answer')).toBeInTheDocument()
+  })
+
+  it('shows 3 files, then Show all N expands and Show less collapses', async () => {
+    const files = Array.from({ length: 13 }, (_, i) => `src\\file${i}.ts`)
+    await show(rec(), withHandoff({ files }))
+    const summary = screen.getByRole('region', { name: 'Summary' })
+    expect(within(summary).getAllByText(/^src\\file\d+\.ts$/)).toHaveLength(3)
+    fireEvent.click(within(summary).getByRole('button', { name: 'Show all 13' }))
+    expect(within(summary).getAllByText(/^src\\file\d+\.ts$/)).toHaveLength(13)
+    fireEvent.click(within(summary).getByRole('button', { name: 'Show less' }))
+    expect(within(summary).getAllByText(/^src\\file\d+\.ts$/)).toHaveLength(3)
+  })
+
+  it('shows a skeleton while details load', () => {
+    window.sessionTray = mockApi()
+    window.sessionTray.details = vi.fn(() => new Promise<null>(() => {}))
+    window.sessionTray.pluggedIn = vi.fn(() => new Promise<null>(() => {}))
+    rtlRender(panel(rec()))
+    expect(screen.getByRole('status', { name: 'Loading summary' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Summary' })).toBeNull()
+  })
+
+  it('without details there is no summary card, but figures and command stay', async () => {
+    await show(rec(), null)
+    expect(screen.getByText('messages')).toBeInTheDocument()
+    expect(screen.getByText(`cd 'C:\\projects\\app'; claude --resume ${A}`)).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Summary' })).toBeNull()
+    expect(screen.queryByRole('status', { name: 'Loading summary' })).toBeNull()
+    expect(screen.queryByRole('region', { name: 'Messages' })).toBeNull()
   })
 
   it("switching sessions never shows the previous session's handoff", async () => {
-    const B = '22222222-2222-4222-8222-222222222222'
     window.sessionTray = mockApi()
     window.sessionTray.details = vi.fn(async (id: string) => (id === A ? DETAILS : new Promise<null>(() => {})))
-    const { rerender } = render(<DetailPanel record={rec()} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
-    await screen.findByRole('region', { name: 'Handoff' })
-    rerender(<DetailPanel record={rec({ id: B, title: 'Other' })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
-    expect(screen.queryByRole('region', { name: 'Handoff' })).toBeNull()
+    const { rerender } = rtlRender(panel(rec()))
+    await screen.findByRole('region', { name: 'Summary' })
+    rerender(panel(rec({ id: B, title: 'Other' })))
+    expect(screen.queryByRole('region', { name: 'Summary' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Continue in…' })).toBeDisabled()
+    await act(async () => {})
+  })
+})
+
+describe('DetailPanel figures', () => {
+  it('shows messages, context with its share, cost and active time', async () => {
+    await show(rec({ contextTokens: 215_000 }))
+    expect(screen.getByText('messages')).toBeInTheDocument()
+    expect(screen.getByText('215k')).toBeInTheDocument()
+    expect(screen.getByText('/ 1M')).toBeInTheDocument()
+    expect(screen.getByText('context, 22%')).toBeInTheDocument()
+    expect(screen.getByText('$4.82')).toBeInTheDocument()
+    expect(screen.getByText('≈ API cost')).toBeInTheDocument()
+    expect(screen.getByText('2h 41m')).toBeInTheDocument()
+    expect(screen.getByText('active')).toBeInTheDocument()
+    expect(screen.queryByRole('progressbar')).toBeNull()
   })
 
-  it("the session's status line text, effort and thinking show quietly, marked as such", () => {
+  it('unknown context and cost show —', async () => {
+    await show(rec({ contextTokens: null, costUSD: null, model: null }))
+    expect(screen.getByText('context')).toBeInTheDocument()
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2)
+  })
+})
+
+describe('DetailPanel lower sections (until tabs)', () => {
+  it('hides the agents section when only old finished agents are left', async () => {
+    await show(rec({ live: { ...LIVE, status: 'idle' }, agents: [
+      { id: 'c', description: 'Yesterday', agentType: null, model: 'haiku', startedAt: null, lastActivityAt: Date.now() - 86_400_000, running: false },
+    ] }), null)
+    expect(screen.queryByText(/^Agents/)).toBeNull()
+  })
+
+  it('lists agents of a live session, running first, finished as done', async () => {
+    await show(rec({ live: LIVE, agents: [
+      { id: 'a', description: 'Code review', agentType: 'general-purpose', model: 'opus', startedAt: null, lastActivityAt: Date.now(), running: true },
+      { id: 'b', description: 'Find parser', agentType: 'Explore', model: null, startedAt: null, lastActivityAt: Date.now() - 60_000, running: false },
+      { id: 'c', description: 'Yesterday', agentType: 'Explore', model: null, startedAt: null, lastActivityAt: Date.now() - 86_400_000, running: false },
+    ] }), null)
+    expect(screen.getByText('Agents · 1 running · 1 done · 1 done earlier')).toBeInTheDocument()
+    expect(screen.queryByText('Yesterday')).toBeNull()
+    expect(screen.getByText('opus')).toBeInTheDocument()
+    expect(screen.getByText('Explore · done')).toBeInTheDocument()
+  })
+
+  it('shows the message peek once details load', async () => {
+    await show()
+    const peek = screen.getByRole('region', { name: 'Messages' })
+    expect(within(peek).getByText('last 2 of 12')).toBeInTheDocument()
+    expect(within(peek).queryByText('Edit src\\a.ts')).toBeNull()
+  })
+
+  it('Show tools adds tool calls to the peek and is remembered in settings', async () => {
+    const { rerender } = await show()
+    fireEvent.click(within(screen.getByRole('region', { name: 'Messages' })).getByRole('switch', { name: 'Show tools' }))
+    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ peekTools: true })
+    rerender(panel(rec(), { showTools: true }))
+    expect(within(screen.getByRole('region', { name: 'Messages' })).getByText('Edit src\\a.ts')).toBeInTheDocument()
+    expect(screen.getByText('last 3 of 12')).toBeInTheDocument()
+  })
+
+  it("the session's status line text, effort and thinking show quietly, marked as such", async () => {
     const r = rec()
-    window.sessionTray = mockApi(makePayload({ statuslineLinked: true, sessionExtras: { [r.id]: { text: 'Opus 5.5 | main', effort: 'high', thinking: true } } }))
-    render(<DetailPanel record={r} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+    await show(r, DETAILS, {}, mockApi(makePayload({ statuslineLinked: true, sessionExtras: { [r.id]: { text: 'Opus 5.5 | main', effort: 'high', thinking: true } } })))
     expect(screen.getByLabelText('From your Claude Code status line')).toHaveTextContent('Opus 5.5 | main · effort high · thinking on')
   })
 
-  it('no status line row when nothing is known for the session', () => {
-    window.sessionTray = mockApi(makePayload())
-    render(<DetailPanel record={rec()} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
+  it('no status line row when nothing is known for the session', async () => {
+    await show(rec(), DETAILS, {}, mockApi(makePayload()))
     expect(screen.queryByLabelText('From your Claude Code status line')).toBeNull()
-  })
-
-  it('Archive is disabled for a running session', () => {
-    window.sessionTray = mockApi()
-    render(<DetailPanel record={rec({ live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } })} pinned={false} continuedListed={false} onSelect={vi.fn()} />)
-    expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled()
   })
 })

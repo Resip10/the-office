@@ -5,9 +5,9 @@ export function TooltipProvider({ children }: { children: ReactNode }) {
   return <TooltipPrimitive.Provider delayDuration={300}>{children}</TooltipPrimitive.Provider>
 }
 
-export function Tooltip({ content, children, side = 'top', open }: { content: ReactNode; children: ReactElement; side?: 'top'; open?: boolean }) {
+export function Tooltip({ content, children, side = 'top', open, onOpenChange }: { content: ReactNode; children: ReactElement; side?: 'top'; open?: boolean; onOpenChange?: (open: boolean) => void }) {
   return (
-    <TooltipPrimitive.Root open={open}>
+    <TooltipPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
       <TooltipPrimitive.Portal>
         <TooltipPrimitive.Content

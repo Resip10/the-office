@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useListState } from '../hooks/useListState'
 import { DetailPanel } from '../components/DetailPanel'
+import type { DetailTab } from '../components/details/types'
 import { FilterBar } from '../components/FilterBar'
 import { LegacyHooksBanner } from '../components/LegacyHooksBanner'
 import { NotifyTip } from '../components/NotifyTip'
@@ -10,6 +11,7 @@ import { Cleanup } from './Cleanup'
 
 export function Window() {
   const s = useListState()
+  const [tab, setTab] = useState<DetailTab>('messages')
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -73,6 +75,8 @@ export function Window() {
               continuedListed={s.selected.continuedInId !== null && s.listedIds.has(s.selected.continuedInId)}
               onSelect={s.select}
               showTools={s.settings.peekTools}
+              tab={tab}
+              onTabChange={setTab}
             />
           ) : (
             <p className="m-auto text-sm text-muted">Select a session to see details</p>
