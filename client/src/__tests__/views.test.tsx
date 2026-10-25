@@ -1,5 +1,6 @@
 import { vi } from 'vitest'
 import { act, fireEvent, render as rtlRender, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { TooltipProvider } from '../components/ui/tooltip'
 import type { SessionRecord, SessionsPayload } from '../../../desktop/src/core/types'
@@ -150,42 +151,43 @@ describe('Popover stale count', () => {
 })
 
 describe('Window', () => {
-  it('selects the session main asks it to open', () => {
+  it('selects the session main asks it to open', async () => {
     let opened: ((o: { id?: string }) => void) | undefined
     mockBridge({ records: [rec(A, { title: 'Peeked' })], pins: [], legacyHooks: false })
     window.sessionTray.onOpen = vi.fn(cb => { opened = cb; return () => {} })
     render(<Window />)
-    act(() => opened?.({ id: A }))
+    await act(async () => opened?.({ id: A }))
     expect(screen.getByRole('heading', { name: 'Peeked' })).toBeInTheDocument()
   })
 
-  it('selecting a row shows its details and resume command', () => {
+  it('selecting a row shows its details, resume command and pull requests', async () => {
     mockBridge({ records: [rec(A, { title: 'Pick me', prUrls: ['https://github.com/acme/app/pull/7'] })], pins: [], legacyHooks: false })
     render(<Window />)
     expect(screen.getByText('Select a session to see details')).toBeInTheDocument()
-    fireEvent.click(screen.getByText('Pick me'))
+    await act(async () => fireEvent.click(screen.getByText('Pick me')))
     expect(screen.getByRole('heading', { name: 'Pick me' })).toBeInTheDocument()
     expect(screen.getByText(`cd 'C:\\projects\\app'; claude --resume ${A}`)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'https://github.com/acme/app/pull/7' }))
+    await userEvent.setup().click(screen.getByRole('tab', { name: 'Pull requests 1' }))
+    fireEvent.click(screen.getByRole('button', { name: 'acme/app #7' }))
     expect(window.sessionTray.openUrl).toHaveBeenCalledWith('https://github.com/acme/app/pull/7')
   })
 
-  it("resume command uses the bridge platform's quoting (PowerShell doubles ')", () => {
+  it("resume command uses the bridge platform's quoting (PowerShell doubles ')", async () => {
     mockBridge({ records: [rec(A, { title: 'Quote', projectPath: "C:\\Bob's app" })], pins: [], legacyHooks: false })
     render(<Window />)
-    fireEvent.click(screen.getByText('Quote'))
+    await act(async () => fireEvent.click(screen.getByText('Quote')))
     expect(screen.getByText(`cd 'C:\\Bob''s app'; claude --resume ${A}`)).toBeInTheDocument()
   })
 
-  it("'Continued in' selects the successor, even outside the time range", () => {
+  it("'Continued in' selects the successor, even outside the time range", async () => {
     mockBridge({
       records: [rec(A, { title: 'First part', continuedInId: B }), rec(B, { title: 'Second part', lastActivityAt: NOW - 40 * 86_400_000 })],
       pins: [], legacyHooks: false,
     })
     render(<Window />)
-    fireEvent.click(screen.getByText('First part'))
+    await act(async () => fireEvent.click(screen.getByText('First part')))
     const detail = screen.getByRole('region', { name: 'Session details' })
-    fireEvent.click(within(detail).getByRole('button', { name: 'Continued in' }))
+    await act(async () => fireEvent.click(within(detail).getByRole('button', { name: 'Continued in' })))
     expect(screen.getByRole('heading', { name: 'Second part' })).toBeInTheDocument()
   })
 })

@@ -11,7 +11,7 @@ import { Cleanup } from './Cleanup'
 
 export function Window() {
   const s = useListState()
-  const [tab, setTab] = useState<DetailTab>('messages')
+  const [detailTab, setDetailTab] = useState<DetailTab>('messages')
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -75,8 +75,8 @@ export function Window() {
               continuedListed={s.selected.continuedInId !== null && s.listedIds.has(s.selected.continuedInId)}
               onSelect={s.select}
               showTools={s.settings.peekTools}
-              tab={tab}
-              onTabChange={setTab}
+              tab={detailTab}
+              onTabChange={setDetailTab}
             />
           ) : (
             <p className="m-auto text-sm text-muted">Select a session to see details</p>

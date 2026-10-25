@@ -1,9 +1,11 @@
 import { vi } from 'vitest'
+import { useState } from 'react'
 import { act, fireEvent, render as rtlRender, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { Handoff, SessionDetails, SessionRecord } from '../../../desktop/src/core/types'
+import type { Handoff, PluggedIn, SessionDetails, SessionRecord } from '../../../desktop/src/core/types'
 import { handoffPrompt } from '../../../desktop/src/core/handoff-prompt'
 import { DetailPanel } from '../components/DetailPanel'
+import type { DetailTab } from '../components/details/types'
 import { TooltipProvider } from '../components/ui/tooltip'
 import { makePayload, mockApi } from './bridge'
 
@@ -38,19 +40,27 @@ const DETAILS: SessionDetails = {
 
 const withHandoff = (h: Partial<Handoff>): SessionDetails => ({ ...DETAILS, handoff: { ...DETAILS.handoff, ...h } })
 
-type Extra = { pinned?: boolean; continuedListed?: boolean; onSelect?: (id: string) => void; showTools?: boolean }
+type Extra = { pinned?: boolean; continuedListed?: boolean; onSelect?: (id: string) => void; showTools?: boolean; tab?: DetailTab }
 
-const panel = (r: SessionRecord, x: Extra = {}) => (
-  <TooltipProvider>
+// Holds the tab like Window does, so clicking a tab switches it.
+function Harness({ r, x }: { r: SessionRecord; x: Extra }) {
+  const [tab, setTab] = useState<DetailTab>(x.tab ?? 'messages')
+  return (
     <DetailPanel
       record={r}
       pinned={x.pinned ?? false}
       continuedListed={x.continuedListed ?? false}
       onSelect={x.onSelect ?? vi.fn()}
       showTools={x.showTools}
-      tab="messages"
-      onTabChange={vi.fn()}
+      tab={tab}
+      onTabChange={setTab}
     />
+  )
+}
+
+const panel = (r: SessionRecord, x: Extra = {}) => (
+  <TooltipProvider>
+    <Harness r={r} x={x} />
   </TooltipProvider>
 )
 
@@ -230,6 +240,8 @@ describe('DetailPanel summary', () => {
     rtlRender(panel(rec()))
     expect(screen.getByRole('status', { name: 'Loading summary' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Summary' })).toBeNull()
+    expect(screen.getByRole('tab', { name: 'Messages' })).toBeInTheDocument()
+    expect(within(screen.getByRole('tabpanel')).getByRole('status', { name: 'Loading messages' })).toBeInTheDocument()
   })
 
   it('without details there is no summary card, but figures and command stay', async () => {
@@ -238,7 +250,7 @@ describe('DetailPanel summary', () => {
     expect(screen.getByText(`cd 'C:\\projects\\app'; claude --resume ${A}`)).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Summary' })).toBeNull()
     expect(screen.queryByRole('status', { name: 'Loading summary' })).toBeNull()
-    expect(screen.queryByRole('region', { name: 'Messages' })).toBeNull()
+    expect(within(screen.getByRole('tabpanel')).getByText('No messages to show')).toBeInTheDocument()
   })
 
   it("switching sessions never shows the previous session's handoff", async () => {
@@ -274,50 +286,121 @@ describe('DetailPanel figures', () => {
   })
 })
 
-describe('DetailPanel lower sections (until tabs)', () => {
-  it('hides the agents section when only old finished agents are left', async () => {
-    await show(rec({ live: { ...LIVE, status: 'idle' }, agents: [
-      { id: 'c', description: 'Yesterday', agentType: null, model: 'haiku', startedAt: null, lastActivityAt: Date.now() - 86_400_000, running: false },
-    ] }), null)
-    expect(screen.queryByText(/^Agents/)).toBeNull()
+describe('DetailPanel tabs', () => {
+  const tab = (name: string | RegExp) => screen.getByRole('tab', { name })
+  const panelEl = () => screen.getByRole('tabpanel')
+  const PRS = ['https://github.com/o/r/pull/15', 'https://example.com/review/9']
+
+  it('shows tabs with counts; no Agents tab when there are none', async () => {
+    await show(rec({ prUrls: PRS, subagentCount: 0 }))
+    expect(tab('Messages 12')).toHaveAttribute('aria-selected', 'true')
+    expect(tab('Pull requests 2')).toBeInTheDocument()
+    expect(tab('Info')).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /^Agents/ })).toBeNull()
+    expect(screen.queryByRole('tab', { name: /^Plugged in/ })).toBeNull()
+  })
+
+  it('a remembered tab the session lacks falls back to Messages', async () => {
+    await show(rec(), DETAILS, { tab: 'prs' })
+    expect(screen.queryByRole('tab', { name: /^Pull requests/ })).toBeNull()
+    expect(tab('Messages 12')).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('a remembered tab arriving late does not steal the selection', async () => {
+    let resolve: (d: PluggedIn) => void = () => {}
+    window.sessionTray = mockApi()
+    window.sessionTray.details = vi.fn(async () => DETAILS)
+    window.sessionTray.pluggedIn = vi.fn(() => new Promise<PluggedIn>(r => { resolve = r }))
+    rtlRender(panel(rec(), { tab: 'plugged' }))
+    await act(async () => {})
+    expect(tab('Messages 12')).toHaveAttribute('aria-selected', 'true')
+    await act(async () => resolve({ loadedAt: null, servers: [], plugins: [{ id: 'p@m', name: 'p', marketplace: 'm', version: null, scope: 'global', enabled: true }] }))
+    expect(tab('Plugged in 1')).toHaveAttribute('aria-selected', 'false')
+    expect(tab('Messages 12')).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('Messages shows the conversation with a caption', async () => {
+    await show()
+    expect(within(panelEl()).getByText('Last 2 of 12')).toBeInTheDocument()
+    expect(within(panelEl()).queryByText('Edit src\\a.ts')).toBeNull()
+  })
+
+  it('Show tool calls sits on Messages only and is remembered in settings', async () => {
+    const user = userEvent.setup()
+    const { rerender } = await show(rec({ prUrls: PRS }))
+    await user.click(screen.getByRole('switch', { name: 'Show tool calls' }))
+    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ peekTools: true })
+    rerender(panel(rec({ prUrls: PRS }), { showTools: true }))
+    expect(within(panelEl()).getByText('Edit src\\a.ts')).toBeInTheDocument()
+    expect(screen.getByText('Last 3 of 12')).toBeInTheDocument()
+    await user.click(tab('Pull requests 2'))
+    expect(screen.queryByRole('switch', { name: 'Show tool calls' })).toBeNull()
+  })
+
+  it('Pull requests: short label, click opens, Copy link copies the url', async () => {
+    const user = userEvent.setup()
+    await show(rec({ prUrls: PRS }))
+    await user.click(tab('Pull requests 2'))
+    const p = panelEl()
+    await user.click(within(p).getByRole('button', { name: 'o/r #15' }))
+    expect(window.sessionTray.openUrl).toHaveBeenCalledWith(PRS[0])
+    expect(within(p).getByRole('button', { name: PRS[1] })).toBeInTheDocument()
+    fireEvent.click(within(p).getAllByRole('button', { name: 'Copy link' })[0])
+    expect(window.sessionTray.copyText).toHaveBeenCalledWith(PRS[0])
   })
 
   it('lists agents of a live session, running first, finished as done', async () => {
+    const user = userEvent.setup()
     await show(rec({ live: LIVE, agents: [
       { id: 'a', description: 'Code review', agentType: 'general-purpose', model: 'opus', startedAt: null, lastActivityAt: Date.now(), running: true },
       { id: 'b', description: 'Find parser', agentType: 'Explore', model: null, startedAt: null, lastActivityAt: Date.now() - 60_000, running: false },
       { id: 'c', description: 'Yesterday', agentType: 'Explore', model: null, startedAt: null, lastActivityAt: Date.now() - 86_400_000, running: false },
     ] }), null)
-    expect(screen.getByText('Agents · 1 running · 1 done · 1 done earlier')).toBeInTheDocument()
-    expect(screen.queryByText('Yesterday')).toBeNull()
-    expect(screen.getByText('opus')).toBeInTheDocument()
-    expect(screen.getByText('Explore · done')).toBeInTheDocument()
+    await user.click(tab('Agents 3'))
+    const p = panelEl()
+    expect(within(p).getByText('1 running · 1 done · 1 done earlier')).toBeInTheDocument()
+    expect(within(p).queryByText('Yesterday')).toBeNull()
+    expect(within(p).getByText('opus')).toBeInTheDocument()
+    expect(within(p).getByText('Explore · done')).toBeInTheDocument()
   })
 
-  it('shows the message peek once details load', async () => {
+  it('an ended session counts the subagents that ran', async () => {
+    const user = userEvent.setup()
+    await show(rec({ subagentCount: 3 }))
+    await user.click(tab('Agents 3'))
+    expect(within(panelEl()).getByText('3 subagents ran in this session')).toBeInTheDocument()
+  })
+
+  it('Info lists surface, version, size, title source, id and pid when live', async () => {
+    const user = userEvent.setup()
+    await show(rec({ live: { ...LIVE, pid: 4242, name: 'worker' } }))
+    await user.click(tab('Info'))
+    const p = panelEl()
+    for (const [k, v] of [['Surface', 'cli'], ['Claude Code', '2.1.302'], ['File size', '2 KB'], ['Title from', 'ai'], ['Session ID', A], ['pid', '4242'], ['Live name', 'worker']]) {
+      expect(within(p).getByText(k)).toBeInTheDocument()
+      expect(within(p).getByText(v)).toBeInTheDocument()
+    }
+  })
+
+  it('Info has no pid for an ended session', async () => {
+    const user = userEvent.setup()
     await show()
-    const peek = screen.getByRole('region', { name: 'Messages' })
-    expect(within(peek).getByText('last 2 of 12')).toBeInTheDocument()
-    expect(within(peek).queryByText('Edit src\\a.ts')).toBeNull()
+    await user.click(tab('Info'))
+    expect(within(panelEl()).queryByText('pid')).toBeNull()
   })
 
-  it('Show tools adds tool calls to the peek and is remembered in settings', async () => {
-    const { rerender } = await show()
-    fireEvent.click(within(screen.getByRole('region', { name: 'Messages' })).getByRole('switch', { name: 'Show tools' }))
-    expect(window.sessionTray.setSettings).toHaveBeenCalledWith({ peekTools: true })
-    rerender(panel(rec(), { showTools: true }))
-    expect(within(screen.getByRole('region', { name: 'Messages' })).getByText('Edit src\\a.ts')).toBeInTheDocument()
-    expect(screen.getByText('last 3 of 12')).toBeInTheDocument()
-  })
-
-  it("the session's status line text, effort and thinking show quietly, marked as such", async () => {
+  it("Info shows the session's status line text, effort and thinking, marked as such", async () => {
+    const user = userEvent.setup()
     const r = rec()
     await show(r, DETAILS, {}, mockApi(makePayload({ statuslineLinked: true, sessionExtras: { [r.id]: { text: 'Opus 5.5 | main', effort: 'high', thinking: true } } })))
-    expect(screen.getByLabelText('From your Claude Code status line')).toHaveTextContent('Opus 5.5 | main · effort high · thinking on')
+    await user.click(tab('Info'))
+    expect(within(panelEl()).getByLabelText('From your Claude Code status line')).toHaveTextContent('Opus 5.5 | main · effort high · thinking on')
   })
 
   it('no status line row when nothing is known for the session', async () => {
+    const user = userEvent.setup()
     await show(rec(), DETAILS, {}, mockApi(makePayload()))
+    await user.click(tab('Info'))
     expect(screen.queryByLabelText('From your Claude Code status line')).toBeNull()
   })
 })

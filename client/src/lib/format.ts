@@ -24,6 +24,12 @@ export function formatDuration(ms: number): string {
   return `${s}s`
 }
 
+// A GitHub pull request URL as `owner/repo #N`; any other URL as it is.
+export function prLabel(url: string): string {
+  const m = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)(?:[/?#].*)?$/.exec(url)
+  return m ? `${m[1]}/${m[2]} #${m[3]}` : url
+}
+
 const LARGE_WINDOW = 1_000_000
 const DEFAULT_WINDOW = 200_000
 
