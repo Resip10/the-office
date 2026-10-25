@@ -112,7 +112,7 @@ export function DetailHeader({ record: r, pinned, continuedListed, onSelect, con
         {path && (
           <span className="flex items-center gap-1.5 min-w-0">
             <FolderIcon width={13} height={13} className="shrink-0 text-faint" />
-            <span className="truncate font-mono text-[12px]">{path}</span>
+            <span className="truncate font-mono text-[12px]" title={path}>{path}</span>
             {!r.projectExists && <span>(missing)</span>}
             <CopyButton label="Copy project path" onCopy={() => window.sessionTray.copyText(path)} />
           </span>
@@ -120,7 +120,7 @@ export function DetailHeader({ record: r, pinned, continuedListed, onSelect, con
         {r.gitBranch && (
           <span className="flex items-center gap-1.5 min-w-0">
             <BranchIcon width={13} height={13} className="shrink-0 text-faint" />
-            <span className="truncate font-mono text-[12px]">{r.gitBranch}</span>
+            <span className="truncate font-mono text-[12px]" title={r.gitBranch}>{r.gitBranch}</span>
           </span>
         )}
         <span>{when}</span>

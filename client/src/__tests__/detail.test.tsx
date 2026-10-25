@@ -128,6 +128,17 @@ describe('DetailPanel header', () => {
     expect(screen.getByText(/^Started .+, last active just now$/)).toBeInTheDocument()
   })
 
+  it('a deep path and long branch truncate and carry the full text in title', async () => {
+    const path = `C:\${'deep\'.repeat(40)}app`
+    const branch = `feat/${'x'.repeat(200)}`
+    await show(rec({ projectPath: path, gitBranch: branch }))
+    for (const text of [path, branch]) {
+      const el = screen.getByText(text)
+      expect(el).toHaveClass('truncate')
+      expect(el).toHaveAttribute('title', text)
+    }
+  })
+
   it('marks a missing project folder', async () => {
     await show(rec({ projectExists: false }))
     expect(screen.getByText('(missing)')).toBeInTheDocument()
