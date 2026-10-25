@@ -12,7 +12,7 @@ const SHOWN_FILES = 3
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <>
-      <dt className="pt-0.5 font-mono text-[10.5px] uppercase tracking-[.08em] text-muted">{label}</dt>
+      <dt className="pt-0.5 text-[12px] text-muted">{label}</dt>
       <dd className="m-0 min-w-0">{children}</dd>
     </>
   )
@@ -25,7 +25,7 @@ export function HandoffCard({ handoff: h, onCopy }: { handoff: Handoff; onCopy: 
   return (
     <section aria-label="Handoff" className="flex flex-col rounded-[10px] border border-line bg-surface">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-line">
-        <span className="font-mono text-[10.5px] uppercase tracking-[.08em] text-text">Handoff</span>
+        <span className="text-[12px] text-text">Handoff</span>
         <span className="font-mono text-[10.5px] text-muted border border-line-strong rounded px-1.5">{SOURCE_TAG[h.source]}</span>
         <button
           onClick={onCopy}

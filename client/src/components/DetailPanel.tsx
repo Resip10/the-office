@@ -32,7 +32,7 @@ const dateTime = (ts: number | null) =>
 function Stat({ label, value, sub, first = false }: { label: string; value: ReactNode; sub: ReactNode; first?: boolean }) {
   return (
     <div className={`flex flex-col gap-1.5 px-4 py-3.5 min-w-0 ${first ? '' : 'border-l border-line'}`}>
-      <span className="font-mono text-[10.5px] uppercase tracking-[.08em] text-muted">{label}</span>
+      <span className="text-[12px] text-muted">{label}</span>
       <span className="font-mono text-xl tabular-nums">{value}</span>
       {sub}
     </div>
@@ -187,7 +187,7 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect, show
 
       {agents.length > 0 && (
         <section className="flex flex-col gap-1.5">
-          <h2 className="m-0 font-mono text-[10.5px] font-normal uppercase tracking-[.08em] text-muted">
+          <h2 className="m-0 text-[12px] font-normal text-muted">
             Agents · {agents.filter(a => a.running).length} running · {agents.filter(a => !a.running).length} done
             {doneEarlier > 0 && ` · ${doneEarlier} done earlier`}
           </h2>
@@ -207,7 +207,7 @@ export function DetailPanel({ record: r, pinned, continuedListed, onSelect, show
 
       {r.prUrls.length > 0 && (
         <section className="flex flex-col gap-1.5">
-          <h2 className="m-0 font-mono text-[10.5px] font-normal uppercase tracking-[.08em] text-muted">Pull requests</h2>
+          <h2 className="m-0 text-[12px] font-normal text-muted">Pull requests</h2>
           <ul className="m-0 p-0 list-none text-sm">
             {r.prUrls.map(url => (
               <li key={url}>

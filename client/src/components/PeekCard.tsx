@@ -13,7 +13,7 @@ export function PeekCard({ items: peek, total, showTools, onOpenTranscript }: Pr
   return (
     <section aria-label="Messages" className="flex flex-col rounded-[10px] border border-line bg-surface">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-line">
-        <span className="font-mono text-[10.5px] uppercase tracking-[.08em] text-text">Messages</span>
+        <span className="text-[12px] text-text">Messages</span>
         <span className="font-mono text-[10.5px] text-muted">last {peek.length} of {total}</span>
         <span className="ml-auto flex items-center gap-1.5 font-mono text-[10.5px] text-muted">
           <button
@@ -37,7 +37,7 @@ export function PeekCard({ items: peek, total, showTools, onOpenTranscript }: Pr
       <ol className="m-0 p-0 list-none px-4 py-3.5 flex flex-col gap-3 text-[13px] leading-normal">
         {peek.map((item, i) => (
           <li key={i} className="flex gap-2.5">
-            <span className={`w-11 shrink-0 pt-0.5 font-mono text-[10.5px] uppercase tracking-[.08em] ${item.role === 'user' ? 'text-accent-text' : 'text-muted'}`}>
+            <span className={`w-11 shrink-0 pt-0.5 text-[12px] ${item.role === 'user' ? 'text-accent-text' : 'text-muted'}`}>
               {LABEL[item.role]}
             </span>
             {item.role === 'tool'

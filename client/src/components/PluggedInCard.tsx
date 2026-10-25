@@ -11,7 +11,7 @@ const STATUS: Record<NonNullable<McpServerInfo['status']>, { label: string; colo
 }
 
 const chip = 'shrink-0 px-1.5 rounded-full border border-line-strong text-[10px] text-text-2'
-const heading = 'm-0 font-mono text-[10.5px] font-normal uppercase tracking-[.08em] text-muted'
+const heading = 'm-0 text-[12px] font-normal text-muted'
 
 function scopeLabel(s: McpServerInfo): string {
   return s.scope === 'plugin' && s.source ? `plugin · ${s.source}` : s.scope

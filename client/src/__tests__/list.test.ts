@@ -1,6 +1,6 @@
 import { DEFAULT_SETTINGS } from '../../../desktop/src/core/types'
 import type { SessionRecord } from '../../../desktop/src/core/types'
-import { buildSections, projectName, relativeTime, stateOf, type Filters, staleList } from '../lib/list'
+import { buildSections, isUntitled, projectName, relativeTime, stateOf, type Filters, staleList } from '../lib/list'
 
 const NOW = new Date(2026, 9, 19, 15, 0, 0).getTime() // local time, Oct 19 2026 15:00
 const MIN = 60_000
@@ -178,5 +178,12 @@ describe('staleList', () => {
     const list = staleList([old, pinned, fresh], { ...state, pins: ['pin'] }, NOW)
     expect(list.map(x => x.record.id)).toEqual(['old'])
     expect(list[0].reasons).toEqual([{ kind: 'idle', days: 40 }])
+  })
+})
+
+describe('isUntitled', () => {
+  it('is true only for titleSource none', () => {
+    expect(isUntitled({ titleSource: 'none' })).toBe(true)
+    expect(isUntitled({ titleSource: 'ai' })).toBe(false)
   })
 })

@@ -72,7 +72,7 @@ export function ContinueSheet({ record: r, details, onClose }: Props) {
 
           {target === 'claude' && (
             <div className="flex items-center gap-2.5">
-              <span className="w-14 font-mono text-[10.5px] uppercase tracking-[.08em] text-muted">Folder</span>
+              <span className="w-14 text-[12px] text-muted">Folder</span>
               <span className={`flex-1 min-w-0 truncate font-mono text-xs px-2.5 py-[7px] rounded-[7px] border border-line bg-sunken ${folder ? 'text-text' : 'text-run'}`}>
                 {folder ?? 'Project folder is gone. Pick a folder.'}
               </span>
@@ -82,7 +82,7 @@ export function ContinueSheet({ record: r, details, onClose }: Props) {
 
           <div className="flex-1 min-h-[220px] flex flex-col gap-2">
             <div className="flex items-baseline gap-2">
-              <label htmlFor="continue-prompt" className="font-mono text-[10.5px] uppercase tracking-[.08em] text-muted">First message</label>
+              <label htmlFor="continue-prompt" className="text-[12px] text-muted">First message</label>
               <span className="ml-auto font-mono text-[11px] text-muted">~{Math.round(prompt.length / 4)} tokens</span>
             </div>
             <textarea

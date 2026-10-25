@@ -1,13 +1,18 @@
 import { vi } from 'vitest'
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render as rtlRender, screen, within } from '@testing-library/react'
+import type { ReactElement } from 'react'
+import { TooltipProvider } from '../components/ui/tooltip'
 import type { SessionRecord, SessionsPayload } from '../../../desktop/src/core/types'
 import { mockApi, makePayload } from './bridge'
 import { Popover } from '../views/Popover'
 import { Window } from '../views/Window'
 
+const render = (ui: ReactElement) => rtlRender(<TooltipProvider>{ui}</TooltipProvider>)
+
 const NOW = Date.now()
 const A = '11111111-1111-4111-8111-111111111111'
 const B = '22222222-2222-4222-8222-222222222222'
+const C = '33333333-3333-4333-8333-333333333333'
 
 function rec(id: string, over: Partial<SessionRecord> = {}): SessionRecord {
   return {
@@ -34,6 +39,17 @@ describe('Popover', () => {
     const recent = screen.getByText('Recent', { selector: 'h2' }).closest('section') as HTMLElement
     expect(within(running).getByText('Live one')).toBeInTheDocument()
     expect(within(recent).getByText('Old one')).toBeInTheDocument()
+  })
+
+  it('section headers are sentence case, not uppercase', () => {
+    mockBridge({
+      records: [rec(A, { live: { pid: 1, status: 'busy', name: null, updatedAt: NOW, waitingFor: null, statusUpdatedAt: null } }), rec(B), rec(C)],
+      pins: [B],
+    })
+    render(<Popover />)
+    for (const name of ['Running', 'Pinned', 'Recent']) {
+      expect(screen.getByText(name, { selector: 'h2' })).not.toHaveClass('uppercase')
+    }
   })
 
   it('a waiting session shows the notifications tip; Turn on enables them', () => {

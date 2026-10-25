@@ -66,7 +66,7 @@ const Group = ({ children }: { children: ReactNode }) => (
 )
 
 const Label = ({ children }: { children: ReactNode }) => (
-  <span className="font-mono text-[10.5px] uppercase tracking-[.08em] text-muted">{children}</span>
+  <span className="text-[12px] text-muted">{children}</span>
 )
 
 function ThemeCard({ id, selected }: { id: ThemeId; selected: boolean }) {
