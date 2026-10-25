@@ -19,16 +19,16 @@ export function InfoTab({ record: r }: { record: SessionRecord }) {
     extras.text,
     extras.effort && `effort ${extras.effort}`,
     extras.thinking !== null && `thinking ${extras.thinking ? 'on' : 'off'}`,
-  ].filter(Boolean).join(' · ')
+  ].filter(Boolean).join(', ')
 
   return (
-    <dl className="m-0 grid grid-cols-[112px_minmax(0,1fr)] items-center gap-y-1.5">
+    <dl className="m-0 grid grid-cols-[136px_minmax(0,1fr)] items-center gap-y-1.5">
       <Row label="Surface">{r.entrypoint}</Row>
-      <Row label="Claude Code">{r.version}</Row>
+      <Row label="Claude Code version">{r.version}</Row>
       <Row label="File size">{formatBytes(r.fileSize)}</Row>
       <Row label="Title from">{r.titleSource}</Row>
       <Row label="Session ID">{r.id}</Row>
-      {r.live && <Row label="pid">{r.live.pid}</Row>}
+      {r.live && <Row label="PID">{r.live.pid}</Row>}
       {r.live?.name && <Row label="Live name">{r.live.name}</Row>}
       {extrasText && (
         <Row label="Status line">

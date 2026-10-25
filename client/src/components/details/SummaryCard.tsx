@@ -60,8 +60,8 @@ export function SummaryCard({ handoff: h, onCopy }: { handoff: Handoff; onCopy: 
       </div>
       {!extract && <p className={`m-0 whitespace-pre-wrap line-clamp-[12] ${prose}`}>{h.summary}</p>}
       <dl className="m-0 grid grid-cols-[72px_minmax(0,1fr)] gap-x-3.5 gap-y-2.5">
-        {extract && h.goal && <Field label="Goal"><span className={prose}>{h.goal}</span></Field>}
-        {extract && h.lastAsk && <Field label="Last ask"><span className={prose}>“{h.lastAsk}”</span></Field>}
+        {extract && h.goal && <Field label="Goal"><span className={`block ${prose}`}>{h.goal}</span></Field>}
+        {extract && h.lastAsk && <Field label="Last ask"><span className={`block ${prose}`}>“{h.lastAsk}”</span></Field>}
         {h.files.length > 0 && (
           <Field label="Files">
             <span className="flex flex-col gap-[3px] font-mono text-[12px] text-text-2">
@@ -75,7 +75,7 @@ export function SummaryCard({ handoff: h, onCopy }: { handoff: Handoff; onCopy: 
           </Field>
         )}
         {h.branch && <Field label="Branch"><span className="font-mono text-[12px] text-text-2">{h.branch}</span></Field>}
-        {extract && h.lastAnswer && <Field label="Last answer"><span className={`line-clamp-4 ${prose}`}>{h.lastAnswer}</span></Field>}
+        {extract && h.lastAnswer && <Field label="Last answer"><span className={`block line-clamp-4 ${prose}`}>{h.lastAnswer}</span></Field>}
       </dl>
     </section>
   )

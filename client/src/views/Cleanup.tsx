@@ -4,7 +4,7 @@ import { reasonLabel, type StaleReason } from '../../../desktop/src/core/stale'
 import { Checkbox } from '../components/ui/checkbox'
 import { useListState } from '../hooks/useListState'
 import { formatBytes } from '../lib/format'
-import { UNTITLED, isUntitled, projectName, relativeTime } from '../lib/list'
+import { displayTitle, isUntitled, projectName, relativeTime } from '../lib/list'
 
 type Tab = 'stale' | 'archive'
 type Rules = Settings['stale']
@@ -111,12 +111,12 @@ export function Cleanup() {
                       <tr key={r.id} className="hover:bg-hover [&>td]:px-3 [&>td]:py-2.5 [&>td]:border-b [&>td]:border-line [&>td]:whitespace-nowrap">
                         <td>
                           <Checkbox
-                            aria-label={`Select ${r.title}`}
+                            aria-label={`Select ${displayTitle(r)}`}
                             checked={!unchecked.has(r.id)}
                             onCheckedChange={() => toggleRow(r.id)}
                           />
                         </td>
-                        <td className={`max-w-[360px] truncate ${isUntitled(r) ? 'text-muted' : ''}`} title={isUntitled(r) ? UNTITLED : r.title}>{isUntitled(r) ? UNTITLED : r.title}</td>
+                        <td className={`max-w-[360px] truncate ${isUntitled(r) ? 'text-muted' : ''}`} title={displayTitle(r)}>{displayTitle(r)}</td>
                         <td className="font-mono text-xs text-muted">{projectName(r.projectPath)}</td>
                         <td className="flex gap-1">
                           {reasons.map(reason => (
@@ -142,7 +142,7 @@ export function Cleanup() {
               <ul className="m-0 p-0 list-none rounded-[10px] border border-line bg-sunken">
                 {archivedRecords.map(r => (
                   <li key={r.id} className="flex items-center gap-3 px-3.5 py-2.5 border-t border-line first:border-t-0">
-                    <span className={`flex-1 min-w-0 truncate text-[13px] ${isUntitled(r) ? 'text-muted' : ''}`}>{isUntitled(r) ? UNTITLED : r.title}</span>
+                    <span className={`flex-1 min-w-0 truncate text-[13px] ${isUntitled(r) ? 'text-muted' : ''}`}>{displayTitle(r)}</span>
                     <span className="font-mono text-xs text-muted">{projectName(r.projectPath)} · {relativeTime(r.lastActivityAt, s.now)}</span>
                     <button className={button} onClick={() => window.sessionTray.restore([r.id])}>Restore</button>
                   </li>

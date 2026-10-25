@@ -93,6 +93,12 @@ describe('DetailPanel header', () => {
     expect(screen.getByRole('heading', { name: 'Untitled session' })).toHaveClass('text-muted')
   })
 
+  it('renaming an untitled session starts from an empty field', async () => {
+    await show(rec({ titleSource: 'none', title: 'abc' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+    expect(screen.getByRole('textbox', { name: 'Session name' })).toHaveValue('')
+  })
+
   it('a very long title truncates', async () => {
     const title = 'x'.repeat(300)
     await show(rec({ title }))
@@ -358,10 +364,16 @@ describe('DetailPanel tabs', () => {
     ] }), null)
     await user.click(tab('Agents 3'))
     const p = panelEl()
-    expect(within(p).getByText('1 running · 1 done · 1 done earlier')).toBeInTheDocument()
+    expect(within(p).getByText('1 running, 1 done, 1 done earlier')).toBeInTheDocument()
     expect(within(p).queryByText('Yesterday')).toBeNull()
     expect(within(p).getByText('opus')).toBeInTheDocument()
     expect(within(p).getByText('Explore · done')).toBeInTheDocument()
+  })
+
+  it('Show tool calls sits beside the tab list, not inside it', async () => {
+    await show()
+    const sw = screen.getByRole('switch', { name: 'Show tool calls' })
+    expect(sw.closest('[role="tablist"]')).toBeNull()
   })
 
   it('an ended session counts the subagents that ran', async () => {
@@ -376,7 +388,7 @@ describe('DetailPanel tabs', () => {
     await show(rec({ live: { ...LIVE, pid: 4242, name: 'worker' } }))
     await user.click(tab('Info'))
     const p = panelEl()
-    for (const [k, v] of [['Surface', 'cli'], ['Claude Code', '2.1.302'], ['File size', '2 KB'], ['Title from', 'ai'], ['Session ID', A], ['pid', '4242'], ['Live name', 'worker']]) {
+    for (const [k, v] of [['Surface', 'cli'], ['Claude Code version', '2.1.302'], ['File size', '2 KB'], ['Title from', 'ai'], ['Session ID', A], ['PID', '4242'], ['Live name', 'worker']]) {
       expect(within(p).getByText(k)).toBeInTheDocument()
       expect(within(p).getByText(v)).toBeInTheDocument()
     }
@@ -386,7 +398,7 @@ describe('DetailPanel tabs', () => {
     const user = userEvent.setup()
     await show()
     await user.click(tab('Info'))
-    expect(within(panelEl()).queryByText('pid')).toBeNull()
+    expect(within(panelEl()).queryByText('PID')).toBeNull()
   })
 
   it("Info shows the session's status line text, effort and thinking, marked as such", async () => {
@@ -394,7 +406,7 @@ describe('DetailPanel tabs', () => {
     const r = rec()
     await show(r, DETAILS, {}, mockApi(makePayload({ statuslineLinked: true, sessionExtras: { [r.id]: { text: 'Opus 5.5 | main', effort: 'high', thinking: true } } })))
     await user.click(tab('Info'))
-    expect(within(panelEl()).getByLabelText('From your Claude Code status line')).toHaveTextContent('Opus 5.5 | main · effort high · thinking on')
+    expect(within(panelEl()).getByLabelText('From your Claude Code status line')).toHaveTextContent('Opus 5.5 | main, effort high, thinking on')
   })
 
   it('no status line row when nothing is known for the session', async () => {

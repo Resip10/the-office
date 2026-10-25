@@ -13,6 +13,7 @@ export function Tooltip({ content, children, side = 'top', open, onOpenChange }:
         <TooltipPrimitive.Content
           side={side}
           sideOffset={6}
+          hideWhenDetached
           className="z-50 rounded-md bg-text px-1.5 py-0.5 text-[11px] text-canvas"
         >
           {content}

@@ -38,6 +38,14 @@ describe('ui primitives', () => {
     expect(await screen.findAllByText('Full path')).not.toHaveLength(0)
   })
 
+  it('Stepper input and buttons keep their focus ring inside the clipped wrapper', () => {
+    render(<Stepper label="Idle days" value={30} onChange={() => {}} />)
+    for (const el of [...screen.getAllByRole('button'), screen.getByRole('textbox')]) {
+      expect(el).toHaveClass('focus-ring')
+      expect(el.className).toContain('outline-offset:-2px')
+    }
+  })
+
   it('Stepper maps typed text to a positive integer or null', () => {
     const onChange = vi.fn()
     render(<Stepper label="Idle days" value={30} onChange={onChange} />)

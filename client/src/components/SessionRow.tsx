@@ -1,5 +1,5 @@
 import type { SessionRecord } from '../../../desktop/src/core/types'
-import { UNTITLED, isUntitled, projectName, relativeTime, stateOf } from '../lib/list'
+import { displayTitle, isUntitled, projectName, relativeTime, stateOf } from '../lib/list'
 import { ctxPercent, formatCost, formatDuration, formatTokens } from '../lib/format'
 import { StateDot } from './StateDot'
 import { CopyButton } from './ui/copy-button'
@@ -56,7 +56,7 @@ export function SessionRow({ record: r, pinned, now, continuedListed, onSelect, 
       <span className="pt-1.5"><StateDot state={state} pulse={pulse} /></span>
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <div className="flex items-baseline gap-2">
-          <span className={`flex-1 truncate text-[13.5px] font-medium ${isUntitled(r) ? 'text-muted' : 'text-text'}`} title={isUntitled(r) ? UNTITLED : r.title}>{isUntitled(r) ? UNTITLED : r.title}</span>
+          <span className={`flex-1 truncate text-[13.5px] font-medium ${isUntitled(r) ? 'text-muted' : 'text-text'}`} title={displayTitle(r)}>{displayTitle(r)}</span>
           <span className={`shrink-0 font-mono text-[11px] tabular-nums ${whenColor}`}>
             {when}
             {agents.length > 0 && (

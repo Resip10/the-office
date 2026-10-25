@@ -21,8 +21,8 @@ export function AgentsTab({ record: r }: { record: SessionRecord }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-[12px] text-muted">
-        {agents.filter(a => a.running).length} running · {agents.filter(a => !a.running).length} done
-        {doneEarlier > 0 && ` · ${doneEarlier} done earlier`}
+        {agents.filter(a => a.running).length} running, {agents.filter(a => !a.running).length} done
+        {doneEarlier > 0 && `, ${doneEarlier} done earlier`}
       </span>
       <ul className="m-0 p-0 list-none font-mono text-[11.5px]">
         {agents.map(a => (

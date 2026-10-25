@@ -239,6 +239,18 @@ describe('overview line', () => {
   })
 })
 
+describe('Window details', () => {
+  it('Copied does not carry over when another session is selected', async () => {
+    mockBridge({ records: [rec(A, { title: 'First one' }), rec(B, { title: 'Second one' })], pins: [], legacyHooks: false })
+    render(<Window />)
+    await act(async () => fireEvent.click(screen.getByText('First one')))
+    fireEvent.click(screen.getByRole('button', { name: 'Copy session ID' }))
+    expect(screen.getAllByText('Copied').length).toBeGreaterThan(0)
+    await act(async () => fireEvent.click(screen.getByText('Second one')))
+    expect(screen.queryByText('Copied')).toBeNull()
+  })
+})
+
 describe('keyboard focus', () => {
   const FOCUSABLE = 'button, [role="tab"], [role="combobox"], [role="checkbox"]'
   const missing = (root: HTMLElement) =>

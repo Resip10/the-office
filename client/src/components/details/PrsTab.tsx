@@ -4,7 +4,7 @@ import { Tooltip } from '../ui/tooltip'
 
 export function PrsTab({ urls }: { urls: string[] }) {
   return (
-    <ul className="m-0 p-0 list-none flex flex-col gap-1">
+    <ul className="m-0 p-0 list-none flex flex-col gap-1 pl-1">
       {urls.map(url => (
         <li key={url} className="flex items-center gap-2 min-w-0">
           <Tooltip content={url}>

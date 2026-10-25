@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { SessionRecord } from '../../../../desktop/src/core/types'
-import { UNTITLED, isUntitled, relativeTime, stateOf } from '../../lib/list'
+import { displayTitle, isUntitled, relativeTime, stateOf } from '../../lib/list'
 import { StateDot } from '../StateDot'
 import { CopyButton } from '../ui/copy-button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
@@ -48,7 +48,7 @@ export function DetailHeader({ record: r, pinned, continuedListed, onSelect, con
           <input
             autoFocus
             aria-label="Session name"
-            defaultValue={r.title}
+            defaultValue={untitled ? '' : r.title}
             onKeyDown={e => {
               if (e.key === 'Enter') { window.sessionTray.rename(r.id, e.currentTarget.value); setEditing(false) }
               if (e.key === 'Escape') setEditing(false)
@@ -60,9 +60,9 @@ export function DetailHeader({ record: r, pinned, continuedListed, onSelect, con
           <>
             <h1
               className={`m-0 min-w-0 truncate text-[22px] font-semibold tracking-tight ${untitled ? 'text-muted' : ''}`}
-              title={untitled ? UNTITLED : r.title}
+              title={displayTitle(r)}
             >
-              {untitled ? UNTITLED : r.title}
+              {displayTitle(r)}
             </h1>
             <Tooltip content="Rename">
               <button

@@ -70,6 +70,7 @@ export function Window() {
             <Cleanup />
           ) : s.selected ? (
             <DetailPanel
+              key={s.selected.id}
               record={s.selected}
               pinned={s.pins.includes(s.selected.id)}
               continuedListed={s.selected.continuedInId !== null && s.listedIds.has(s.selected.continuedInId)}

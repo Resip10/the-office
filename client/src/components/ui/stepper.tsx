@@ -7,7 +7,8 @@ interface Props {
   min?: number
 }
 
-const button = 'focus-ring inline-flex h-[30px] w-[26px] items-center justify-center text-muted hover:text-text'
+const inset = 'focus-visible:![outline-offset:-2px]'
+const button = `focus-ring ${inset} inline-flex h-[30px] w-[26px] items-center justify-center text-muted hover:text-text`
 
 export function Stepper({ label, value, onChange, min = 1 }: Props) {
   return (
@@ -25,7 +26,7 @@ export function Stepper({ label, value, onChange, min = 1 }: Props) {
           const n = /^\d+$/.test(t) ? Number.parseInt(t, 10) : NaN
           onChange(n >= min ? n : null)
         }}
-        className="focus-ring h-[30px] w-12 bg-transparent px-1 text-center font-mono text-[12.5px] text-text placeholder:text-muted"
+        className={`focus-ring ${inset} h-[30px] w-12 bg-transparent px-1 text-center font-mono text-[12.5px] text-text placeholder:text-muted`}
       />
       <button type="button" aria-label={`Increase ${label}`} className={button} onClick={() => onChange(value === null ? min : value + 1)}>
         <PlusIcon />
