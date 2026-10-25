@@ -63,7 +63,7 @@ export function FilterBar({ filters, onChange, projects }: Props) {
           </SelectTrigger>
           <SelectContent position="popper" collisionPadding={8} className="max-h-[min(320px,var(--radix-select-content-available-height))]">
             <SelectItem value={ALL}>All projects</SelectItem>
-            {projects.map(p => <SelectItem key={p} value={p}><span className="truncate">{projectName(p)}</span></SelectItem>)}
+            {projects.map(p => <SelectItem key={p} value={p}>{projectName(p)}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>

@@ -23,7 +23,7 @@ export function SelectContent({ className = '', children, ...props }: ComponentP
       <S.Content
         position="popper"
         sideOffset={4}
-        className={`z-50 min-w-[var(--radix-select-trigger-width)] rounded-lg border border-line-strong bg-raised p-1 shadow-lg ${className}`}
+        className={`z-50 min-w-[var(--radix-select-trigger-width)] max-w-[min(var(--radix-select-content-available-width),calc(100vw-16px))] rounded-lg border border-line-strong bg-raised p-1 shadow-lg ${className}`}
         {...props}
       >
         <S.Viewport>{children}</S.Viewport>
@@ -35,11 +35,11 @@ export function SelectContent({ className = '', children, ...props }: ComponentP
 export function SelectItem({ className = '', children, ...props }: ComponentPropsWithoutRef<typeof S.Item>) {
   return (
     <S.Item
-      className={`relative flex cursor-default select-none items-center rounded-md py-1.5 pl-6 pr-2 text-[12.5px] text-text-2 outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-hover data-[highlighted]:text-text ${className}`}
+      className={`relative flex cursor-default select-none items-center rounded-md py-1.5 pl-6 pr-2 [&>span:last-child]:min-w-0 text-[12.5px] text-text-2 outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-hover data-[highlighted]:text-text ${className}`}
       {...props}
     >
       <S.ItemIndicator className="absolute left-1.5 inline-flex"><CheckIcon /></S.ItemIndicator>
-      <S.ItemText>{children}</S.ItemText>
+      <S.ItemText><span className="block truncate">{children}</span></S.ItemText>
     </S.Item>
   )
 }
