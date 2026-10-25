@@ -4,6 +4,8 @@ import { OVERVIEW_APP_ITEMS, NOTIFY_AFTER_MIN, OVERVIEW_STATUSLINE_ITEMS, type N
 import { useAppState } from '../hooks/useAppState'
 import { useNow } from '../hooks/useSessions'
 import { relativeTime } from '../lib/list'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import { Stepper } from '../components/ui/stepper'
 import { THEMES, type ThemeId } from '../lib/themes'
 
 type Section = 'general' | 'appearance' | 'overview' | 'terminal' | 'cleanup'
@@ -44,23 +46,6 @@ function Switch({ label, checked, onChange, disabled = false }: { label: string;
     >
       <span className={`w-4 h-4 rounded-full ${checked ? 'bg-on-accent' : 'bg-muted'}`} />
     </button>
-  )
-}
-
-function ThresholdInput({ label, value, onChange }: { label: string; value: number | null; onChange: (v: number | null) => void }) {
-  return (
-    <input
-      type="number"
-      min={1}
-      aria-label={label}
-      value={value ?? ''}
-      placeholder="off"
-      onChange={e => {
-        const n = Number.parseInt(e.target.value, 10)
-        onChange(Number.isInteger(n) && n > 0 ? n : null)
-      }}
-      className="w-20 h-[30px] px-2.5 rounded-[7px] border border-line-strong bg-control font-mono text-[12.5px] text-text text-right"
-    />
   )
 }
 
@@ -244,15 +229,12 @@ export function Settings() {
                 <Switch label="Notify when a session needs input" checked={settings.notify} onChange={v => set({ notify: v })} />
               </Row>
               <Row title="Notify after" hint="How long a session waits before you're notified.">
-                <select
-                  aria-label="Notify after"
-                  disabled={!settings.notify}
-                  value={settings.notifyAfterMin}
-                  onChange={e => set({ notifyAfterMin: Number(e.target.value) as NotifyAfterMin })}
-                  className="h-[30px] px-2.5 rounded-[7px] border border-line-strong bg-control text-[12.5px] text-text disabled:opacity-40"
-                >
-                  {NOTIFY_AFTER_MIN.map(m => <option key={m} value={m}>{m} min</option>)}
-                </select>
+                <Select disabled={!settings.notify} value={String(settings.notifyAfterMin)} onValueChange={v => set({ notifyAfterMin: Number(v) as NotifyAfterMin })}>
+                  <SelectTrigger aria-label="Notify after" className="h-[30px] rounded-[7px] border-line-strong text-text disabled:opacity-40"><SelectValue /></SelectTrigger>
+                  <SelectContent position="popper" collisionPadding={8} className="max-h-[min(320px,var(--radix-select-content-available-height))]">
+                    {NOTIFY_AFTER_MIN.map(m => <SelectItem key={m} value={String(m)}>{m} min</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </Row>
             </Group>
           </>
@@ -305,14 +287,12 @@ export function Settings() {
                 title="Open sessions in"
                 hint={preview && <span className="font-mono text-[11.5px] break-all">{describeInvocation(preview)}</span>}
               >
-                <select
-                  aria-label="Open sessions in"
-                  value={settings.terminal}
-                  onChange={e => set({ terminal: e.target.value as TerminalChoice })}
-                  className="h-[30px] px-2.5 rounded-[7px] border border-line-strong bg-control text-[12.5px] text-text"
-                >
-                  {terminals.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                </select>
+                <Select value={settings.terminal} onValueChange={v => set({ terminal: v as TerminalChoice })}>
+                  <SelectTrigger aria-label="Open sessions in" className="h-[30px] rounded-[7px] border-line-strong text-text"><SelectValue /></SelectTrigger>
+                  <SelectContent position="popper" collisionPadding={8} className="max-h-[min(320px,var(--radix-select-content-available-height))]">
+                    {terminals.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </Row>
             </Group>
           </>
@@ -325,14 +305,14 @@ export function Settings() {
             </div>
             <Group>
               <Row title="No activity for" hint="Days without activity. Leave empty to turn the rule off.">
-                <ThresholdInput
+                <Stepper
                   label="Idle days"
                   value={settings.stale.idleDays}
                   onChange={v => set({ stale: { ...settings.stale, idleDays: v } })}
                 />
               </Row>
               <Row title="Trivial sessions" hint="Fewer than this many messages and no file edits. Leave empty to turn off.">
-                <ThresholdInput
+                <Stepper
                   label="Trivial messages"
                   value={settings.stale.trivialMessages}
                   onChange={v => set({ stale: { ...settings.stale, trivialMessages: v } })}

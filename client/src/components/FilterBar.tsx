@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
 import type { Filters, TimeRange } from '../lib/list'
 import { projectName } from '../lib/list'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+
+const ALL = '__all__'
 
 interface Props {
   filters: Filters
@@ -54,15 +57,15 @@ export function FilterBar({ filters, onChange, projects }: Props) {
         >
           Running
         </button>
-        <select
-          aria-label="Project"
-          value={filters.project ?? ''}
-          onChange={e => set({ project: e.target.value || null })}
-          className="ml-auto min-w-0 flex-1 max-w-[160px] h-7 px-2 rounded-md bg-control border border-line-strong text-[11.5px] text-text-2"
-        >
-          <option value="">All projects</option>
-          {projects.map(p => <option key={p} value={p}>{projectName(p)}</option>)}
-        </select>
+        <Select value={filters.project ?? ALL} onValueChange={v => set({ project: v === ALL ? null : v })}>
+          <SelectTrigger aria-label="Project" className="ml-auto min-w-0 flex-1 max-w-[180px] text-[11.5px] text-text-2">
+            <span className="min-w-0 truncate"><SelectValue /></span>
+          </SelectTrigger>
+          <SelectContent position="popper" collisionPadding={8} className="max-h-[min(320px,var(--radix-select-content-available-height))]">
+            <SelectItem value={ALL}>All projects</SelectItem>
+            {projects.map(p => <SelectItem key={p} value={p}><span className="truncate">{projectName(p)}</span></SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   )

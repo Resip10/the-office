@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { DEFAULT_SETTINGS, type Settings } from '../../../desktop/src/core/types'
 import { reasonLabel, type StaleReason } from '../../../desktop/src/core/stale'
+import { Checkbox } from '../components/ui/checkbox'
 import { useListState } from '../hooks/useListState'
 import { formatBytes } from '../lib/format'
 import { projectName, relativeTime } from '../lib/list'
@@ -81,11 +82,9 @@ export function Cleanup() {
             <div role="group" aria-label="Rules" className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-2.5">
               {ruleCards(s.settings.stale).map(rule => (
                 <label key={rule.kind} className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-[9px] border text-[13px] ${rule.on ? 'border-line-strong bg-selected' : 'border-line bg-surface'}`}>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={rule.on}
-                    onChange={() => window.sessionTray.setSettings({ stale: rule.toggle() })}
-                    className="accent-[var(--accent)] w-3.5 h-3.5 m-0"
+                    onCheckedChange={() => window.sessionTray.setSettings({ stale: rule.toggle() })}
                   />
                   <span className="flex-1">{rule.text}</span>
                   <span className="font-mono text-muted tabular-nums">{s.stale.filter(item => item.reasons.some(r => r.kind === rule.kind)).length}</span>
@@ -111,12 +110,10 @@ export function Cleanup() {
                     {s.stale.map(({ record: r, reasons }) => (
                       <tr key={r.id} className="hover:bg-hover [&>td]:px-3 [&>td]:py-2.5 [&>td]:border-b [&>td]:border-line [&>td]:whitespace-nowrap">
                         <td>
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             aria-label={`Select ${r.title}`}
                             checked={!unchecked.has(r.id)}
-                            onChange={() => toggleRow(r.id)}
-                            className="accent-[var(--accent)] w-3.5 h-3.5 m-0"
+                            onCheckedChange={() => toggleRow(r.id)}
                           />
                         </td>
                         <td className="max-w-[360px] truncate" title={r.title}>{r.title}</td>

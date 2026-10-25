@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { FilterBar } from '../components/FilterBar'
 
@@ -22,5 +23,17 @@ describe('FilterBar', () => {
     expect(within(group).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'false')
     fireEvent.click(within(group).getByRole('button', { name: '30d' }))
     expect(onChange).toHaveBeenCalledWith({ ...FILTERS, range: '30d' })
+  })
+
+  it('project select lists all projects and each project, and choosing one filters', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    const long = '/work/' + 'x'.repeat(60)
+    render(<FilterBar filters={FILTERS} onChange={onChange} projects={['/work/alpha', long]} />)
+    await user.click(screen.getByRole('combobox', { name: 'Project' }))
+    expect(screen.getByRole('option', { name: 'All projects' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'x'.repeat(60) }).querySelector('.truncate')).not.toBeNull()
+    await user.click(screen.getByRole('option', { name: 'alpha' }))
+    expect(onChange).toHaveBeenCalledWith({ ...FILTERS, project: '/work/alpha' })
   })
 })
