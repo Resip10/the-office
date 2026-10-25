@@ -64,6 +64,7 @@ export async function parseDetails(filePath: string, projectPath: string | null)
   const peek: PeekItem[] = []
   const conversation: PeekItem[] = []
   let messageTotal = 0
+  let lastUser: PeekItem | null = null
 
   const push = (item: PeekItem) => {
     for (const list of item.role === 'tool' ? [peek] : [peek, conversation]) {
@@ -102,7 +103,8 @@ export async function parseDetails(filePath: string, projectPath: string | null)
         if (text) {
           goal ??= text.slice(0, ASK_MAX)
           lastTyped = text
-          push({ role: 'user', text, ts: at })
+          lastUser = { role: 'user', text, ts: at }
+          push(lastUser)
         }
         continue
       }
@@ -141,6 +143,7 @@ export async function parseDetails(filePath: string, projectPath: string | null)
     },
     peek,
     conversation,
+    lastUser,
     messageTotal,
   }
 }

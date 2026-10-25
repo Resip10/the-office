@@ -35,6 +35,7 @@ const DETAILS: SessionDetails = {
     { role: 'user', text: 'Add CSV', ts: null },
     { role: 'assistant', text: 'Done.', ts: null },
   ],
+  lastUser: { role: 'user', text: 'Add CSV', ts: null },
   messageTotal: 12,
 }
 
@@ -329,6 +330,21 @@ describe('DetailPanel tabs', () => {
     await show()
     expect(within(panelEl()).getByText('Last 2 of 12')).toBeInTheDocument()
     expect(within(panelEl()).queryByText('Edit src\\a.ts')).toBeNull()
+  })
+
+  it('shows your last message above the replies when it scrolled out of the peek', async () => {
+    const replies = [1, 2, 3].map(n => ({ role: 'assistant' as const, text: `Update ${n}`, ts: null }))
+    await show(rec(), { ...DETAILS, peek: replies, conversation: replies, lastUser: { role: 'user', text: 'Start the build', ts: null } })
+    const rows = within(panelEl()).getAllByRole('listitem').map(li => li.textContent)
+    expect(rows[0]).toContain('Start the build')
+    expect(rows[1]).toBe('…')
+    expect(rows[2]).toContain('Update 1')
+  })
+
+  it('does not repeat your last message when it is already in the peek', async () => {
+    await show()
+    expect(within(panelEl()).getAllByText('Add CSV')).toHaveLength(1)
+    expect(within(panelEl()).queryByText('…')).toBeNull()
   })
 
   it('Show tool calls sits on Messages only and is remembered in settings', async () => {

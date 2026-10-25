@@ -10,6 +10,7 @@ const EMPTY: SessionDetails = {
   handoff: { source: 'extract', summary: null, goal: null, lastAsk: null, files: [], branch: null, lastAnswer: null },
   peek: [],
   conversation: [],
+  lastUser: null,
   messageTotal: 0,
 }
 
@@ -32,6 +33,16 @@ describe('parseDetails', () => {
     expect(d?.peek[4]).toMatchObject({ role: 'tool', text: 'Bash npm test' })
     expect(d?.peek[2]).toMatchObject({ role: 'user', text: 'Now add CSV too' })
     expect(d?.messageTotal).toBe(11)
+  })
+
+  it('remembers the last typed user message even when it falls out of the peek', async () => {
+    const d = await details('long-reply')
+    expect(d?.conversation.map(p => p.role)).toEqual(Array(6).fill('assistant'))
+    expect(d?.lastUser).toMatchObject({ role: 'user', text: 'Start the build and report back' })
+  })
+
+  it('lastUser is the latest typed message', async () => {
+    expect((await details('edits'))?.lastUser).toMatchObject({ role: 'user', text: 'Now add CSV too' })
   })
 
   it('keeps a separate conversation-only peek of the last 6 user/assistant messages', async () => {

@@ -20,6 +20,19 @@ export function ToolCallsSwitch({ on }: { on: boolean }) {
   )
 }
 
+function MessageRow({ item }: { item: PeekItem }) {
+  return (
+    <li className="grid grid-cols-[56px_minmax(0,1fr)] gap-2.5">
+      <span className={`pt-0.5 text-[12px] ${item.role === 'user' ? 'text-text' : 'text-muted'}`}>
+        {LABEL[item.role]}
+      </span>
+      {item.role === 'tool'
+        ? <span className="min-w-0 truncate font-mono text-xs text-muted">{item.text}</span>
+        : <span className={`min-w-0 line-clamp-2 ${item.role === 'assistant' ? 'text-text-2' : 'text-text'}`}>{item.text}</span>}
+    </li>
+  )
+}
+
 export function MessagesTab({ details, loading, showTools }: { details: SessionDetails | null; loading: boolean; showTools: boolean }) {
   if (loading) {
     return (
@@ -30,20 +43,15 @@ export function MessagesTab({ details, loading, showTools }: { details: SessionD
   }
   const items = details ? (showTools ? details.peek : details.conversation) : []
   if (!details || items.length === 0) return <p className="m-0 text-[13px] text-muted">No messages to show</p>
+  // Your last message, when Claude's replies since then pushed it out of the peek.
+  const lastUser = items.some(item => item.role === 'user') ? null : details.lastUser
 
   return (
     <div className="flex flex-col gap-2">
       <ol className="m-0 p-0 list-none flex flex-col gap-3 text-[13px] leading-normal">
-        {items.map((item, i) => (
-          <li key={i} className="grid grid-cols-[56px_minmax(0,1fr)] gap-2.5">
-            <span className={`pt-0.5 text-[12px] ${item.role === 'user' ? 'text-text' : 'text-muted'}`}>
-              {LABEL[item.role]}
-            </span>
-            {item.role === 'tool'
-              ? <span className="min-w-0 truncate font-mono text-xs text-muted">{item.text}</span>
-              : <span className={`min-w-0 line-clamp-2 ${item.role === 'assistant' ? 'text-text-2' : 'text-text'}`}>{item.text}</span>}
-          </li>
-        ))}
+        {lastUser && <MessageRow item={lastUser} />}
+        {lastUser && <li aria-label="Earlier messages hidden" className="pl-[66px] text-muted">…</li>}
+        {items.map((item, i) => <MessageRow key={i} item={item} />)}
       </ol>
       <span className="pt-1.5 text-[12px] text-muted">Last {items.length} of {details.messageTotal}</span>
     </div>

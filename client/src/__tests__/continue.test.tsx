@@ -21,6 +21,7 @@ const DETAILS: SessionDetails = {
   handoff: { source: 'extract', summary: null, goal: 'Build it', lastAsk: 'Add CSV', files: [], branch: 'main', lastAnswer: 'Done.' },
   peek: [],
   conversation: [],
+  lastUser: null,
   messageTotal: 12,
 }
 
