@@ -13,6 +13,8 @@ files:
 extraResources:
   - from: ../client/dist
     to: client/dist
+# No Developer ID: sign the mac app ad-hoc so Gatekeeper doesn't call it "damaged".
+afterSign: scripts/adhoc-sign.cjs
 mac:
   category: public.app-category.developer-tools
   target: dmg
